@@ -1,0 +1,42 @@
+EndDevice: sFDI ascending href ascending
+FunctionSetAssignments: mRID descending
+Subscription: href ascending
+Notification: href ascending
+ResponseSet: mRID descending
+Response: createdDateTime descending endDeviceLFDI ascending
+IPInterface: ifIndex ascending
+IPAddr: address ascending
+LLInterface: EUI64 ascending
+RPLInstance: DODAGid ascending RPLInstanceID ascending
+RPLSourceRoutes: SourceRoute ascending DestAddress ascending
+LogEvent: createdDateTime ascending logEventID ascending
+DemandResponseProgram: primacy ascending mRID decending
+EndDeviceControl: interval.start ascending creationTime descending mRID descending
+UsagePoint: mRID descending
+MeterReading: mRID descending
+ReadingSet: timePeriod.start descending mRID descending
+Reading: localID ascending consumptionBlock ascending touTier ascending
+TariffProfile: mRID descending
+RateComponent: mRID descending
+TimeTariffInterval: interval.start ascending creationTime descending mRID descending
+ConsumptionTariffInterval: startValue ascending
+MessagingProgram: mRID descending
+TextMessage: interval.start descending creationTime descending mRID descending
+CustomerAccount: customerName ascending mRID descending
+CustomerAgreement: serviceLocation ascending mRID descending
+BillingPeriod: interval.start decending href ascending
+HistoricalReading: description ascending mRID descending
+TargetReading: description ascending mRID descending
+ProjectionReading: description ascending mRID descending
+BillingReadingSet: timePeriod.start descending mRID descending
+BillingReading: timePeriod.start ascending consumptionBlock ascending touTier ascending
+Prepayment: mRID descending
+CreditRegister: effectiveTime descending mRID descending
+SupplyInterruptionOverride: interval.start ascending interval.duration ascending
+FlowReservationRequest: intervalRequested.start ascending creationTime descending mRID descending
+FlowReservationResponse: interval.start ascending creationTime descending mRID descending
+DERProgram: primacy ascending mRID descending
+DERControl: interval.start ascending creationTime descending mRID descending
+DERCurve: creationTime descending mRID descending
+DER: href ascending
+MirrorUsagePoint: mRID descending
