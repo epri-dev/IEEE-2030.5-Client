@@ -6,7 +6,7 @@
 #include "der_client.c"
 #include "query.c"
 
-#define VERSION "0.2.10"
+#define VERSION "0.2.11"
 
 void version () {
   printf("IEEE 2030.5 client test version %s -- compiled: %s\n",
@@ -38,6 +38,7 @@ void usage () {
 #define PUT_PIN (1<<14)
 #define DELETE_DEVICE (1<<15)
 #define CLIENT_FOUND (1<<16)
+#define INVERTER_CLIENT (1<<17)
 
 int server = 0, test = 0, secure = 0, interval = 5*60, primary = 0, pin = 0;
 Stub *edevs; char *path = NULL; uint64_t delete_sfdi;
@@ -116,8 +117,8 @@ void options (int argc, char **argv) {
     const char * const commands[] =
       {"sfdi", "edev", "fsa", "register", "pin", "primary", "all", "time",
        "self", "subscribe", "metering", "meter", "alarm", "poll", "load",
-       "device", "delete"};
-    switch (string_index (argv[i], commands, 17)) {
+       "device", "delete", "inverter"};
+    switch (string_index (argv[i], commands, 18)) {
     case 0: // sfdi
       if (++i == argc || !number64 (&device_sfdi, argv[i])) {
 	printf ("sfdi command expects number argument\n"); exit (0);
@@ -169,6 +170,8 @@ void options (int argc, char **argv) {
       if (++i == argc || !number64 (&delete_sfdi, argv[i])) {
 	printf ("delete command expects number argument\n"); exit (0);
       } test |= GET_EDEV | DELETE_DEVICE; break;
+    case 17: // inverter
+      test |= INVERTER_CLIENT; break;
     default:
       printf ("unknown command \"%s\"\n", argv[i]); exit (0);
     }
@@ -309,6 +312,7 @@ void get_edev_subs (Stub *edevs) { List *l;
   foreach (l, edevs->reqs) {
     Stub *s = l->data;
     SE_EndDevice_t *e = resource_data (s);
+    if (test & INVERTER_CLIENT && e->sFDI != device_sfdi) continue;
     s->completion = edev_complete;
     get_list_dep (s, e, DERList);
     if (test & GET_FSA) {

@@ -32,9 +32,9 @@ To build the framework library and applications run:
 
     ./build.sh
 
-By default the build script uses the compiler `x86_64-linux-gnu-gcc`. To change
-the compiler edit the variable `linux_host` in `build.sh`, this variable
-describes the system target. If you are unsure of the target, run:
+By default the build script uses the compiler `gcc`. To compile for a specific
+host compiler you can edit the variable `linux_host` in `build.sh`, this
+variable describes the system target. If you are unsure of the target, run:
 
     gcc -v|&grep -e Target
 
@@ -56,6 +56,14 @@ and `linux_cross_prefix` appropriately and run:
 
 Version History
 ---------------
+
+### Version 0.2.11
+
+Changes:
+
+-   Change build.sh to use `gcc` by default.
+-   Added the `inverter` command to `client_test` to perform tests in
+    "inverter" mode.
 
 ### Version 0.2.10
 

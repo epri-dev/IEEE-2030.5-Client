@@ -10,13 +10,15 @@
 # change these for your host systems
 
 system="linux" # only linux supported in this version
-linux_host="x86_64-linux-gnu"
+linux_host=
 linux_prefix="/usr"
 linux_cross_host=
 linux_cross_prefix=
 
 #---------------------------------------------------------
 
+cc=gcc
+cpp=cpp
 args=( "$@" )
 compile_args=()
 debug_flags=( -g )
@@ -87,7 +89,6 @@ else
     prefix=${system}_prefix
 fi
 
-cc=""
 recompile=0
 build_dep=0
 
@@ -212,12 +213,13 @@ if (( $build_dep == 0 )); then
 fi
 sys_flags=( ${flags[@]} )
 #echo ${sys_flags[@]}
-if [[ $system == "linux" ]]; then
-    cc="${!host}-gcc"
-    cpp="${!host}-cpp"
-elif [[ $system == "win32" ]]; then
-    cc="${!host}-gcc.exe"
-    cpp="${!host}-cpp.exe"
+if [ -n "${!host}" ]; then
+    cc="${!host}-${cc}"
+    cpp="${!host}-${cpp}"
+fi
+if [[ $system == "win32" ]]; then
+    cc="${cc}.exe"
+    cpp="${cpp}.exe"
     sys_flags+=( -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 )
     libs=( -lws2_32 -liphlpapi )
 fi

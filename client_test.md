@@ -136,4 +136,10 @@ and the associated DERCurveLists and DERControlLists are retrieved.
 -   `load sfdi directory` - Load the device settings located in `directory`
     for the EndDevice with the `sfdi` specified.
 
+-   `inverter` - Perform the test as an inverter client rather than an
+    aggregator client (the default). An inverter client will only retrieve
+    subordinate resources for the EndDevice instance with an SFDI matching the
+    client's computed SFDI. An aggregator client will retrieve the subordinate
+    resources and perform scheduling for every EndDevice managed by the
+    aggregator client.
 
