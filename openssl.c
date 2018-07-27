@@ -1,6 +1,8 @@
 // Copyright (c) 2018 Electric Power Research Institute, Inc.
 // author: Mark Slicker <mark.slicker@gmail.com>
 
+#define CIPHER_LIST "ECDHE-ECDSA-AES128-CCM8"
+
 /** @addtogroup security
     @{
 */
@@ -174,8 +176,8 @@ void tls_init (const char *path, VerifyFunc verify) {
   init_bio (); _verify_peer = verify;
   SSL_CTX_set_verify (ssl_ctx, SSL_VERIFY_PEER |
 		      SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_peer);
-  if (!SSL_CTX_set_cipher_list (ssl_ctx, "ECDHE-ECDSA-AES128-CCM8")) {
-    printf ("tls_init: error selecting ECDHE-ECDSA-AES128-CCM8 cipher suite\n");
+  if (!SSL_CTX_set_cipher_list (ssl_ctx, CIPHER_LIST)) {
+    printf ("tls_init: error selecting %s cipher list\n", CIPHER_LIST);
     exit (0);
   }
   if (ext = strstr (private, ".x509")) {
