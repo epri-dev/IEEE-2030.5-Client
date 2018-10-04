@@ -14,12 +14,12 @@ if [[ $tls_lib == "openssl" ]]; then
     se_core_flags=( -DOPENSSL_TLS )
     command -v openssl > /dev/null
     if [ $? -eq 1 ]; then
-	echo "The openssl command is not found, make sure that OpenSSL version 1.1.0 installed."
+	echo "The openssl command is not found, make sure that OpenSSL version 1.1.* installed."
 	exit 0
     fi
     version=`openssl version -a`
-    if [[ ! ($version =~ "OpenSSL 1.1.0") ]]; then
-	echo "The EPRI 2030.5 client requires OpenSSL version 1.1.0."
+    if [[ ! ($version =~ "OpenSSL 1.1.") ]]; then
+	echo "The EPRI 2030.5 client requires OpenSSL version 1.1.*."
 	echo "openssl version -a"
 	echo $version
 	exit 0

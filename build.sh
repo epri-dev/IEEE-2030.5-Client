@@ -10,8 +10,8 @@
 # change these for your host systems
 
 system="linux" # only linux supported in this version
-linux_host=
-linux_prefix="/usr"
+linux_host=${CC}
+linux_prefix=
 linux_cross_host=
 linux_cross_prefix=
 
@@ -214,8 +214,8 @@ fi
 sys_flags=( ${flags[@]} )
 #echo ${sys_flags[@]}
 if [ -n "${!host}" ]; then
-    cc="${!host}-${cc}"
-    cpp="${!host}-${cpp}"
+    cc="${!host}"
+    cpp="${!host}"
 fi
 if [[ $system == "win32" ]]; then
     cc="${cc}.exe"
