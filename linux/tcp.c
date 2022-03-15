@@ -39,7 +39,7 @@ int accepted (TcpPort *p, Acceptor *a) { Address host;
   }
   p->pe.status = Connected;
   non_block_enable (p->pe.socket); 
-  event_add (p->pe.socket, p);
+  event_add (p->pe.socket, p);//将连接上的socket放到pevent中去，以便随时接收数据并相应
   return 1;
 }
 

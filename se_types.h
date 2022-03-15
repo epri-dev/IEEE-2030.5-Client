@@ -135,7 +135,11 @@ typedef struct {
 typedef uint16_t SE_UInt16_t;
 typedef SE_UInt16_t SE_VersionType_t;
 typedef char SE_String32_t[32];
-typedef uint8_t SE_HexBinary128_t[16];
+
+//这条语句定义了一个含有16个uint8_t元素的结构体数组类型。
+typedef uint8_t SE_HexBinary128_t[16];//
+
+//用SE_mRIDType_t 来代称 SE_HexBinary128_t
 typedef SE_HexBinary128_t SE_mRIDType_t;
 
 // #define SE_description_exists (1 << 0)
@@ -670,6 +674,8 @@ typedef struct {
 // #define SE_subscribable_exists (1 << 1)
 // #define SE_version_exists (1 << 2)
 // #define SE_responseRequired_exists (1 << 5)
+
+//对应着 CSIP中的Immediate Controls中的数据体
 typedef struct {
   uint32_t _flags;
   char * href;
@@ -2574,7 +2580,7 @@ typedef struct {
   SE_TimeType_t createdDateTime;
   SE_HexBinary160_t endDeviceLFDI;
   SE_UInt8_t status;
-  SE_mRIDType_t subject;
+  SE_mRIDType_t subject;    /*mRID*/
 } SE_Response_t;
 
 // #define SE_status_exists (1 << 5)

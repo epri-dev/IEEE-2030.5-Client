@@ -388,6 +388,7 @@ void print_xs_type (int type) {
   char *base[] = {"", "XS_STRING", "XS_BOOLEAN", "XS_HEX_BINARY", "XS_ANY_URI",
 		  "XS_LONG", "XS_INT", "XS_SHORT", "XS_BYTE", "XS_ULONG", 
 		  "XS_UINT", "XS_USHORT", "XS_UBYTE"};
+  //n表示字节个数
   int n = type >> 4; type &= 0xf;
   if (n) print ("xs_type(%s,%d)", base[type], n);
   else print (base[type]);

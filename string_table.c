@@ -7,7 +7,7 @@ typedef struct _StringTable {
   struct _StringTable *next, *prev;
   int length, index;
   const void *name;
-  char *strings[];
+  char *strings[];  //柔性数组
 } StringTable;
 
 StringTable *find_table (StringTable *t, const void *name) {
@@ -33,6 +33,7 @@ StringTable *new_string_table (StringTable *t, const void *name, int length) {
 
 StringTable *add_string (StringTable *head, StringTable *t, char *s) {
   if (t && t->index == t->length) {
+    //如果满了，则先直接增加一倍容量。
     t->length <<= 1;
     t = realloc (t, sizeof (StringTable) + sizeof (char *) * t->length);
     if (t->prev) t->prev->next = t; else head = t;

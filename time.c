@@ -27,11 +27,12 @@ int64_t se_time ();
 int se_time_offset = 0;
 
 void set_time (SE_Time_t *tm) {
+    //得到本地时间跟服务器时间的时间差，以后跟服务器交互，都算上这个时间差。这样就用不上搞成服务器时间与本地时间保持一致了。
   se_time_offset = tm->currentTime - time (NULL);
   set_timezone (tm->tzOffset, tm->dstOffset,
 		tm->dstStartTime, tm->dstEndTime);
 }
 
 int64_t se_time () {
-  return time (NULL) + se_time_offset;
+  return time (NULL) + se_time_offset;  //
 }

@@ -55,6 +55,7 @@ void queue_free (Queue *queue);
 
 #ifndef HEADER_ONLY
 
+//将新元素加入到末尾
 void queue_add (Queue *q, void *item) {
   if (q->last) q->last = q->last->next = item;
   else q->first = q->last = item;

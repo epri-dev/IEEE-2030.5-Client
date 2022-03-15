@@ -36,7 +36,8 @@ typedef struct {
 */
 #define se_list_field(obj, info) (List **)((obj)+(info)->offset)
 
-/** @brief Is an IEEE 2030.5 object type derived from a base type?
+/** TODO:这部分代码需要再看看IEEE协议。完全不懂在说什么
+    @brief Is an IEEE 2030.5 object type derived from a base type?
     
     Queries the schema to determine if an object of certain type is derived
     from a base object. This is useful for dealing with certain classes of
@@ -156,6 +157,7 @@ int compare_ids (const void *a, const void *b) {
 }
 
 ListInfo *find_list_info (unsigned short type) {
+/* 对象的数组执行二分查找，base 指向进行查找的数组，key 指向要查找的元素，size 指定数组中每个元素的大小。 */
   return bsearch (&type, se_list_info, SE_LIST_LENGTH,
 		  sizeof (ListInfo), compare_ids);  
 }

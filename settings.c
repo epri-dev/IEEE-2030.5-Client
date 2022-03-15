@@ -8,6 +8,8 @@ typedef struct {
   SE_DERStatus_t *ders;
 } Settings;
 
+
+/*读取文件，然后解析*/
 void load_settings (const char *name, void *ctx) {
   Settings *ds = ctx;
   char *buffer = file_read (name, NULL),

@@ -87,9 +87,10 @@ int exi_output_string (Output *o, const SchemaElement *se, char *s) {
   return 1;
 }
 
-int exi_output_value (Output *o, void *value) {
-  int type = o->se->xs_type;
-  int n = type >> 4;
+int exi_output_value (Output *o, void *value) {//高
+  int type = o->se->xs_type;    //高
+  /*高四位表达的是 “字节个数” */
+  int n = type >> 4; 
   if (o->end - o->ptr < 10) return 0;
   switch (type & 0xf) {
   case XS_STRING: if (n) return exi_output_string (o, o->se, value);
