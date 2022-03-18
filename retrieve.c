@@ -297,7 +297,7 @@ void poll_resource (Stub *s) {
     time_t end = ev->interval.start + ev->interval.duration;
     if (s->poll_rate >= (end - now)) return;
   }
-  if (s->poll_next <= now) {//如果下一个事件已经到期了，就加入到需要立即执行的队列中？
+  if (s->poll_next <= now) {
     s->poll_next = next; insert_event (s, RESOURCE_POLL, next);
   }
 }

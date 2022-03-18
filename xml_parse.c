@@ -74,12 +74,10 @@ int parse_value (Parser *p, void *value) {
   int type = p->se->xs_type; 
   char *data = (char *)p->ptr;
   int n = type >> 4;
-  //低四位表示的是实际的类型，而高四位表示“字节数”
   switch (type & 0xf) {
   case XS_STRING: if (n) {
       if (strlen (data) > n-1) return 0;
       strcpy (value, data);
-    //如果n是0，则表示的是一个 char*
     } else *(char **)(value) = strdup (data); return 1;
   case XS_BOOLEAN: if (streq (data, "true") || streq (data, "1"))
       *(uint32_t *)value |= 1 << p->flag;

@@ -26,9 +26,9 @@ int event_poll (void **any, int timeout) {
     }
   retry:
     n = epoll_wait (poll_fd, events, MAX_EVENTS, timeout); i = 0;
-    if (n < 0) goto retry; // perror ("event_poll");//
-    if (n == 0) return POLL_TIMEOUT;//
-  }//中文
+    if (n < 0) goto retry; // perror ("event_poll");
+    if (n == 0) return POLL_TIMEOUT;
+  }
   event = events[i].events; *any = pe = events[i].data.ptr; i++;
   // printf ("event_poll %x %p %d\n", event, pe, pe->type);
   switch (pe->type) {

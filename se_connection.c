@@ -287,7 +287,7 @@ void *get_conn (Address *addr) {
 void *se_connect (Address *addr, int secure) {
   SeConnection *c = get_conn (addr);
   address_copy (&c->host, addr); 
-  if (net_status (c) == Closed) 
+  if (net_status (c) == Closed)
     conn_connect (c, addr, secure);
   if (conn_session (c)) http_flush (c); return c;
 }
@@ -317,11 +317,10 @@ void *se_send (void *conn, void *data, int type,
     print_se_object (data, type); printf ("\n");
   } return conn;
 }
-           
-//可能是对 ImmediateControls 的回应消息
+
 void se_response (void *resp, SE_Event_t *ev, char *lfdi, int status) {
   SE_Response_t *r = resp;
-  r->_flags = SE_createdDateTime_exists | SE_status_exists; //这部分代码应该是在IEEE2030.5文档中。
+  r->_flags = SE_createdDateTime_exists | SE_status_exists;
   r->href = NULL; r->createdDateTime = time (NULL);
   memcpy (r->endDeviceLFDI, lfdi, 20);
   r->status = status;

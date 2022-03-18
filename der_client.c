@@ -63,7 +63,6 @@ void print_event_schedule (DerDevice *d) {
   print_blocks (s->active); printf ("\n");
 }
 
-//
 int der_poll (void **any, int timeout) {
   Schedule *s; int event;
   while (event = next_event (any)) {

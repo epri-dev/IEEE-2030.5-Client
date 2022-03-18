@@ -147,7 +147,7 @@ int txt_valid (char *data, int length) {
 
 // extract key=value pair from TXT record
 char *txt_pair (char *key, char **value, char *data) {
-  int n = *data++, m; char *next = data+n; *value = "";     /*"n = *data++"这个动作应该是根据TXT这个专门的格式而来的。 */
+  int n = *data++, m; char *next = data+n; *value = "";
   if (n) { char *eq = strchr (data, '=');
     if (eq && (m = eq - data) < n) {
       n -= m+1; *value = key+m+1;
@@ -158,15 +158,10 @@ char *txt_pair (char *key, char **value, char *data) {
   } return NULL;
 }
 
-// return the value associated with a TXT key=value pair
-
-/*
-"key=value"放在data中，而"key"已经指出需要搜索的key。
-*/
-
+// return value associated with a TXT key=value pair
 char *txt_value (char *buffer, char *data, char *key) {
   if (data) { char *value;
-    while (data = txt_pair (buffer, &value, data))  //key将放到buffer中然后被返回。
+    while (data = txt_pair (buffer, &value, data))
       if (streq (buffer, key)) return value;
   } return NULL;
 }

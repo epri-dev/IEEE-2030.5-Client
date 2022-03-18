@@ -171,7 +171,7 @@ void *list_remove (void *list, void *link) {
     } prev = l;
   } return list;
 }
-//具体是从小到大还是从大到小排列，还没搞清楚。
+
 void *_insert_sorted (void *list, void *item, List **prev,
 		      int (*compare) (void *a, void *b)) {
   List *l = list, *n = item;

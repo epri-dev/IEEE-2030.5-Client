@@ -47,11 +47,10 @@ int write_uri (char *buffer, Uri *uri);
 #ifndef HEADER_ONLY
 
 char *pchar (char **p, char *data) {
-  int c = *data++, x, y;    //++的优先级高于*，所以先增值data，再取值。
+  int c = *data++, x, y;
   if (alpha (c) || in_range (c, '&', ';') || c == '='
       || c == '!' || c == '$' || c == '@' || c == '_' || c == '~') {
-    *(*p)++ = c; return data;   //*(*p)++解释：p是指向一个“char*指针”的指针，*p的结果是得到“char *p”指针原始值。(*p)++即将指针往后移动一字节，然后再取值。
-    //上面这段话的意思是：如果*data的后一个字节是一个合法（符合上述过滤器）的，则把后面这个字节赋给*p所指向的单元。返回的是经过了修改的*data；
+    *(*p)++ = c; return data;
   } else if (c == '%') {
     ok (hex4 (&x, data++) && hex4 (&y, data++));
     *(*p)++ = (x << 4) | y;
@@ -92,11 +91,6 @@ void terminate_host (Uri *uri) {
 }
 
 // parse URI-reference (RFC 3986)
-//函数功能：将*data中存储的数据解析成Uri数据结构。
-/*
-state参数表示从哪个元素开始解析。默认都是从0开始。
-
-*/
 char *parse_uri (Uri *uri, Address *host, int state, char *data) {
   char *p; int c; uri->name = uri->path = uri->query = NULL; uri->host = NULL;
   while (1) { c = *data;

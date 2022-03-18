@@ -12,9 +12,6 @@ enum XsType {XS_NULL, XS_STRING, XS_BOOLEAN, XS_HEX_BINARY, XS_ANY_URI,
 	     XS_LONG, XS_INT, XS_SHORT, XS_BYTE, XS_ULONG, 
 	     XS_UINT, XS_USHORT, XS_UBYTE};
 
-//下面宏定义的意思：l是表达“字节数”信息，b表达“base type”的意思。将l往前挪动四位，用来“存放”长度信息。
-// xs_type(XS_STRING,32)表示的意思是，将XS_STRING值存储到第四位，将32这个表达字节数的信息，放到高四位上去。
-//第四位已经能够完全容纳上面的enum XsType的全部枚举值。
 #define xs_type(b, l) (((l)<<4)|(b))
 
 typedef struct {
