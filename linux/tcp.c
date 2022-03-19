@@ -30,6 +30,8 @@ Acceptor *net_listen (Address *address) {
 #define event_pending(c) (errno == EAGAIN || errno == EWOULDBLOCK \
 			  || errno == EINPROGRESS)
 
+
+/*接收了一个TCP连接请求*/
 int accepted (TcpPort *p, Acceptor *a) { Address host;
   host.length = sizeof (Address);
   p->pe.socket = accept (a->pe.socket, (struct sockaddr *)&host,
@@ -64,7 +66,8 @@ int net_status (void *port) {
   TcpPort *p = port; return p->pe.status;
 }
 
-Queue _tcp_wait = {0};
+/*一个用来等待TCP的queue*/
+Queue _tcp_wait = {0};  
 int _tcp_timeout = 10;
 
 void net_timeout (int seconds) {
@@ -101,7 +104,7 @@ void clear_timeout (void *port) {
     } else {
       queue_remove (&_tcp_wait);
       if (p = queue_peek (&_tcp_wait))
-	set_timer_ct (_tcp_timer, &p->timeout);
+	    set_timer_ct (_tcp_timer, &p->timeout);
       else set_timer (_tcp_timer, 0);
     }
   }

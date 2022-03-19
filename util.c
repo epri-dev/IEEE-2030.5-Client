@@ -50,9 +50,11 @@ char *to_lower (char *s) { char *t = s;
   while (*t) *t = tolower (*t), t++; return s;
 }
 
+//将一个表示10进制数值的字符，转换成一个数值。
+//如果做了哪怕一次转换，最后返回的是data指针，同时执行了*x=y这个操作。否则返回NULL。
 char *number (int *x, char *data) {
   int y = 0, n = 0;
-  while (digit (*data)) 
+  while (digit (*data))     //连续执行，直到遇到一个不是表示10进制的字符。
     y = y * 10 + (*data++ - '0'), n++;
   return n > 0? *x = y, data : NULL;
 }

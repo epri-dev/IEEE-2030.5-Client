@@ -55,6 +55,8 @@ void print_dns_name (char *name);
 #include <stdio.h>
 #include <string.h>
 
+
+/*主机名字和地址信息*/
 typedef struct _Host {
   struct _Host *next;
   char *name;
@@ -205,6 +207,7 @@ void print_host (Address *host) {
   write_address (buffer, host); printf ("%s", buffer);
 }
 
+/*打印获取到的服务*/
 void print_service (Service *s) {
   Host *h = s->host;
   printf ("service found:\n");
@@ -340,8 +343,8 @@ Service *dnssd_receive (UdpPort *port) {
 
 // return next completed service not yet seen
 Service *service_next (Service *s) {
-  while (s) { // process discovered services
-    if (s->complete && !s->seen) {
+  while (s) { // process discovered services    
+    if (s->complete && !s->seen) {  //如果一个服务已经完成，但是还有没有被seen的服务器，则返回。
       s->seen = 1; return s;
     } s = s->next;
   } return NULL;

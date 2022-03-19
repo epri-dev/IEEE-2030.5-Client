@@ -3,25 +3,32 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/*将当前字符data所代表的的16进制数值转换成10进制数值，并且返回下一个字符所在地址。
+*/
 char *hex4 (int *x, char *data) { int c = *data;
   if (in_range (c, '0', '9')) *x = c - '0';
   else if (in_range (c, 'a', 'f')) *x = c - 'a' + 10;
   else if (in_range (c, 'A', 'F')) *x = c - 'A' + 10;
   else return NULL;
+  //表示下一个字符的位置，主要用来提供给下一次调用的时候判断，字符串是否已经结束了。
   return data + 1;
 }
 
+/*将一个用来表达16bit宽度的16进制数字（含有4个字符的）的一个字符串，转换成为10进制数值。*/
 char *hex16 (char *h, char *data) {
   int n = 0, x = 0, y;
   while (n < 4) {
+    //将10进制值提取出来，到x中保存。
     if (hex4 (&y, data)) x = (x << 4) + y;
-    else if (in_range (n, 1, 4)) goto out;
-    else return NULL;
+    else if (in_range (n, 1, 4)) goto out;  
+    else return NULL;   //如果不足4个字符，则表示错误，返回一个NULL
     n++; data++;
   }
  out:
-  h[0] = x >> 8; h[1] = x;
-  return data;
+    //为什么要高低位取反？？
+  h[0] = x >> 8;h[1] = x;
+    //返回指向下一个字符的位置
+  return data;  
 }
 
 int ipv6_input (char c) {
@@ -66,16 +73,19 @@ char *parse_ipv6 (char *addr, char *data) {
   } return NULL;
 }
 
+
 char *parse_ipv4 (uint32_t *addr, char *data) {
   int x = 0, y, n = 0;
   do {
     ok ((data = number (&y, data)) && y <= 255);
     x = (x << 8) | y;
+    //如果上述的转化动作做了4次，就表示做好了，返回结果。
     if (++n == 4) { *addr = x; return data; }
-  } while (*data++ == '.');
+  } while (*data++ == '.'); //如果遇到的下一个字符是 "."，那么就继续往后执行，否则退出。 
   return NULL;
 }
 
+//自动区分是ipv6还是ipv4
 char *parse_address (Address *addr, int port, char *data) {
   if (*data == '[') { char buffer[16];
     ok (data = parse_ipv6 (buffer, data));
@@ -110,12 +120,14 @@ int write_ipv6 (char *buffer, unsigned char *host) {
   return 1 + n + sprintf (buffer+n, "]");
 }
 
+//
 int write_address (char *buffer, Address *addr) {
   switch (address_type (addr)) {
   case ADDR_IPv4: return write_ipv4 (buffer, address_ipv4 (addr));
   case ADDR_IPv6: return write_ipv6 (buffer, address_ipv6 (addr));
   } return 0; 
 }
+
 
 int write_address_port (char *buffer, Address *addr) {
   int n = write_address (buffer, addr);

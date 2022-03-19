@@ -17,6 +17,13 @@ char *net_receive (UdpPort *p, int *length) {
   return *length < 0? NULL : p->buffer;
 }
 
+/*
+定义函数：int sendto(int s, const void * msg, int len, unsigned int flags, const struct sockaddr * to, int tolen);
+函数说明：sendto() 用来将数据由指定的socket 传给对方主机.
+参数s 为已建好连线的socket, 如果利用UDP协议则不需经过连线操作.
+参数msg 指向欲连线的数据内容, 参数flags 一般设0, 详细描述请参考send(). 
+参数to 用来指定欲传送的网络地址, 结构sockaddr 请参考bind(). 参数tolen 为sockaddr 的结果长度.
+*/
 int net_send (UdpPort *p, char *buffer, int length, Address *addr) {
   // printf ("udp_write %d\n", length); fflush (stdout);
   return sendto (p->pe.socket, buffer, length, 0,

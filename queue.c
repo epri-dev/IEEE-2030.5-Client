@@ -56,8 +56,8 @@ void queue_free (Queue *queue);
 #ifndef HEADER_ONLY
 
 void queue_add (Queue *q, void *item) {
-  if (q->last) q->last = q->last->next = item;
-  else q->first = q->last = item;
+  if (q->last) q->last = q->last->next = item;  //将item加入到最后位置
+  else q->first = q->last = item;   //针对这个queue中加入首个元素的情况
 }
 
 void _queue_insert (Queue *q, void *item, void *prev,
@@ -78,8 +78,8 @@ void *queue_remove (Queue *q) {
   void *item = q->first; 
   if (item) {
     if (q->first == q->last) queue_clear (q);
-    else q->first = q->first->next;
-  } return item;
+    else q->first = q->first->next; //将first往后移动一个位置
+  } return item;//并且返回首个元素
 }
 
 void queue_free (Queue *q) {

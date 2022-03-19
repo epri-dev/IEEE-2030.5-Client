@@ -23,6 +23,18 @@
 #define RESOURCE_REMOVE (EVENT_NEW+8)
 #define RETRIEVE_FAIL (EVENT_NEW+9)
 
+/*
+time_t类型在time.h中定义：
+#ifndef __TIME_T
+#define __TIME_T
+typedef  long  time_t;
+#endif
+可见，time_t实际是一个长整型。
+其值表示为从UTC(coordinated universal time)时间1970年1月1日00时00分00秒(也称为Linux系统的Epoch时间)到当前时刻的秒数。
+由于time_t类型长度的限制，它所表示的时间不能晚于2038年1月19日03时14分07秒(UTC)。
+为了能够表示更久远的时间，可用64位或更长的整形数来保存日历时间，这里不作详述。
+*/
+
 /** A Resource Stub. */
 typedef struct _Stub {
   Resource base; ///< is a container for the resource

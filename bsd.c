@@ -38,6 +38,7 @@ void net_select (int index) {
 
 Address *new_address () { return calloc (1, sizeof(Address)); }
 
+//将一个原始的32bit的 ipv4 IP地址和端口，规格化为程序内部统一使用的结构体格式。
 Address *ipv4_address (Address *addr, uint32_t ip, int port) {
   struct sockaddr_in *in = &addr->in;
   in->sin_addr.s_addr = htonl (ip);
@@ -52,6 +53,7 @@ int ipv6_scope (const char *addr) {
   return 0;
 }
 
+//将一个原始的ipv6地址和端口，规格化为程序内部统一使用的结构体格式。
 Address *ipv6_address (Address *addr, const char *ip, int port) {
   struct sockaddr_in6 *in = &addr->in6;
   memcpy (in->sin6_addr.s6_addr, ip, 16);
@@ -61,6 +63,18 @@ Address *ipv6_address (Address *addr, const char *ip, int port) {
   return addr;
 }
 
+
+/*
+1、一般来说，一个端口释放后会等待两分钟之后才能再被使用，SO_REUSEADDR是让端口释放后立即就可以被再次使用。
+
+    SO_REUSEADDR用于对TCP套接字处于TIME_WAIT状态下的socket，才可以重复绑定使用。server程序总是应该在调用bind()之前设置SO_REUSEADDR套接字选项。TCP，先调用close()的一方会进入TIME_WAIT状态
+
+2、SO_REUSEADDR和SO_REUSEPORT
+
+
+详见 ：https://www.cnblogs.com/mydomain/archive/2011/08/23/2150567.html
+
+*/
 void reuse_address (int s) {
   int reuse = 1;
   if (setsockopt (s, SOL_SOCKET, SO_REUSEADDR,
@@ -68,6 +82,15 @@ void reuse_address (int s) {
     print_error ("reuse_address");
 }
 
+/*
+SO_REUSEPORT使用场景：linux kernel 3.9 引入了最新的SO_REUSEPORT选项，
+使得多进程或者多线程创建多个绑定同一个ip:port的监听socket，
+提高服务器的接收链接的并发能力,程序的扩展性更好；此时需要设置SO_REUSEPORT（注意所有进程都要设置才生效）
+
+详见：
+https://zhuanlan.zhihu.com/p/35367402
+
+*/
 void reuse_port (int s) {
 #ifdef SO_REUSEPORT
   int reuse = 1;
@@ -77,6 +100,7 @@ void reuse_port (int s) {
 #endif
 }
 
+//创建一个socket
 int bsd_socket (int family) {
   int s = socket (family, SOCK_STREAM, IPPROTO_TCP);
   if (s < 0) print_error ("bsd_socket");
@@ -84,13 +108,29 @@ int bsd_socket (int family) {
   return s;
 }
 
+//创建socket并且监听
 int bsd_listen (Address *address) {
   int s = bsd_socket (address->family);
   if (bind (s, (struct sockaddr *)address, address->length) < 0)
     print_error ("bsd_listen");
   listen (s, 100);
+/*
+int listen(int sockfd, int backlog);
+
+listen()函数将sockfd标记为被动打开的套接字，并作为accept的参数用来接收到达的连接请求。
+
+backlog参数用来描述sockfd的等待连接队列能够达到的最大值。
+当一个请求到达并且该队列为满时，客户端可能会收到一个表示连接失败的错误，
+或者如果底层协议支持重传(比如tcp协议),本次请求会被丢弃不作处理，
+在下次重试时期望能连接成功(下次重传的时候队列可能已经腾出空间)。 
+
+https://blog.csdn.net/ywy2090/article/details/52613379
+
+*/
+
   return s;
 }
+
 
 int bsd_connected (int socket) {
   int error; socklen_t n = sizeof (int);

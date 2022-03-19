@@ -37,6 +37,8 @@ int client_poll (void **any, int timeout) {
   if (s = service_next (s)) {
     *any = s; return SERVICE_FOUND;
   }
+  
+  /*我的注解：看起来作为client，仅仅关注下面这三种Event类型*/
   switch (event = event_poll (any, timeout)) {
   case TCP_CONNECT: return TCP_PORT;
   case UDP_PORT:
