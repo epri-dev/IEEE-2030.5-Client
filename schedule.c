@@ -23,7 +23,7 @@ enum EventStatus {Scheduled, Active, Canceled, CanceledRandom,
     EndDevice.
 
     The start and end times are effective times with the event
-    randomization already applied, primacy is derived the context that the event
+    randomization already applied, primacy is derived(adj. 导出的；衍生的，派生的) the context that the event
     occured.
 */
 typedef struct _EventBlock {
@@ -39,7 +39,7 @@ typedef struct _EventBlock {
 } EventBlock;
 
 /** @brief A Schedule organizes the events of a particular function set for an
-    EndDevice in terms of the rules in section 12.1.3 Event Rules and Guidlines.
+    EndDevice in terms of (依据；按照；在……方面；以……措词) the rules in section 12.1.3 Event Rules and Guidlines.
     
     Events are assigned to an EventBlock which can belong to one of three
     queues, `scheduled`, `active`, and `superseded`. EventBlocks that

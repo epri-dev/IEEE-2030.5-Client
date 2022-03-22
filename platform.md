@@ -60,7 +60,8 @@ application of the higher level event when a service is newly discovered.
 
 The application programmer is free to define new events, the only caution is
 make sure the event code is unique (a unique offset from `EVENT_NEW`) so that
-it does not clash with an existing platform event or client library event.
+it does not clash（n. 冲突，交战；争论，争执；交锋，） with an existing 
+platform event or client library event.
 
 Porting
 -------
@@ -95,7 +96,7 @@ cases where the application does not read all the data, these objects are
 placed in queue by `event_poll` so that a new `TCP_PORT` event is returned by
 `event_poll` even though no new events may be returned by `epoll`.
 
-Because of the peculiarities of system interfaces the techniques used for the
+Because of the peculiarities（n. 独特性；怪癖；奇特的东西（peculiarity 的复数）） of system interfaces the techniques used for the
 Linux port may or may not apply in porting to other systems. For example, in
 Windows the IOCP (IO Completion Port) event model means that events are
 reported by the OS only when operations complete such as reading data from TCP

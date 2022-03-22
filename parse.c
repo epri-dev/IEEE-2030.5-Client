@@ -2,14 +2,14 @@
 // author: Mark Slicker <mark.slicker@gmail.com>
 
 /** @defgroup parse Parse
-    
+    parser将一个XML或者EXI格式的文档，转换成一个C对象（一个类型化的数据结构）。
     The parser converts an XML or EXI document into a C object (a typed data
     structure). The parser is schema based, which means that the document
     structure (the order and types of elements and values) is predefined by an
     XML schema. Successful parsing means that the document conforms to the
     schema, failure means that the document did not conform or that the
     document is incomplete. 
-
+    parser是状态化的，能够随时停止和开始解析，所以意味着可以一个大型的文档能够以分段的方式来解析。
     The parser has a state and can stop and resume parsing at any point in the
     document, this means that a large document can be parsed in segments.
     This feature can be used to reduce the space needed to store documents and
@@ -104,17 +104,17 @@ typedef struct {
 } StackItem;
 
 typedef struct {
-  int n;
+  int n;    //当前的占用总数
   StackItem items[MAX_STACK];
 } ElementStack;
 
 #define stack_top(s) (&(s)->items[(s)->n-1])
 
-struct _XmlParser;
+struct _XmlParser;  //这样的声明方法是什么意思。
 struct _ParserDriver;
 
 typedef struct _Parser {
-  void *obj; int type; // completed object and type
+  void *obj; int type; // completed object and type 完成解析后的数据对象和类型
   struct _XmlParser *xml;
   ElementStack stack;
   const Schema *schema;
@@ -141,8 +141,8 @@ typedef struct _ParserDriver {
   void (*rebuffer) (Parser *, char *, int length);
 } ParserDriver;
 
-StackItem *push_element (ElementStack *stack, const SchemaElement *se,
-			 void *base) { StackItem *t;
+StackItem *push_element (ElementStack *stack, const SchemaElement *se,void *base) { 
+  StackItem *t;
   if (stack->n == MAX_STACK) return NULL;
   stack->n++; t = stack_top (stack);
   memset (t, 0, sizeof (StackItem));
@@ -176,7 +176,13 @@ void parser_rebuffer (Parser *p, void *data, int length) {
 
 #define set_count(flags, count, bit) \
   *(uint32_t *)(flags) |= (count) << (bit)
-
+/*
+void *calloc(size_t n, size_t size);
+函数返回值为void型指针。
+如果执行成功，函数从堆上获得 size X n 的字节空间，并返回该空间的首地址。
+如果执行失败，函数返回NULL。该函数与malloc()函数的一个显著不同时是，calloc()函数得到的内存空间是经过初始化的，其内容全为0。
+calloc()函数适合为数组申请空间，可以将size设置为数组元素的空间长度，将n设置为数组的容量。
+*/
 void *add_element (StackItem *t) {
   List *l = list_insert (NULL, calloc (1, t->size)); 
   queue_add (&t->queue, l); return l;

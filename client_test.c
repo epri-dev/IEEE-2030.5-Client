@@ -39,8 +39,10 @@ void usage () {
 #define DELETE_DEVICE (1<<15)
 #define CLIENT_FOUND (1<<16)
 #define INVERTER_CLIENT (1<<17)
+//test记录了需要测试的内容
 
 int server = 0, test = 0, secure = 0, interval = 5*60, primary = 0, pin = 0;
+
 Stub *edevs; char *path = NULL; uint64_t delete_sfdi;
 
 int subtype_query (char *arg, char *name) {
@@ -84,6 +86,10 @@ int cert_name (char *arg) {
   } return 1;
 }
 
+/*导入本次测试所需要的各项参数
+client_test interface [device_cert ca_certs..]
+                       <subtype[:1][/path] | URI> [commands]
+*/
 void options (int argc, char **argv) {
   int i = 2, index; char *name = argv[1];
   if (argc < 3) usage ();

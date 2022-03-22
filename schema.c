@@ -25,8 +25,8 @@ typedef struct {
   };
   unsigned char min, max, n;
   unsigned int bit : 5;
-  unsigned int attribute : 1;
-  unsigned int simple : 1;
+  unsigned int attribute : 1;//表示是否含有属性成员
+  unsigned int simple : 1;  //是否是简单类型，比如整形类型或者指针类型
   unsigned int unbounded : 1;
 } SchemaElement;
 

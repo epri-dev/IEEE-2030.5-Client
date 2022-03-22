@@ -5,6 +5,25 @@
 #include <ifaddrs.h>
 
 int interface_index (char *name) {
+/*
+socket（）函数原型：
+
+　　int socket(int domain, int type, int protocol);
+
+　　参数说明：　
+　　
+    domain：协议域，又称协议族（family）。
+    常用的协议族有AF_INET、 AF_INET6、AF_LOCAL（或称AF_UNIX，Unix域　　Socket）、AF_ROUTE等。
+    协议族决定了socket的地址类型，在通信 中必须采用对应的地址，如AF_INET决定了要用ipv4地（32位的）与端口号（16位的）的组合、AF_UNIX决定了要用一个绝对路径名作为地 址。
+　　
+    type：指定Socket类型。常用的sinocket类型有SOCK_STREAM、 SOCK_DGRAM、SOCK_RAW、SOCK_PACKET、SOCK_SEQPACKET等。
+    流式Socket（SOCK_STREAM）是一种 面向连接的Socket，针对于面向连接的TCP服务应用。数据报式Socket（SOCK_DGRAM）是一种无连接的Socket，对应于无连接的UDP服务应用。　　
+　　
+    protocol：指定协议。
+    常用协议有IPPROTO_TCP、IPPROTO_UDP、IPPROTO_SCTP、IPPROTO_TIPC等，分别对应TCP传输协议、UDP传输协议、STCP传输协议、TIPC传输协议。
+　　注意：1.type和protocol不可以随意组合，如SOCK_STREAM不可以跟IPPROTO_UDP组合。当第三个参数为0时，会自动选择第二个参数类型对应的默认协议。
+
+*/
   int s = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP), ret;
     /*
     2、用法说明

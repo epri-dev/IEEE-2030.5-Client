@@ -9,7 +9,7 @@
 
 #define SERVICE_FOUND (EVENT_NEW+1)
 
-/** @brief Perform polling on the behalf of a client.
+/** @brief Perform polling on the behalf of a client(在……一方（on behalf of）).
 
     Returns SERVICE_FOUND with a pointer to a Service as the event object when
     a the service discovery returns a discovers a new service.

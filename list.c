@@ -109,6 +109,7 @@ void free_list (void *list) { List *l = list, *t;
   while (l) t = l, l = l->next, free (t);
 }
 
+//新建一个新的list成员，并且插入到成员l的前面。
 List *list_insert (List *l, void *data) {
   List *n = malloc (sizeof (List));
   n->next = l; n->data = data;

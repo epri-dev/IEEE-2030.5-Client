@@ -53,11 +53,11 @@ The `subtype` can be one of:
 -   `sdev` - to discover Self Device servers
 -   `smartenergy` - to discover IEEE 2030.5 servers of any type
 
-When the number `1` is affixed to the `subtype`, the `client_test` sets
-the `QU` bit to `1` in the service discovery request indicating that a
+When the number `1` is affixed（v. 粘上，附上；（使）附于；可固定（affix 的过去式及过去分词）） to the `subtype`, 
+the `client_test` sets the `QU` bit to `1` in the service discovery request indicating that a
 unicast response is desired.
 
-Since the `subtype` argument can delimit the list of certificates it
+Since the `subtype` argument can delimit（vt. 划界；定界限） the list of certificates it
 follows that there can not be a certificate or certificate directory
 with the same name as the `subtype` argument.
 

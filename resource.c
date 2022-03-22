@@ -62,6 +62,7 @@ void *new_resource (int size, char *name, void *data, int type);
 */
 void free_resource (void *res);
 
+//这个怎么是一个空函数？
 /** @brief Initialize the Resource database. */
 void resource_init ();
 

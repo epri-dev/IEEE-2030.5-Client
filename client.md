@@ -4,7 +4,7 @@ Client API
 The IEEE 2030.5 client API provides a means for developers to integrate IEEE
 2030.5 functionality into their applications. At the base is a portable
 platform layer that includes support for files, TCP connections, UDP ports,
-timers, and events. The event polling mechanism provides a portable and unified
+timers, and events. The event polling mechanism provides a portable and unified（adj. 一致的，统一的；联合的，一体的）
 way of processing operating system events that is both responsive
 (non-blocking) and balanced (includes round robin scheduling).
 
@@ -82,9 +82,9 @@ SFDI).
 
 Schema
 ------
-
-IEEE 2030.5 resources are defined by an XML schema (sep.xsd). This schema is
-processed to extract C type definitions (se_types.h) and a table (se_schema.c)
+由sep.xsd文件来构建出c文件。
+IEEE 2030.5 resources are defined by an XML schema (sep.xsd文件，在这个目录下). This schema is
+processed to extract（n. 选段，引文；提取物，汁） C type definitions (se_types.h) and a table (se_schema.c)
 which can be used to transform 2030.5 resources from their XML or EXI
 representation into a C object representation. The process can also be
 reversed, transforming a C object into an XML or EXI representation. The

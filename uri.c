@@ -10,7 +10,7 @@
 
 /** Parsed URI representation */
 typedef struct {
-  char *scheme; ///< is the URI scheme
+  char *scheme; ///< is the URI scheme:HTTP or HTTPS
   char *name; ///< is the host name (if any)
   char *end; ///< is a pointer to the end of the host name
   char *path; ///< is the URI path
@@ -91,6 +91,7 @@ void terminate_host (Uri *uri) {
 }
 
 // parse URI-reference (RFC 3986)
+/*将URL中的各个要素都解析出来*/
 char *parse_uri (Uri *uri, Address *host, int state, char *data) {
   char *p; int c; uri->name = uri->path = uri->query = NULL; uri->host = NULL;
   while (1) { c = *data;
@@ -100,11 +101,12 @@ char *parse_uri (Uri *uri, Address *host, int state, char *data) {
       else if (alpha (c)) { p = data; state++; }
       else return NULL; break;
     case 1: // scheme
-      if (c == ':') { *data = '\0'; uri->scheme = p; state++;
-	if (streq (uri->scheme, "http")) uri->port = 80;
-	else if (streq (uri->scheme, "https")) uri->port = 443;
+      if (c == ':') { 
+        *data = '\0'; uri->scheme = p; state++;
+	    if (streq (uri->scheme, "http")) uri->port = 80;
+	    else if (streq (uri->scheme, "https")) uri->port = 443;
       } else {
-	ok (alpha (c) || digit (c) || c == '+' || c == '-' || c == '.');
+	    ok (alpha (c) || digit (c) || c == '+' || c == '-' || c == '.');
       } break;
     case 2: // hier-part
       if (c == '/') { state++; break; } state = 5; continue;

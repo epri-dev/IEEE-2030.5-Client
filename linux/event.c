@@ -28,7 +28,7 @@ struct epoll_event
    EPOLLPRI：表示对应的文件描述符有紧急的数可读；
    EPOLLERR：表示对应的文件描述符发生错误；
    EPOLLHUP：表示对应的文件描述符被挂断；
-   EPOLLET：    ET的epoll工作模式；
+   EPOLLET：  ET的epoll工作模式；
 
  所涉及到的函数有：
 
@@ -88,10 +88,13 @@ int main()
 　　struct sockaddr_in clientaddr, serveraddr;
 　　listenfd = socket(AF_INET, SOCK_STREAM, 0);//生成socket文件描述符
 　　setnonblocking(listenfd);//把socket设置为非阻塞方式
+
 　　epfd=epoll_create(256);//生成用于处理accept的epoll专用的文件描述符
 　　ev.data.fd=listenfd;//设置与要处理的事件相关的文件描述符
 　　ev.events=EPOLLIN|EPOLLET;//设置要处理的事件类型
+
 　　epoll_ctl(epfd,EPOLL_CTL_ADD,listenfd,&ev);//注册epoll事件
+
     //设置服务器端地址信息
 　　bzero(&serveraddr, sizeof(serveraddr));
 　　serveraddr.sin_family = AF_INET;

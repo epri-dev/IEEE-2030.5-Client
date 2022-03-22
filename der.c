@@ -65,6 +65,7 @@ void *device_key (void *data) {
 // find_device, insert_device, remove_device, device_init
 global_hash (device, int64, 64)
 
+//通过对sfdi作哈希运算快速的得到设备数据指针
 DerDevice *get_device (uint64_t sfdi) {
   DerDevice *d = find_device (&sfdi);
   if (!d) {
