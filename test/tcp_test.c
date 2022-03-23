@@ -46,7 +46,7 @@ int main () {
   a = net_listen (&addr1);
   client = new_tcp_port ();
   server = new_tcp_port ();
-  net_timeout (2);
+  net_timeout (2);      //设定当前网络超时时间
   while (1) {
     switch (state) {
     case 0: cond = 0;

@@ -146,7 +146,7 @@ void net_connect (void *port, Address *server) {
 	       server->length) == 0) {
     p->pe.status = Connected;
     queue_add (&_active, p);
-  } else if (event_pending (p)) {
+  } else if (event_pending (p)) {       //如果不能立即连接上，那么就等待？
     set_timeout (p);
     p->pe.status = InProgress;
   }

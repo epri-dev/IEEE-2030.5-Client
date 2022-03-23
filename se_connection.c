@@ -297,9 +297,11 @@ void *se_connect_uri (Uri *uri) {
   return se_connect (uri->host, secure);
 }
 
+/*这个函数应用于服务端，在本Demo代码中并没有用到。*/
 void *se_accept (Acceptor *a, int secure) {
   return conn_accept (new_conn (0), a, secure);
 }
+
 
 void *se_send (void *conn, void *data, int type,
 	       char *href, int method) {

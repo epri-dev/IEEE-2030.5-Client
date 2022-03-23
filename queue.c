@@ -74,6 +74,8 @@ void queue_insert (Queue *q, void *item,
   _queue_insert (q, item, &prev, compare);
 }
 
+
+/*将queue中的第一个元素移出*/
 void *queue_remove (Queue *q) {
   void *item = q->first; 
   if (item) {

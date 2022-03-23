@@ -75,10 +75,10 @@ enum OutputState {OUTPUT_START, OUTPUT_ELEMENT, OUTPUT_ATTRIBUTE,
 struct _OutputDriver;
 
 typedef struct _Output {
-  const Schema *schema; const SchemaElement *se;
+  const Schema *schema; const SchemaElement *se;        /*se从属于schema，是里面的一个元素*/
   ElementStack stack;
-  char *buffer, *ptr, *end;
-  int state, indent; void *base;
+  char *buffer, *ptr, *end;     /*buffer是用来保存输出内容的空间，ptr表示缓冲区buffer当前的位置，end是缓冲区结尾地址*/
+  int state, indent; void *base;/*indent用于表示换行之后，需要在一行前部添加的空格的个数。*/
   /* For the EXI driver keep track of the number of possible event codes and
      the current event code for a given context. The number of possible event
      codes determines the number of bits needed to record an event. With
@@ -88,13 +88,14 @@ typedef struct _Output {
   int code; // the current EXI event code
   int bit, flag;
   StringTable *global, *local;
-  const struct _OutputDriver *driver;
-  unsigned int open : 1;
+  const struct _OutputDriver *driver;   /*用于打印的驱动函数表*/
+  unsigned int open : 1;        /*表示输出的内容是否已经结束，即字符">"是否已经添加*/
   unsigned int first : 1;
 } Output;
 
 Output output_global;
 
+/*前面的EE和AT表示什么意思？*/
 enum OutputEvent {EE_EVENT, AT_EVENT, SE_SIMPLE, SE_COMPLEX};
 
 typedef struct _OutputDriver {
@@ -104,8 +105,10 @@ typedef struct _OutputDriver {
   void (*output_done) (Output *);
 } OutputDriver;
 
+
+/*向Output对象的缓冲区输出打印内容*/
 int output_string (Output *o, char *format, ...) {
-  va_list args; int n, size = o->end-o->ptr;
+  va_list args; int n, size = o->end - o->ptr;
   va_start (args, format);
   n = vsnprintf (o->ptr, size, format, args);
   va_end (args);

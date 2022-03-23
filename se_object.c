@@ -205,6 +205,9 @@ void *insert_se_object (List *list, List *n, ListInfo *info) {
   n->next = l; return list;
 }
 
+
+/*初始化se输出对象。
+指定schema，驱动函数等。*/
 void se_output_init (Output *o, char *buffer, int size, int xml) {
   if (xml) output_init (o, &se_schema, buffer, size); 
   else exi_output_init (o, &se_schema, buffer, size);

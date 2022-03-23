@@ -508,7 +508,7 @@ int main (int argc, char **argv) {
       else get_path (s, secure); break;
     case TCP_ACCEPT:
       // accept_notifier (any);
-    case TCP_PORT:
+    case TCP_PORT:      //可能是连接到了服务器？
       if (conn_session (any)) {
 	http_debug (any, 1);
 	// if (http_client (any))

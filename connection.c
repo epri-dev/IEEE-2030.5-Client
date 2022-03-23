@@ -192,6 +192,8 @@ void *conn_accept (void *conn, Acceptor *a, int secure) {
   else tcp_setup (conn); return conn;
 }
 
+
+/*建立TCP连接*/
 void *conn_connect (void *conn, Address *server, int secure) {
   Connection *c = conn; net_connect (conn, server);
   if (secure) { tls_setup (conn); ssl_connect (c->tls); }

@@ -15,11 +15,13 @@ void output_init (Output *o, const Schema *schema, char *buffer, int size);
 
 #ifndef HEADER_ONLY
 
+/*向output对象的缓冲区输出一个字节*/
 int output_char (Output *o, int c) {
   if (o->ptr+1 < o->end) { *o->ptr++ = c; *o->ptr = '\0'; return 1; }
   return 0;
 }
 
+/* 向output对象的缓冲器输出一个“转义符” */
 int output_escaped (Output *o, char *s) {
   char *ptr = o->ptr; int c;
   if (!s) {
@@ -59,6 +61,8 @@ int output_hex (Output *o, uint8_t *value, int n) {
   return 1;
 }
 
+
+/*输出一个数字到output对象的缓冲区中*/
 int output_value (Output *o, void *value) {
   int type = o->se->xs_type;
   int n = type >> 4;
@@ -79,6 +83,10 @@ int output_value (Output *o, void *value) {
   } return 0;
 }
 
+/*输出一个"引用的"内容，即带了双引号的字符串，比如典型的：
+<DERControl href="/derp/2/derc/0">
+中的href内容
+*/
 int output_quoted (Output *o, void *value) {
   char *last = o->ptr;
   if (!value) {
@@ -89,6 +97,7 @@ int output_quoted (Output *o, void *value) {
   *last = '\0'; o->ptr = last; return 0;
 }
 
+/*输出一个换行，并且填充空格，即将输出的内容做换行格式化*/
 int output_break (Output *o, char *format, ...) {
   va_list args; int n, size; char *last = o->ptr;
   if (!o->first) {
@@ -104,13 +113,15 @@ int output_break (Output *o, char *format, ...) {
   o->ptr += n; return 1; 
 }
 
+/*将之前输出的内容废弃*/
 void output_flush (Output *o) {
   o->ptr = o->buffer;
 }
 
+/**/
 int output_event (Output *o, const SchemaElement *se, int event) {
   const char *name = se_name (se, o->schema);
-  if (event & 2 && o->open) {
+  if (event & 2 && o->open) {   /*如果输出尚未结束，则此时让其结束*/
     if (!output_char (o, '>')) return 0;
     o->open = 0;
   }
@@ -120,12 +131,12 @@ int output_event (Output *o, const SchemaElement *se, int event) {
       if (!output_string (o, "/>")) return 0;
       o->open = 0; o->indent -= 2;
     } else if (se->simple) {
-      return output_string (o, "</%s>", name);
+      return output_string (o, "</%s>", name);  /*典型的如</dstStartTime>*/
     } else { o->indent -= 2;
-      if (!output_break (o, "</%s>", name)) {
+      if (!output_break (o, "</%s>", name)) {   /*典型的如</dstStartTime>*/
 	o->indent += 2; return 0; }
     } break;
-  case AT_EVENT: return output_string (o, " %s=", name);
+  case AT_EVENT: return output_string (o, " %s=", name);        /*典型的如  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" href="/dcap/tm"> */
   case SE_SIMPLE: return output_break (o, "<%s>", name);
   case SE_COMPLEX: if (output_break (o, "<%s", name)) {
       if (o->first) {
@@ -141,10 +152,10 @@ int output_event (Output *o, const SchemaElement *se, int event) {
 void output_done (Output *o) { output_char (o, '\n'); }
 
 const OutputDriver xml_output = {
-  output_event,
-  output_quoted,
-  output_value,
-  output_done
+  output_event, /*output_event*/
+  output_quoted,/*output_attr_value，输出一段引用的字符串*/
+  output_value, /*output_value 成员，输出一个数值*/
+  output_done   /*output_done 成员*/
 };
 
 void output_init (Output *o, const Schema *schema, char *buffer, int size) {

@@ -33,8 +33,8 @@ typedef struct {
 typedef struct _Schema {
   const char *namespace;
   const char *schemaId;
-  const int length;
-  const SchemaElement *elements;
+  const int length;     /*下面的schema->elements的数组单元个数*/
+  const SchemaElement *elements;        /*一个数组，是SchemaElement元素的集合*/
   const char * const *names;
   const uint16_t *ids;
 } Schema;
@@ -122,8 +122,9 @@ const char *type_name (int type, const Schema *schema) {
   return schema->names[type];
 }
 
+/*参数中，se是从属于schema对象中的一个元素。在现在这个程序中，获取的是全局变量se_names[]中的有一个字符串*/
 const char *se_name (const SchemaElement *se, const Schema *schema) {
-  int index = se - schema->elements;
+  int index = se - schema->elements;/*获取se在数组schema->elementsh中的相对位置*/
   int id = index < schema->length? index
     : schema->ids[index - schema->length];
   return schema->names[id];
