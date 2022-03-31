@@ -11,15 +11,18 @@
 /** @brief Resource structure */
 typedef struct _Resource {
   struct _Resource *next; //< pointer to the next resource with the same name
-  char *name; //< name of Resource (the path component of the href)
-  void *data; //< pointer to a 2030.5 object 
-  int type; //< the schema type for the object
-  ListInfo *info; //< pointer to the ListInfo for 2030.5 List objects
+  char *name; //< name of Resource (the path component of the href) 每一个链接表示了一个资源
+  void *data; //< pointer to a 2030.5 object    表示了一个资源？？
+  int type; //< the schema type for the object  这个是什么意思？？
+  ListInfo *info; //< pointer to the ListInfo for 2030.5 List objects 一个指向了se_list_info中的某一个位置的指针。
   int64_t time; //< the time the resource was created or last updated
 } Resource;
 
 // pointer to the list field of a list type resource
 // ListInfo must be valid
+
+//Stub结构体的第一个成员恰好是Resource类型，所以很多地方在用resource_type的时候，是对Stub类型操作的，因为首地址重合所以刚好能够适用。
+
 #define list_field(r) se_list_field (((Resource *)r)->data, \
 				     ((Resource *)r)->info)
 #define resource_name(r) ((Resource *)r)->name
@@ -31,11 +34,13 @@ typedef struct _Resource {
     @returns a pointer to a Resource with a matching name, or NULL if none were
     found.
 */
+//这个函数由 global_hash 宏定义来实现
 void *find_resource (void *name);
 
 /** @brief Insert a resource into the database.
     @param res is a pointer to a Resource
 */
+//这个函数由 global_hash 宏定义来实现
 void insert_resource (void *res);
 
 /** @brief Delete a resource with the name from the database and return it.
@@ -43,6 +48,7 @@ void insert_resource (void *res);
     @returns a pointer to a Resource with a matching name, or NULL if none were
     found.
 */
+//这个函数由 global_hash 宏定义来实现
 void *delete_resource (void *name);
 
 /** @brief Create a new resource.
@@ -60,10 +66,12 @@ void *new_resource (int size, char *name, void *data, int type);
     Frees the name and IEEE 2030.5 object (if any)
     @param res is a pointer to a Resource.
 */
+//这个函数由 global_hash 宏定义来实现
 void free_resource (void *res);
 
 //这个怎么是一个空函数？
 /** @brief Initialize the Resource database. */
+//这个函数由 global_hash 宏定义来实现
 void resource_init ();
 
 /** @} */
@@ -71,20 +79,27 @@ void resource_init ();
 #include <string.h>
 
 void *resource_key (void *data) {
-  Resource *r = data; return r->name;
+  Resource *r = data;
+  return r->name;
 }
 
-// find_resource, insert_resource, delete_resource, resource_init
+// find_resource, insert_resource, delete_resource, resource_init 这个几个函数都是通过下面的这个宏定义来实现的。
+
 global_hash(resource, string, 512)
 
+//
 void *new_resource (int size, char *name, void *data, int type) {
   Resource *r = calloc (1, size);
-  r->name = strdup (name); r->data = data; r->type = type; 
+  r->name = strdup (name);
+  r->data = data;
+  r->type = type;
   r->info = find_list_info (type);
   return r;
 }
 
-void free_resource (void *res) { Resource *r = res;
+void free_resource (void *res) {
+  Resource *r = res;
   if (r->data) free_se_object (r->data, r->type);
-  free (r->name); free (r);
+  free (r->name);
+  free (r);
 }

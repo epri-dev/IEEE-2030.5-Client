@@ -32,15 +32,17 @@ Acceptor *net_listen (Address *address) {
 
 
 /*接收了一个TCP连接请求*/
-int accepted (TcpPort *p, Acceptor *a) { Address host;
+int accepted (TcpPort *p, Acceptor *a) {
+  Address host;
   host.length = sizeof (Address);
   p->pe.socket = accept (a->pe.socket, (struct sockaddr *)&host,
-		      &host.length);
+                         &host.length);
   if (p->pe.socket == -1) {
-    a->pe.end = 1; return 0;
+    a->pe.end = 1;
+    return 0;
   }
   p->pe.status = Connected;
-  non_block_enable (p->pe.socket); 
+  non_block_enable (p->pe.socket);
   event_add (p->pe.socket, p);
   return 1;
 }
@@ -49,25 +51,28 @@ void net_accept (void *port, Acceptor *a) {
   TcpPort *p = port;
   p->pe.next = NULL;
   if (accepted (p, a)) {
-    p->pe.type = TCP_ACCEPT; 
+    p->pe.type = TCP_ACCEPT;
     queue_add (&_active, p);
   } else queue_add (&a->ports, p);
 }
 
 void *accept_queued (void *any) {
-  Acceptor *a = any; TcpPort *p;
+  Acceptor *a = any;
+  TcpPort *p;
   if (p = queue_peek (&a->ports)) {
     if (accepted (p, a))
       return queue_remove (&a->ports);
-  } return NULL;
+  }
+  return NULL;
 }
 
 int net_status (void *port) {
-  TcpPort *p = port; return p->pe.status;
+  TcpPort *p = port;
+  return p->pe.status;
 }
 
 /*一个用来等待TCP的queue*/
-Queue _tcp_wait = {0};  
+Queue _tcp_wait = {0};
 int _tcp_timeout = 10;
 
 void net_timeout (int seconds) {
@@ -77,7 +82,7 @@ void net_timeout (int seconds) {
 int compare_timeout (void *a, void *b) {
   TcpPort *p1 = a, *p2 = b;
   int diff = p1->timeout.spec.tv_sec - p2->timeout.spec.tv_sec;
-  return diff? diff : p1->timeout.spec.tv_nsec - p2->timeout.spec.tv_nsec;
+  return diff ? diff : p1->timeout.spec.tv_nsec - p2->timeout.spec.tv_nsec;
 }
 
 void set_timeout (void *port) {
@@ -104,19 +109,21 @@ void clear_timeout (void *port) {
     } else {
       queue_remove (&_tcp_wait);
       if (p = queue_peek (&_tcp_wait))
-	    set_timer_ct (_tcp_timer, &p->timeout);
+        set_timer_ct (_tcp_timer, &p->timeout);
       else set_timer (_tcp_timer, 0);
     }
   }
 }
 
-void *tcp_expired () { TcpPort *p, *q; 
+void *tcp_expired () {
+  TcpPort *p, *q;
   if (p = queue_remove (&_tcp_wait)) {
     if (q = queue_peek (&_tcp_wait))
       set_timer_ct (_tcp_timer, &q->timeout);
     else set_timer (_tcp_timer, 0);
     return p;
-  } return NULL;
+  }
+  return NULL;
 }
 
 void net_close (void *port) {
@@ -137,13 +144,14 @@ void net_close (void *port) {
   }
 }
 
+//底层网络实际连接到服务器。
 void net_connect (void *port, Address *server) {
   TcpPort *p = port;
   p->pe.socket = bsd_socket (server->family);
   event_add (p->pe.socket, p);
   p->pe.type = TCP_CONNECT;
   if (connect (p->pe.socket, (struct sockaddr *)server,
-	       server->length) == 0) {
+               server->length) == 0) {
     p->pe.status = Connected;
     queue_add (&_active, p);
   } else if (event_pending (p)) {       //如果不能立即连接上，那么就等待？
@@ -153,29 +161,33 @@ void net_connect (void *port, Address *server) {
 }
 
 int net_read (void *port, char *buffer, int size) {
-  TcpPort *p = port; int n = -1;
+  TcpPort *p = port;
+  int n = -1;
   if (p->pe.status == Connected) {
     n = read (p->pe.socket, buffer, size);
     if (n == 0) net_close (p);
-  } p->pe.end = n <= 0;
+  }
+  p->pe.end = n <= 0;
   return n;
 }
 
 int net_write (void *port, const char *data, int length) {
   TcpPort *p = port;
-  return p->pe.status == Connected?
-    write (p->pe.socket, data, length) : -1;
+  return p->pe.status == Connected ?
+         write (p->pe.socket, data, length) : -1;
 }
 
 Address *net_remote (Address *addr, void *port) {
-  TcpPort *p = port; addr->length = sizeof (Address);
+  TcpPort *p = port;
+  addr->length = sizeof (Address);
   getpeername (p->pe.socket, (struct sockaddr *)addr, &addr->length);
   return addr;
 }
 
 Address *net_local (Address *addr, void *port) {
-  TcpPort *p = port; addr->length = sizeof (Address);
-  getsockname (p->pe.socket, (struct sockaddr*)addr, &addr->length);
+  TcpPort *p = port;
+  addr->length = sizeof (Address);
+  getsockname (p->pe.socket, (struct sockaddr *)addr, &addr->length);
   return addr;
 }
 

@@ -168,58 +168,72 @@ int main()
 */
 
 int event_poll (void **any, int timeout) {
-  PollEvent *pe; TcpPort *p; uint64_t value;
+  PollEvent *pe;
+  TcpPort *p;
+  uint64_t value;
   static struct epoll_event events[MAX_EVENTS];
-  static int i = 0, n = 0; int event;
+  static int i = 0, n = 0;
+  int event;
   static PollEvent *prev = NULL;
   if (prev) {
     if (!event_done (prev)) queue_add (&_active, prev); //往当前活动的_active的queue中添加prev，prev与本函数中后面的代码的执行有关。
     prev = NULL;
   }
- poll:
+poll:
   if (i == n) {
     if (pe = queue_remove (&_active)) {//返回首个元素
       event = pe->type;
       switch (pe->type) {
-      case TCP_ACCEPTOR: goto accept;
-      case TCP_ACCEPT: case TCP_CONNECT:
-	pe->type = TCP_PORT;
-      case TCP_PORT: case UDP_PORT:
-	prev = pe;
-      } *any = pe; return event;
+      case TCP_ACCEPTOR:
+        goto accept;
+      case TCP_ACCEPT:
+      case TCP_CONNECT:
+        pe->type = TCP_PORT;
+      case TCP_PORT:
+      case UDP_PORT:
+        prev = pe;
+      } *any = pe;
+      return event;
     }
-  retry:
-/*
-  3、epoll_wait 函数
-     函数声明:int epoll_wait(int epfd,struct epoll_event * events,int maxevents,int timeout)
-     功能：该函数用于轮询I/O事件的发生；
-      @epfd：由epoll_create生成的epoll专用的文件描述符；
-      @epoll_event：用于回传待处理事件的数组；
-      @maxevents：每次能处理的事件数；
-      @timeout：等待I/O事件发生的超时值；
-     成功：返回发生的事件数；失败：-1
+retry:
+    /*
+      3、epoll_wait 函数
+         函数声明:int epoll_wait(int epfd,struct epoll_event * events,int maxevents,int timeout)
+         功能：该函数用于轮询I/O事件的发生；
+          @epfd：由epoll_create生成的epoll专用的文件描述符；
+          @epoll_event：用于回传待处理事件的数组；
+          @maxevents：每次能处理的事件数；
+          @timeout：等待I/O事件发生的超时值；
+         成功：返回发生的事件数；失败：-1
 
-  */  
-    n = epoll_wait (poll_fd, events, MAX_EVENTS, timeout); i = 0;
+      */
+    n = epoll_wait (poll_fd, events, MAX_EVENTS, timeout);
+    i = 0;
     if (n < 0) goto retry; // perror ("event_poll");
     if (n == 0) return POLL_TIMEOUT;
   }
-  
+
   /*如果发生了事件*/
-  event = events[i].events; *any = pe = events[i].data.ptr; i++;
+  event = events[i].events;
+  *any = pe = events[i].data.ptr;
+  i++;
   // printf ("event_poll %x %p %d\n", event, pe, pe->type);
   switch (pe->type) {
-  case TCP_CONNECT: p = *any;
+  case TCP_CONNECT:
+    p = *any;
     /*EPOLLOUT：表示对应的文件描述符可以写；*/
     if (event & EPOLLOUT && bsd_connected (pe->socket)) {
       clear_timeout (pe);
-      pe->status = Connected; pe->type = TCP_PORT;
-      prev = pe; return TCP_CONNECT;
+      pe->status = Connected;
+      pe->type = TCP_PORT;
+      prev = pe;
+      return TCP_CONNECT;
     }
     if (event & EPOLLRDHUP || event & EPOLLHUP)
       net_close (*any);
     goto poll;
-  case TCP_PORT: prev = pe;
+  case TCP_PORT:
+    prev = pe;
     clear_timeout (pe);
     /*EPOLLIN：表示对应的文件描述符可以读；*/
     if (event & EPOLLIN)
@@ -234,17 +248,20 @@ int event_poll (void **any, int timeout) {
     https://blog.csdn.net/midion9/article/details/49883063
     */
     if (event & EPOLLRDHUP || event & EPOLLHUP) {
-      pe->status = Closed; prev = NULL;
+      pe->status = Closed;
+      prev = NULL;
       return TCP_CLOSED;
-    } break;
-  accept:
+    }
+    break;
+accept:
   case TCP_ACCEPTOR:
     if (prev = accept_queued (pe)) {
       queue_add (&_active, pe);
       prev->type = TCP_PORT;
       *any = prev;
       return TCP_ACCEPT;
-    } goto poll;
+    }
+    goto poll;
   case TIMER_EVENT:
     read (pe->fd, &value, 8);
     if (pe->id == TCP_TIMEOUT)

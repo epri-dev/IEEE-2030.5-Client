@@ -16,13 +16,13 @@ typedef struct _Timer {
 
 struct timespec {
                time_t tv_sec;                //Seconds
-               long   tv_nsec;               // Nanoseconds 
+               long   tv_nsec;               // Nanoseconds
            };
            struct itimerspec {
                struct timespec it_interval;  //Interval for periodic timer
                struct timespec it_value;     //Initial expiration
            };
-           
+
 */
 typedef struct _ClockTime {
   struct timespec spec;
@@ -66,7 +66,9 @@ void set_timer_ms (Timer *timer, int ms) {
 
 
 void set_timer_ct (Timer *timer, ClockTime *ct) {
-  struct timespec t; struct itimerspec it = {0}; long diff;
+  struct timespec t;
+  struct itimerspec it = {0};
+  long diff;
   clock_gettime (CLOCK_MONOTONIC, &t);
   //  printf ("set_timer_ct %d %d\n", t.tv_sec, ct->spec.tv_sec);
   t.tv_sec = ct->spec.tv_sec - t.tv_sec;
@@ -93,13 +95,16 @@ CLOCK_MONOTONIC:以固定的速率运行，从不进行调整和复位 ,它不�
 
 Timer *add_timer (int id) {
   Timer *timer = malloc (sizeof (Timer));
-  timer->pe.type = TIMER_EVENT; timer->pe.id = id;
+  timer->pe.type = TIMER_EVENT;
+  timer->pe.id = id;
   timer->pe.fd = timerfd_create (CLOCK_MONOTONIC, 0);
-  timer->pe.end = 1; event_add (timer->pe.fd, timer);
+  timer->pe.end = 1;
+  event_add (timer->pe.fd, timer);
   return timer;
 }
 
 Timer *new_timer (int id, int timeout) {
   Timer *timer = add_timer (id);
-  set_timer (timer, timeout); return timer;
+  set_timer (timer, timeout);
+  return timer;
 }

@@ -38,7 +38,8 @@ void event_init ();
 
 typedef struct _Event {
   struct _Event *next;
-  void *data; int type;
+  void *data;
+  int type;
   int64_t time;
 } Event;
 
@@ -46,33 +47,41 @@ Event *cur_event = NULL;
 Queue im_event = {0};
 
 int event_compare (void *a, void *b) {
-  Event *x = a, *y = b; return x->time - y->time;
+  Event *x = a, *y = b;
+  return x->time - y->time;
 }
 
 void print_events () {
   Event *e = cur_event;
   printf ("print_events %d: ", list_length (e));
-  while (e) { printf ("%p %d %d, ", e->data, e->type, e->time); e = e->next; }
+  while (e) {
+    printf ("%p %d %d, ", e->data, e->type, e->time);
+    e = e->next;
+  }
   printf ("\n");
 }
 
 void insert_event (void *data, int type, int64_t time) {
   Event *e = type_alloc (Event);
-  e->data = data; e->type = type; e->time = time;
+  e->data = data;
+  e->type = type;
+  e->time = time;
   if (time == 0) queue_add (&im_event, e);
   else cur_event = insert_sorted (cur_event, e, event_compare);
 }
 
 void *remove_by_data (void *list, void *data) {
   List **first = list, *l = *first, *prev = NULL, *next;
-  while (l) { next = l->next;
+  while (l) {
+    next = l->next;
     if (l->data == data) {
       if (prev) prev->next = next;
       else *first = next;
       free (l);
     } else prev = l;
     l = next;
-  } return prev;
+  }
+  return prev;
 }
 
 void remove_event (void *data) {
@@ -83,11 +92,14 @@ void remove_event (void *data) {
 Timer *ev_timer;
 
 int next_event (void **any) {
-  Event *e; int event;
+  Event *e;
+  int event;
   if (queue_peek (&im_event)) {
     e = queue_remove (&im_event);
-    event = e->type; *any = e->data;
-    free (e); return event;
+    event = e->type;
+    *any = e->data;
+    free (e);
+    return event;
   }
   if (e = cur_event) {
     int64_t now = se_time ();
@@ -95,9 +107,11 @@ int next_event (void **any) {
     if (e->time <= now) {
       event = e->type;
       cur_event = e->next;
-      *any = e->data; free (e);
+      *any = e->data;
+      free (e);
       return event;
-    } set_timer (ev_timer, e->time - now);
+    }
+    set_timer (ev_timer, e->time - now);
   } else set_timer (ev_timer, 0);
   return EVENT_NONE;
 }

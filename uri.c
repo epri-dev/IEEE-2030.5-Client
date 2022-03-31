@@ -3,8 +3,8 @@
 
 /** @defgroup uri Uri
 
-    Provides a parser for Uniform Resource Identifiers (URIs 
-    <a href="https://www.ietf.org/rfc/rfc3986.txt">RFC 3986</a>) 
+    Provides a parser for Uniform Resource Identifiers (URIs
+    <a href="https://www.ietf.org/rfc/rfc3986.txt">RFC 3986</a>)
     @{
 */
 
@@ -19,14 +19,14 @@ typedef struct {
   int port; ///< is the URI port
 } Uri;
 
-/** A buffered URI (abstract type) */
+/** A buffered URI (abstract type) 这里未定义后面的buffer数组长度*/
 typedef struct {
   Uri uri;
   Address host;
   char buffer[];
 } UriBuffered;
 
-/** A buffered URI instance type */
+/** A buffered URI instance type 定义了实际的数据长度，跟上面的UriBuffered实体 */
 typedef struct {
   Uri uri;
   Address host;
@@ -50,12 +50,14 @@ char *pchar (char **p, char *data) {
   int c = *data++, x, y;
   if (alpha (c) || in_range (c, '&', ';') || c == '='
       || c == '!' || c == '$' || c == '@' || c == '_' || c == '~') {
-    *(*p)++ = c; return data;
+    *(*p)++ = c;
+    return data;
   } else if (c == '%') {
     ok (hex4 (&x, data++) && hex4 (&y, data++));
     *(*p)++ = (x << 4) | y;
     return data;
-  } return NULL;
+  }
+  return NULL;
 }
 
 // parse the host component of a URI
@@ -63,81 +65,136 @@ char *parse_host (Uri *uri, Address *host, char *data) {
   char *name, *last;
   if (last = parse_address (host, uri->port, data)) {
     uri->host = host;
-  } else { char *end = name = data;
-    while (data) { last = data;
+  } else {
+    char *end = name = data;
+    while (data) {
+      last = data;
       switch (*data) {
-      case '@': case ':': goto out;
-      default: data = pchar (&end, data);
+      case '@':
+      case ':':
+        goto out;
+      default:
+        data = pchar (&end, data);
       }
-    } out:
-    if (name != end) {
-      uri->name = name; uri->end = end;
     }
-  } data = last;
-  if (*data == ':') { *data = '\0';
-    data = number_q (&uri->port, data+1);
+out:
+    if (name != end) {
+      uri->name = name;
+      uri->end = end;
+    }
+  }
+  data = last;
+  if (*data == ':') {
+    *data = '\0';
+    data = number_q (&uri->port, data + 1);
     if (uri->host) set_port (host, uri->port);
-  } return data;
+  }
+  return data;
 }
 
 // terminate URI host name without modifying the URI path
 void terminate_host (Uri *uri) {
   if (uri->name && *uri->end != '\0') { // host name not terminated
     int count = uri->end - uri->name;
-    if (uri->name+count == uri->path) {
-      memmove (uri->name-1, uri->name, count); uri->name--;
-    } uri->name[count] = '\0';
+    if (uri->name + count == uri->path) {
+      memmove (uri->name - 1, uri->name, count);
+      uri->name--;
+    }
+    uri->name[count] = '\0';
   }
 }
 
 // parse URI-reference (RFC 3986)
 /*将URL中的各个要素都解析出来*/
 char *parse_uri (Uri *uri, Address *host, int state, char *data) {
-  char *p; int c; uri->name = uri->path = uri->query = NULL; uri->host = NULL;
-  while (1) { c = *data;
+  char *p;
+  int c;
+  uri->name = uri->path = uri->query = NULL;
+  uri->host = NULL;
+  while (1) {
+    c = *data;
     switch (state) {
     case 0:
-      if (c == '/') { ok (uri->scheme); state = 3; }
-      else if (alpha (c)) { p = data; state++; }
-      else return NULL; break;
+      if (c == '/') {
+        ok (uri->scheme);
+        state = 3;
+      } else if (alpha (c)) {
+        p = data;
+        state++;
+      } else return NULL;
+      break;
     case 1: // scheme
-      if (c == ':') { 
-        *data = '\0'; uri->scheme = p; state++;
-	    if (streq (uri->scheme, "http")) uri->port = 80;
-	    else if (streq (uri->scheme, "https")) uri->port = 443;
+      if (c == ':') {
+        *data = '\0';
+        uri->scheme = p;
+        state++;
+        if (streq (uri->scheme, "http")) uri->port = 80;
+        else if (streq (uri->scheme, "https")) uri->port = 443;
       } else {
-	    ok (alpha (c) || digit (c) || c == '+' || c == '-' || c == '.');
-      } break;
+        ok (alpha (c) || digit (c) || c == '+' || c == '-' || c == '.');
+      }
+      break;
     case 2: // hier-part
-      if (c == '/') { state++; break; } state = 5; continue;
+      if (c == '/') {
+        state++;
+        break;
+      }
+      state = 5;
+      continue;
     case 3: // hier-part
-      if (c == '/') { state++; break; } data--; state = 5; continue;
+      if (c == '/') {
+        state++;
+        break;
+      }
+      data--;
+      state = 5;
+      continue;
     case 4: // authority
-      data = parse_host (uri, host, data); state++; continue;
-    case 5: p = uri->path = data; state++; // path
+      data = parse_host (uri, host, data);
+      state++;
+      continue;
+    case 5:
+      p = uri->path = data;
+      state++; // path
     case 6: // path
       switch (c) {
-      case '/': *p++ = '/'; break;
-      case '?': *p = '\0';
-	p = uri->query = data+1; state++; break;
-      default: goto pchar_data;
-      } break;
+      case '/':
+        *p++ = '/';
+        break;
+      case '?':
+        *p = '\0';
+        p = uri->query = data + 1;
+        state++;
+        break;
+      default:
+        goto pchar_data;
+      }
+      break;
     case 7: // query
       switch (c) {
-      case '/': case '?': *p++ = c; break;
-      default: goto pchar_data;
+      case '/':
+      case '?':
+        *p++ = c;
+        break;
+      default:
+        goto pchar_data;
       }
-    } data++; continue;
-  pchar_data:
+    }
+    data++;
+    continue;
+pchar_data:
     if (c == '\0' || ws (c)) {
       *p = '\0'; // terminate path or query
-      terminate_host (uri); return data;
+      terminate_host (uri);
+      return data;
     }
     ok (data = pchar (&p, data));
   }
 }
 
-// parse absolute URI (buffered)
+
+// parse absolute URI (buffered) 将一个href字符串中的各个元素都拆分开，放到一个UriBuffered结构的数据中。
+
 int uri_parse (void *buf, const char *href, int length) {
   UriBuffered *uri = buf;
   if (strlen (href) > length) return 0;
@@ -145,15 +202,16 @@ int uri_parse (void *buf, const char *href, int length) {
   return parse_uri (buf, &uri->host, 0, uri->buffer) != NULL;
 }
 
-int write_uri (char *buffer, Uri *uri) { int n = 0;
+int write_uri (char *buffer, Uri *uri) {
+  int n = 0;
   if (uri->name || uri->host) {
     n = sprintf (buffer, "%s://", uri->scheme);
-    if (uri->name) 
-      n += sprintf (buffer+n, "%s:%d", uri->name, uri->port);
-    else n += write_address_port (buffer+n, uri->host);
+    if (uri->name)
+      n += sprintf (buffer + n, "%s:%d", uri->name, uri->port);
+    else n += write_address_port (buffer + n, uri->host);
   }
-  if (uri->path) n += sprintf (buffer+n, "%s", uri->path);
-  if (uri->query) n += sprintf (buffer+n, "?%s", uri->query);
+  if (uri->path) n += sprintf (buffer + n, "%s", uri->path);
+  if (uri->query) n += sprintf (buffer + n, "?%s", uri->query);
   return n;
 }
 

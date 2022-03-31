@@ -23,7 +23,7 @@ int client_poll (void **any, int timeout);
 /** @brief Perform client initialization.
     @param index is the interface index
     @param cert is the path/name of device used to load the device certificate
-    and private key pair. 
+    and private key pair.
 */
 void client_init (char *name, const char *cert);
 
@@ -32,22 +32,29 @@ void client_init (char *name, const char *cert);
 #ifndef HEADER_ONLY
 
 int client_poll (void **any, int timeout) {
-  int event; static Service *s = NULL;
- top:
+  int event;
+  static Service *s = NULL;
+top:
   if (s = service_next (s)) {
-    *any = s; return SERVICE_FOUND;
+    *any = s;
+    return SERVICE_FOUND;
   }
-  
+
   /*我的注解：看起来作为client，仅仅关注下面这三种Event类型*/
   switch (event = event_poll (any, timeout)) {
-  case TCP_CONNECT: return TCP_PORT;
+  case TCP_CONNECT:
+    return TCP_PORT;
   case UDP_PORT:
     if (s = service_receive (*any)) goto top;
-  } return event;
+  }
+  return event;
 }
 
 void client_init (char *name, const char *cert) {
-  if (cert) { tls_init (cert, 0); security_init (cert); }
+  if (cert) {
+    tls_init (cert, 0);
+    security_init (cert);
+  }
   discover_init (name);
 }
 

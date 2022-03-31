@@ -9,15 +9,16 @@
 
     The events of each function set are independent and each EndDevice may
     utilitize one or more function sets, therefore an EndDevice could have one
-    or more independent event schedules. 
+    or more independent event schedules.
     @{
 */
 
 #define SCHEDULE_UPDATE (EVENT_NEW+10)
 
 enum EventStatus {Scheduled, Active, Canceled, CanceledRandom,
-		  Superseded, Aborted, Completed, ActiveWait,
-		  ScheduleSuperseded};
+                  Superseded, Aborted, Completed, ActiveWait,
+                  ScheduleSuperseded
+                 };
 
 /** @brief An EventBlock is an Event instance scheduled for a particular
     EndDevice.
@@ -40,7 +41,7 @@ typedef struct _EventBlock {
 
 /** @brief A Schedule organizes the events of a particular function set for an
     EndDevice in terms of (依据；按照；在……方面；以……措词) the rules in section 12.1.3 Event Rules and Guidlines.
-    
+
     Events are assigned to an EventBlock which can belong to one of three
     queues, `scheduled`, `active`, and `superseded`. EventBlocks that
     correspond with server events that have been marked Canceled or Superseded
@@ -122,11 +123,14 @@ void schedule_init (Schedule *s);
 
 int rand_bound (int bound) {
   if (bound) {
-    int sign = bound < 0? -1 : 1, upper, result;
-    bound *= sign; upper = RAND_MAX - RAND_MAX % bound;
-    do result = rand (); while (result > upper);
+    int sign = bound < 0 ? -1 : 1, upper, result;
+    bound *= sign;
+    upper = RAND_MAX - RAND_MAX % bound;
+    do result = rand ();
+    while (result > upper);
     return sign * (result % (bound + 1));
-  } return 0;
+  }
+  return 0;
 }
 
 int randomize_start (void *event) {
@@ -157,12 +161,13 @@ uint32_t der_base (void *event) {
 
 int block_supersede (EventBlock *a, EventBlock *b) {
   SE_Event_t *x = resource_data (a->event),
-    *y = resource_data (b->event);
+              *y = resource_data (b->event);
   if ((a->primacy == b->primacy
        && x->creationTime > y->creationTime)
       || a->primacy < b->primacy)
-    return a->der? (b->der &= ~a->der) == 0 : 1;
-  a->der &= ~b->der; return 0;
+    return a->der ? (b->der &= ~a->der) == 0 : 1;
+  a->der &= ~b->der;
+  return 0;
 }
 
 EventBlock *new_block (Stub *event, int primacy) {
@@ -171,9 +176,9 @@ EventBlock *new_block (Stub *event, int primacy) {
   int rand = randomizable (resource_type (event));
   eb->next = NULL;
   eb->start = ev->interval.start
-    + (rand? randomize_start (event) : 0);
+              + (rand ? randomize_start (event) : 0);
   eb->end = eb->start + ev->interval.duration
-    + (rand? randomize_duration (event) : 0);
+            + (rand ? randomize_duration (event) : 0);
   eb->primacy = primacy;
   eb->status = 0;
   eb->event = event;
@@ -207,27 +212,32 @@ void event_interval (Interval *i, Stub *event) {
 
 void insert_block (Schedule *s, EventBlock *eb) {
   EventBlock *prev = (EventBlock *)&s->scheduled,
-    *e = s->scheduled, *next; Interval x, y;
+              *e = s->scheduled, *next;
+  Interval x, y;
   eb->status = Scheduled;
   if (resource_type (eb->event) == SE_DERControl)
     eb->der = der_base (eb->event);
   event_interval (&x, eb->event);
-  while (e) { next = e->next;
+  while (e) {
+    next = e->next;
     event_interval (&y, e->event);
     if (x.start < y.end && x.end > y.start) {
       if (block_supersede (eb, e)) {
-	e->status = ScheduleSuperseded;
-	link_insert (s->superseded, e);
-	prev->next = e = next; continue;
+        e->status = ScheduleSuperseded;
+        link_insert (s->superseded, e);
+        prev->next = e = next;
+        continue;
       } else if (!eb->der) {
-	eb->status = ScheduleSuperseded;
-	link_insert (s->superseded, eb); return;
+        eb->status = ScheduleSuperseded;
+        link_insert (s->superseded, eb);
+        return;
       }
     } else if (x.end == y.start)
       e->start = eb->end;
     else if (x.end == y.end)
       e->end = eb->end;
-    prev = e; e = next;
+    prev = e;
+    e = next;
   }
   s->scheduled = insert_sorted (s->scheduled, eb, compare_start);
 }
@@ -243,7 +253,7 @@ void activate_block (Schedule *s, EventBlock *eb) {
     device_response (s->device, event, EventStarted);
   }
   event->poll_rate = active_poll_rate;
-  poll_resource (event);  
+  poll_resource (event);
 }
 
 void insert_active (Schedule *s, EventBlock *eb) {
@@ -251,25 +261,32 @@ void insert_active (Schedule *s, EventBlock *eb) {
   printf ("insert_active\n");
   if (resource_type (eb->event) == SE_DERControl)
     eb->der = der_base (eb->event);
-  while (a) { next = a->next;
+  while (a) {
+    next = a->next;
     if (block_supersede (eb, a)) {
       prev->next = next;
       a->end = eb->start;
       if (a->status == Active)
-	insert_event (a, EVENT_END, 0);
+        insert_event (a, EVENT_END, 0);
       a->status = Superseded;
       device_response (s->device, a->event, EventSuperseded);
     } else if (!eb->der) {
       eb->status = Superseded;
-      device_response (s->device, eb->event, EventSuperseded); return;
-    } a = next;
+      device_response (s->device, eb->event, EventSuperseded);
+      return;
+    }
+    a = next;
   }
   switch (event_status (eb->event)) {
-  case Scheduled: update_resource (eb->event);
-    eb->status = ActiveWait; break;
-  case Active: activate_block (s, eb); break;
+  case Scheduled:
+    update_resource (eb->event);
+    eb->status = ActiveWait;
+    break;
+  case Active:
+    activate_block (s, eb);
+    break;
   }
-  s->active = insert_sorted (s->active, eb, compare_end); 
+  s->active = insert_sorted (s->active, eb, compare_end);
 }
 
 EventBlock *get_block (Schedule *s, void *event) {
@@ -277,7 +294,8 @@ EventBlock *get_block (Schedule *s, void *event) {
   return hash_get (s->blocks, ev->mRID);
 }
 
-void activate_blocks (Stub *event) { List *l;
+void activate_blocks (Stub *event) {
+  List *l;
   // printf ("activate_blocks\n");
   foreach (l, event->schedules) {
     EventBlock *eb = get_block (l->data, event);
@@ -289,18 +307,23 @@ void activate_blocks (Stub *event) { List *l;
 void remove_block (Schedule *s, EventBlock *eb) {
   switch (eb->status) {
   case Scheduled:
-    s->scheduled = list_remove (s->scheduled, eb); break;
-  case Active: eb->end = se_time ();
+    s->scheduled = list_remove (s->scheduled, eb);
+    break;
+  case Active:
+    eb->end = se_time ();
     remove_event (eb);
     insert_event (eb, EVENT_END, 0);
   case ActiveWait:
-    s->active = list_remove (s->active, eb); break;
+    s->active = list_remove (s->active, eb);
+    break;
   case ScheduleSuperseded:
-    s->superseded = list_remove (s->superseded, eb); break;
-  }  
+    s->superseded = list_remove (s->superseded, eb);
+    break;
+  }
 }
 
-void remove_blocks (Stub *event, int response) { List *l;
+void remove_blocks (Stub *event, int response) {
+  List *l;
   int status = event_status (event);
   foreach (l, event->schedules) {
     Schedule *s = l->data;
@@ -312,17 +335,20 @@ void remove_blocks (Stub *event, int response) { List *l;
   }
 }
 
-void delete_blocks (Stub *event) { List *l;
+void delete_blocks (Stub *event) {
+  List *l;
   SE_Event_t *ev = resource_data (event);
   foreach (l, event->schedules) {
     Schedule *s = l->data;
     free (hash_delete (s->blocks, ev->mRID));
-  } free_list (event->schedules);
+  }
+  free_list (event->schedules);
   event->schedules = NULL;
 }
 
 void event_update (Stub *event) {
-  int64_t now; static int64_t sync_time = 0;
+  int64_t now;
+  static int64_t sync_time = 0;
   printf ("event_update\n");
   switch (event_status (event)) {
   case Scheduled:
@@ -330,14 +356,21 @@ void event_update (Stub *event) {
        synchronize by setting the clock (time offset) backward, also retry
        the event retrieval in another second. */
     if (sync_time != (now = se_time ())) {
-      se_time_offset--; sync_time = --now;
-    } insert_event (event, RESOURCE_UPDATE, now+1);
+      se_time_offset--;
+      sync_time = --now;
+    }
+    insert_event (event, RESOURCE_UPDATE, now + 1);
     break;
-  case Active: activate_blocks (event); break;
-  case Canceled: case CanceledRandom:
-    remove_blocks (event, EventCanceled); break;
+  case Active:
+    activate_blocks (event);
+    break;
+  case Canceled:
+  case CanceledRandom:
+    remove_blocks (event, EventCanceled);
+    break;
   case Superseded:
-    remove_blocks (event, EventSuperseded); break;
+    remove_blocks (event, EventSuperseded);
+    break;
   }
 }
 
@@ -345,11 +378,13 @@ void block_update (EventBlock *eb, int status) {
   if (eb->status == Active) {
     eb->end = se_time ();
     insert_event (eb, EVENT_END, 0);
-  } eb->status = status;
+  }
+  eb->status = status;
 }
 
 EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
-  EventBlock *eb; SE_Event_t *ev = resource_data (event);
+  EventBlock *eb;
+  SE_Event_t *ev = resource_data (event);
   int status = event_status (event);
   if (eb = hash_get (s->blocks, ev->mRID)) {
     eb->primacy = primacy;
@@ -371,20 +406,27 @@ EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
   switch (status) {
   case Scheduled:
     if (eb->status != ActiveWait) {
-      insert_block (s, eb); break;
+      insert_block (s, eb);
+      break;
     }
-  case Active: insert_active (s, eb); break;
-  case Canceled: case CanceledRandom:
+  case Active:
+    insert_active (s, eb);
+    break;
+  case Canceled:
+  case CanceledRandom:
     device_response (s->device, event, EventCanceled);
-    block_update (eb, status); break;
+    block_update (eb, status);
+    break;
   case Superseded:
     device_response (s->device, event, EventSuperseded);
     block_update (eb, status);
-  } return eb;
+  }
+  return eb;
 }
 
 void *mrid_key (void *data) {
-  EventBlock *eb = data; Stub *s = eb->event;
+  EventBlock *eb = data;
+  Stub *s = eb->event;
   SE_Event_t *e = resource_data (s);
   return e->mRID;
 }
@@ -399,34 +441,49 @@ void update_schedule (Schedule *s) {
   while (eb) {
     if (eb->end <= now) {
       if (eb->status == Active) {
-	device_response (s->device, eb->event, EventCompleted);
-	insert_event (eb, EVENT_END, 0);
-      } eb->status = Completed;
-    } else { last = eb->end; break; }
+        device_response (s->device, eb->event, EventCompleted);
+        insert_event (eb, EVENT_END, 0);
+      }
+      eb->status = Completed;
+    } else {
+      last = eb->end;
+      break;
+    }
     eb = eb->next;
-  } s->active = eb;
+  }
+  s->active = eb;
   eb = s->scheduled;
-  while (eb) { next = eb->next;
+  while (eb) {
+    next = eb->next;
     if (eb->start <= now) {
       insert_active (s, eb);
-      last = last? min (last, eb->end) : eb->end;
-    } else { last = last? min (last, eb->start) : eb->start; break; }
+      last = last ? min (last, eb->end) : eb->end;
+    } else {
+      last = last ? min (last, eb->start) : eb->start;
+      break;
+    }
     eb = next;
-  } s->scheduled = eb;
+  }
+  s->scheduled = eb;
   eb = s->superseded;
   while (eb) {
     if (eb->start <= now) {
       eb->status = Superseded;
       device_response (s->device, eb->event, EventSuperseded);
-    } else { last = last? min (last, eb->start) : eb->start; break; }
+    } else {
+      last = last ? min (last, eb->start) : eb->start;
+      break;
+    }
     eb = eb->next;
-  } s->superseded = eb;
+  }
+  s->superseded = eb;
   printf ("update_schedule %" PRId64 " %" PRId64 "\n", now, last);
   if (last) {
     if (last != s->next) {
       remove_event (s);
       insert_event (s, SCHEDULE_UPDATE, last);
-    } s->next = last;
+    }
+    s->next = last;
   } else s->next = 0;
 }
 

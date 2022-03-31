@@ -61,7 +61,7 @@ void queue_add (Queue *q, void *item) {
 }
 
 void _queue_insert (Queue *q, void *item, void *prev,
-		    int (*compare) (void *a, void *b)) {
+                    int (*compare) (void *a, void *b)) {
   q->first = _insert_sorted (q->first, item, prev, compare);
   if (q->last) {
     if (q->last->next) q->last = q->last->next;
@@ -69,7 +69,7 @@ void _queue_insert (Queue *q, void *item, void *prev,
 }
 
 void queue_insert (Queue *q, void *item,
-		    int (*compare) (void *a, void *b)) {
+                   int (*compare) (void *a, void *b)) {
   List *prev = NULL;
   _queue_insert (q, item, &prev, compare);
 }
@@ -77,16 +77,18 @@ void queue_insert (Queue *q, void *item,
 
 /*将queue中的第一个元素移出*/
 void *queue_remove (Queue *q) {
-  void *item = q->first; 
+  void *item = q->first;
   if (item) {
     if (q->first == q->last) queue_clear (q);
     else q->first = q->first->next; //将first往后移动一个位置
-  } return item;//并且返回首个元素
+  }
+  return item;//并且返回首个元素
 }
 
 void queue_free (Queue *q) {
-  free_list (q->first); queue_clear (q);
+  free_list (q->first);
+  queue_clear (q);
 }
 
 #endif
-    
+
