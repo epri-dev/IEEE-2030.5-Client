@@ -54,7 +54,9 @@ typedef struct {
 #define se_list(type) (se_type_is_a (type, SE_SubscribableList) \
 		       || se_type_is_a (type, SE_List))
 
-/** @brief Is an IEEE 2030.5 object type an Event derived type?
+
+/** @brief Is an IEEE 2030.5 object type an Event derived type? 
+  是否是一个Event类型派生出来的type？IEEE中的Event指的是需要定时完成的某一个任务。
     @returns 1 if the type is a Event type, 0 otherwise
 */
 #define se_event(type) se_type_is_a (type, SE_Event)

@@ -75,7 +75,7 @@ void queue_insert (Queue *q, void *item,
 }
 
 
-/*将queue中的第一个元素移出*/
+/*将queue中的第一个元素移出，但是不删除该元素所占用的空间*/
 void *queue_remove (Queue *q) {
   void *item = q->first;
   if (item) {

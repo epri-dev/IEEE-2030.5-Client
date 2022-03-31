@@ -113,7 +113,7 @@ void free_list (void *list) {
   while (l) t = l, l = l->next, free (t);
 }
 
-//新建一个新的list成员，并且插入到成员l的前面。
+//新建一个新的list成员，并且插入到成员l的前面。这个新插入的对象成为了这个list的header。
 List *list_insert (List *l, void *data) {
   List *n = malloc (sizeof (List));
   n->next = l;
@@ -141,7 +141,7 @@ void *find_by_data (List *list, void *data) {
   return _find_by_data (&prev, list, data); //事实上这个prev这里仅仅是一个摆设，没有发挥作用。
 }
 
-//前面的insert可能有重复插入的情况，而这个是保证了唯一性
+//前面的insert可能有重复插入的情况，而这个是保证了唯一性。
 List *insert_unique (List *l, void *data) {
   List *prev;
   if (_find_by_data (&prev, l, data)) return l;
@@ -206,7 +206,7 @@ void *_insert_sorted (void *list, void *item, List **prev,
                       int (*compare) (void *a, void *b)) {
   List *l = list, *n = item;
   while (l && (compare (n, l) > 0)) //如果n大于l则继续往后走，意思就是找到一个比n更大的，即不满足n>l的条件后才停止
-    *prev = l, l = l->next;
+    *prev = l, l = l->next; //最终结果是大的放在后面，即升序排列。
   if (*prev) (*prev)->next = n;
   else list = n;
   n->next = l;

@@ -37,7 +37,7 @@ typedef  long  time_t;
 
 /** A Resource Stub. */
 typedef struct _Stub {
-  Resource base; ///< is a container for the resource
+  Resource base; ///< is a container for the resource 这个Stub所要代表的数据本身
   void *conn; ///< is a pointer to an SeConnection
   int status; ///< is the HTTP status, 0 for a new Stub, -1 for an update
   time_t poll_next; ///< is the next time to poll the resource
@@ -50,7 +50,7 @@ typedef struct _Stub {
   uint32_t all; ///< is the total number of list items
   struct _Stub *moved; ///< is a pointer to the new resource
   List *list; ///< is a list of old requirements for updates
-  List *deps; ///< is a list of dependencies 依赖？
+  List *deps; ///< is a list of dependencies 依赖？存储的是一个个Stub内容单元，表示的是以本Stub为依赖对象的子层级的Stub。
   List *reqs; ///< is a list of requirements 要求？
   union {
     void *context; ///< is a user defined completion context
@@ -73,7 +73,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 /** @brief Get a subordinate（n. 部属，下级；从属，次要） resource given a parent object.
 
     Subordinate resources are retrieved from links in the parent object.
-    Links follow a naming convention, they are named after the type of the
+    Links follow a naming convention（名称规范）, they are named after the type of the
     subordinate resource with the string "Link" appended. This macro
     provides a convienent way to retrieve a subordinate resource, taking
     advantage of the naming pattern used to link subordinate resources from
@@ -90,6 +90,8 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 
 /** @brief Get a subordinate %List resource given a parent object.
 
+    在给出了一个父级的对象后，获取到一个下层的List资源。
+    
     The same as @ref get_root but for subordinate %List resources. Links to
     %List resources include the "all" parameter, this indicates the number of
     items contained in the %List resource and is used as a query parameter in
@@ -105,8 +107,12 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
    get_resource (conn, SE_##type, (obj)->type##Link.href,	\
 		 (obj)->type##Link.all) : NULL)
 
-/** Get a subordinate resource Stub and make the parent resource a dependent.
-
+/** 
+获取一个下一层的 resource Stub并且让父级resource变成一个“受依赖方”。
+    Get a subordinate resource Stub and make the parent resource a dependent（n. 受供养者）.
+    父层resource将构建一个bit位表示法来代表对于下层资源的需求，如果这些资源被满足，
+    那么就将这些bit位清零。
+    
     Creates a two way link between the subordinate and parent resources, the
     parent stores a bit representing the requirement for the subordinate
     resource and the subordinate resource clears this bit once all of its
@@ -148,6 +154,7 @@ int process_http (void *conn, DepFunc dep);
 
 /** @} */
 
+//看起来像是要获取一个资源
 void get_seq (Stub *s, int offset, int count) {
   char *name = resource_name (s);
   if (count) {
@@ -160,12 +167,17 @@ void get_seq (Stub *s, int offset, int count) {
   set_request_context (s->conn, s);
 }
 
+
+//增加一个依赖关系。Stub *r是父层级资源，Stub *d是下一层级资源。
+
 void add_dep (Stub *r, Stub *d) {
-  d->deps = insert_unique (d->deps, r);
+  d->deps = insert_unique (d->deps, r); //对d->deps作了更新，保证r资源被插入。
   d->poll_rate = min (d->poll_rate, r->poll_rate);
-  r->complete = 0;
+  r->complete = 0;  //一个新加入的Stub由于目前还未被轮训过，所以此时complete的值表示“未完成”。
 }
 
+
+//新建一个 dependency。Stub *r是父层级资源，Stub *d是下一层级资源。flag用来标志代表d自己的唯一标识。
 Stub *new_dep (Stub *r, Stub *d, int flag) {
   if (d) {
     add_dep (r, d);
@@ -175,6 +187,7 @@ Stub *new_dep (Stub *r, Stub *d, int flag) {
   return d;
 }
 
+//移除 requirements?
 void remove_req (Stub *s, Stub *r) {
   r->deps = list_delete (r->deps, s);
   if (!r->deps) insert_event (r, RESOURCE_REMOVE, 0);
@@ -299,7 +312,7 @@ void dep_reset (Stub *s) {
 }
 
 void update_resource (Stub *s) {
-  if (s->status >= 0) {
+  if (s->status >= 0) { //is the HTTP status, 0 for a new Stub, -1 for an update
     if (s->all) s->offset = 0;
     s->list = s->reqs;
     s->reqs = NULL;
@@ -337,6 +350,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count) {
   return s;
 }
 
+//之类的poll资源，主要是针对 SE_Event_t 数据 。但是看起来他并没有去做向服务器Poll的动作？？
 void poll_resource (Stub *s) {
   time_t now = se_time ();
   time_t next = now + s->poll_rate;
@@ -345,8 +359,11 @@ void poll_resource (Stub *s) {
     time_t end = ev->interval.start + ev->interval.duration;
     if (s->poll_rate >= (end - now)) return;
   }
+  
+  //如果下一次轮询的时刻还没有到，则放到event poll queue中
   if (s->poll_next <= now) {
     s->poll_next = next;
+    //这里的类型RESOURCE_POLL，跟在der_poll中调用这个函数的时候的case值严格一致了。
     insert_event (s, RESOURCE_POLL, next);
   }
 }

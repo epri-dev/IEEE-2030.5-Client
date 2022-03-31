@@ -74,7 +74,7 @@ void print_event_schedule (DerDevice *d) {
 int der_poll (void **any, int timeout) {
   Schedule *s;
   int event;
-  while (event = next_event (any)) {
+  while (event = next_event (any)) {  //查询下一个event是否已经到来
     switch (event) {
     case SCHEDULE_UPDATE:
       s = *any;

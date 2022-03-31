@@ -14,7 +14,7 @@ typedef struct _Resource {
   char *name; //< name of Resource (the path component of the href) 每一个链接表示了一个资源
   void *data; //< pointer to a 2030.5 object    表示了一个资源？？
   int type; //< the schema type for the object  这个是什么意思？？
-  ListInfo *info; //< pointer to the ListInfo for 2030.5 List objects 一个指向了se_list_info中的某一个位置的指针。
+  ListInfo *info; //< pointer to the ListInfo for 2030.5 List objects 一个指向了 se_list_info 中的某一个位置的指针。
   int64_t time; //< the time the resource was created or last updated
 } Resource;
 
@@ -40,7 +40,7 @@ void *find_resource (void *name);
 /** @brief Insert a resource into the database.
     @param res is a pointer to a Resource
 */
-//这个函数由 global_hash 宏定义来实现
+//这个函数由 global_hash 宏定义来实现。见下面的 global_hash(resource, string, 512)
 void insert_resource (void *res);
 
 /** @brief Delete a resource with the name from the database and return it.
@@ -48,7 +48,7 @@ void insert_resource (void *res);
     @returns a pointer to a Resource with a matching name, or NULL if none were
     found.
 */
-//这个函数由 global_hash 宏定义来实现
+//这个函数由 global_hash 宏定义来实现。见下面的 global_hash(resource, string, 512)。
 void *delete_resource (void *name);
 
 /** @brief Create a new resource.
@@ -66,12 +66,12 @@ void *new_resource (int size, char *name, void *data, int type);
     Frees the name and IEEE 2030.5 object (if any)
     @param res is a pointer to a Resource.
 */
-//这个函数由 global_hash 宏定义来实现
+//这个函数由 global_hash 宏定义来实现。见下面的 global_hash(resource, string, 512)
 void free_resource (void *res);
 
 //这个怎么是一个空函数？
 /** @brief Initialize the Resource database. */
-//这个函数由 global_hash 宏定义来实现
+//这个函数由 global_hash 宏定义来实现。见下面的 global_hash(resource, string, 512)
 void resource_init ();
 
 /** @} */
