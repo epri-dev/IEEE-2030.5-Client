@@ -33,8 +33,8 @@ typedef struct {
 typedef struct _Schema {
   const char *namespace;
   const char *schemaId;
-  const int length;     /*下面的schema->elements的数组单元个数*/
-  const SchemaElement *elements;        /*一个数组，是SchemaElement元素的集合*/
+  const int length;               /* 下面的schema->elements的数组单元个数，也就是数组长度 */
+  const SchemaElement *elements;  /*一个数组，是SchemaElement元素的集合*/
   const char * const *names;
   const uint16_t *ids;
 } Schema;
@@ -100,11 +100,11 @@ int is_pointer (int type) {
 }
 
 int se_is_a (const SchemaElement *se, int base, const Schema *schema) {
-  base = schema->elements[base].index;
-  if (se->simple || se->attribute) return 0;
-  while (se->index) {
-    if (se->index == base) return 1;
-    se = &schema->elements[se->index];
+  base = schema->elements[base].index;  //base是“基本类型”？
+  if (se->simple || se->attribute) return 0;  //如果是简单类型数据或者包含有属性attribute，则返回0
+  while (se->index) { //如果index>0(部分是0)
+    if (se->index == base) return 1;    //看起来是找到了？
+    se = &schema->elements[se->index];  //跳转到se->index指向的单元？
   } return 0;
 }
 

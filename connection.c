@@ -95,26 +95,34 @@ const uint8_t *tls_session_id (void *conn);
 
 enum TlsState {TLS_NONE, TLS_NEGOTIATE, TLS_SHUTDOWN, TLS_SESSION};
 
+//一个网络连接对象
 typedef struct _Connection {
   TcpPort tcp;
-  void *tls;
+  void *tls;  
   unsigned tls_state : 2;
-  int (*session) (void *);
-  int (*read) (void *, char *, int);
-  int (*write) (void *, const char *, int);
-  void (*close) (void *);
+  int (*session) (void *);                  //表达当前的连接状态
+  int (*read) (void *, char *, int);        //网络层读数据函数，详见tcp_setup或者tls_setup
+  int (*write) (void *, const char *, int); //网络层写数据函数，详见tcp_setup或者tls_setup
+  void (*close) (void *);                   //网络层关闭连接函数，详见tcp_setup或者tls_setup
 } Connection;
 
 #define conn_field(conn, name) struct_field (Connection, conn, name)
 
 int conn_session (void *conn) { return conn_field (conn, session (conn)); }
+
+//从网络中读取数据函数，注意这里调用的read函数
 int conn_read (void *conn, char *buffer, int size) {
   return conn_field (conn, read (conn, buffer, size));
 }
+
+//向网络中写入数据，注意这里的write函数。
 int conn_write (void *conn, const char *data, int length) {
   return conn_field (conn, write (conn, data, length));
 }
+
 int conn_secure (void *conn) { return conn_field (conn, tls) != NULL; }
+
+//关闭连接，注意这里的close函数
 void conn_close (void *conn) { conn_field (conn, close (conn)); }
 
 int tcp_session (void *conn) {
@@ -132,6 +140,7 @@ const uint8_t *tls_session_id (void *conn) {
   if (c->tls) return ssl_session_id (c->tls);
   return NULL;
 }
+
 
 int tls_session (void *conn) {
   Connection *c = conn;
@@ -154,6 +163,7 @@ int tls_session (void *conn) {
     }
   } return SESSION_NONE;
 }
+
 
 void tls_close (void *conn) {
   Connection *c = conn;
@@ -186,6 +196,8 @@ void tls_setup (Connection *c) {
   c->tls_state = TLS_NEGOTIATE;
 }
 
+
+//建立连接，根据连接是否加密来做不同的初始化
 void *conn_accept (void *conn, Acceptor *a, int secure) {
   Connection *c = conn; net_accept (conn, a);
   if (secure) { tls_setup (conn); ssl_accept (c->tls); }
@@ -193,7 +205,7 @@ void *conn_accept (void *conn, Acceptor *a, int secure) {
 }
 
 
-/*建立TCP连接*/
+/*建立到服务器的TCP连接*/
 void *conn_connect (void *conn, Address *server, int secure) {
   Connection *c = conn; net_connect (conn, server);
   if (secure) { tls_setup (conn); ssl_connect (c->tls); }

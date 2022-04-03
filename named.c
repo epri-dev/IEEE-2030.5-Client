@@ -14,6 +14,7 @@ int find_index_by_name (void *l, char *name);
 
 #ifndef HEADER_ONLY
 
+//在一个list中，根据name找到对应的单元
 void *find_by_name (void *l, char *name) {
   Named *list = l;
   while (list) {
@@ -39,6 +40,8 @@ Named *named_insert (Named *l, char *name, void *data) {
   return n;
 }
 
+
+//看起来像是按照字典顺序升序排列，具体待分析。
 void *_named_insert_sorted (void *h, void *x) {
   Named *prev = NULL, *head = h, *n = x, *l = head;
   while (l && (strcmp (n->name, l->name) > 0)) {

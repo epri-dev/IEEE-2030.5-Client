@@ -128,7 +128,7 @@ void net_close (void *port) {
     pe->status = Closed;
     pe->type = TCP_CLOSED;
     pe->end = 1;
-    close (pe->socket);
+    close (pe->socket); //调用网络层close
     clear_timeout (pe);
     queue_add (&_active, pe);
     break;
@@ -164,7 +164,7 @@ int net_read (void *port, char *buffer, int size) {
 int net_write (void *port, const char *data, int length) {
   TcpPort *p = port;
   return p->pe.status == Connected?
-    write (p->pe.socket, data, length) : -1;
+    write (p->pe.socket, data, length) : -1;  //调用网络层写数据函数。
 }
 
 Address *net_remote (Address *addr, void *port) {

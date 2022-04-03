@@ -147,6 +147,7 @@ char *xml_attr (Element *e, char *name) {
   return NULL;
 }
 
+//递归查找某一个名字的元素。具体过程还不是很清楚。
 Element *find_element (Element *e, char *name) {
   foreach (e, e->first) {
     if (e->type == ELEMENT_NODE) { Element *f;

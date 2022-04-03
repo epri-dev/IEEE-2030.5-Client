@@ -26,9 +26,11 @@ typedef struct {
   Flag *flag; int prim;  
 } Field;
 
-enum ParticleType {PartElement, PartAll, PartChoice, PartSequence,
-		   PartGroup, PartAny};
 
+enum ParticleType {PartElement, PartAll, PartChoice, PartSequence,PartGroup, PartAny};
+
+
+/* Particle 是 “n. 微粒；极少量；粒子”的意思 */
 typedef struct _Particle {
   struct _Particle *next;
   int kind, min, max; char *ref;
@@ -56,6 +58,8 @@ typedef struct _TableEntry {
 
 enum TypeKind {AtomicType, ListType, UnionType, ComplexType};
 
+
+//看起来像是对 sep.xsd 文件中其中一个单元的描述
 typedef struct _SchemaType {
   struct _SchemaType *next;
   char *name, *desc;
@@ -80,13 +84,15 @@ typedef struct _ElementDecl {
   SchemaType *st;
 } ElementDecl;
 
+
+//对一个 Schema 文档的描述 。可以参考sep.xsd作为参考。
 typedef struct {
   SchemaType *types;
   AttrDecl *attrs;
   ElementDecl *elements;
-  char *targetNamespace;
-  unsigned attributeFormDefault : 1;
-  unsigned elementFormDefault : 1;
+  char *targetNamespace;    //属性之一
+  unsigned attributeFormDefault : 1;  //属性之一，值为0或者1，表示unqualified或者qualified。
+  unsigned elementFormDefault : 1;  //同上。
 } SchemaDoc;
 
 const char * const xs_names[] =
@@ -117,16 +123,18 @@ typedef struct _Edge {
 typedef struct _Graph {
   List *start;
   Edge *edges;
-} Graph;
+} Graph;  //难道是“图”算法？？
 
+//向由Graph *g领头的头部插入一个新的Edge单元，且设置的值为传入的参数
 void add_edge (Graph *g, void *a, void *b) {
   Edge *e = malloc (sizeof (Edge));
-  e->next = g->edges; e->a = a; e->b = b;
-  g->edges = e;
+  e->next = g->edges; e->a = a; e->b = b; //e->next = g->edges;意为新单元放在原先已经存在的单元的前面。
+  g->edges = e; //意为g->edges指向新插入的单元。下次有新单元插入的时候，重复上述过程。
 }
 
+
 void add_dep (Graph *g, SchemaType *t, char *name, SchemaType *head) {
-  if (strncmp (name, "xs:", 3) != 0)
+  if (strncmp (name, "xs:", 3) != 0)  //如果不是“xs:”则添加。所有的元素名都是以xs:开头的，而属性则不是
     add_edge (g, t, find_by_name (head, name));
 }
 
@@ -338,6 +346,8 @@ void element_decl (SchemaDoc *doc, Element *e) {
 
 void process_schema (SchemaDoc *doc, Element *root) {
   Element *e; char *prefix; Attribute *a;
+  
+  //添加属性
   foreach (a, root->attr) {
     if (streq (a->name, "attributeFormDefault"))
       doc->attributeFormDefault = streq (a->value, "qualified");
@@ -351,6 +361,7 @@ void process_schema (SchemaDoc *doc, Element *root) {
       add_namespace (doc, a->value, prefix);
     }
   }
+  //添加成员
   foreach (e, (Element *)root->first) {
     char *name = local_name (&prefix, e->name);
     if (streq (name, "import")) {
@@ -367,11 +378,13 @@ void process_schema (SchemaDoc *doc, Element *root) {
   }
 }
 
+
+/* schema_gen 功能函数，应该是一个功能性函数，与client本身功能无关。*/
 int main () {
   Graph graph; List *sorted;
   SchemaDoc doc = {0};
   Named *se_list = load_list ("se_list.txt"); 
-  Element *root = xml_read ("sep.xsd");
+  Element *root = xml_read ("sep.xsd"); //读取并且解析到root。
   process_schema (&doc, root);
   build_graph (&graph, doc.types);
   sorted = top_sort (&graph);

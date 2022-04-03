@@ -601,6 +601,9 @@ void print_symbols (ElementDecl *elements) {
   print ("\n");
 }
 
+
+
+//看起来像是导入了一个表格，按照字典顺序
 Named *load_list (char *file) {
   FILE *f = fopen (file, "r");
   Named *n = NULL; List *l;
@@ -611,7 +614,7 @@ Named *load_list (char *file) {
       sprintf (list_name, "%sList", name);
       l = list_insert (NULL, strdup (name));
       while ((item = strtok (NULL, " \t\r\n")))
-	l = list_insert (l, strdup (item));
+      	l = list_insert (l, strdup (item));
       n = named_insert_sorted (n, strdup (list_name), list_reverse (l));
     }
   } fclose (f);

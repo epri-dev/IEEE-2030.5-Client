@@ -20,6 +20,8 @@ void usage () {
   print_interfaces (0); exit (0);
 }
 
+
+/*下面的宏定义用于在test这个全局变量中标记将要测试的内容*/
 #define GET_EDEV 1
 #define GET_FSA (1<<1)
 #define GET_DERP (1<<2)
@@ -39,12 +41,18 @@ void usage () {
 #define DELETE_DEVICE (1<<15)
 #define CLIENT_FOUND (1<<16)
 #define INVERTER_CLIENT (1<<17)
-//test记录了需要测试的内容
+
+/*
+test记录了需要测试的内容，用bit位占位表示
+secure的值表示是否是加密了连接
+
+*/
 
 int server = 0, test = 0, secure = 0, interval = 5*60, primary = 0, pin = 0;
 
 Stub *edevs; char *path = NULL; uint64_t delete_sfdi;
 
+//可能跟msDNS功能有关
 int subtype_query (char *arg, char *name) {
   char subtype[12] = {0}; int qu = 0, n;
   char *p = strchr (arg, ':'), *q = strchr (arg, '/');
@@ -61,6 +69,7 @@ int subtype_query (char *arg, char *name) {
     path = q; return 1;
   } return 0;
 }
+
 
 int uri_retrieval (char *arg) {
   Uri128 buf = {0}; Uri *uri = &buf.uri;
@@ -89,6 +98,7 @@ int cert_name (char *arg) {
 /*导入本次测试所需要的各项参数
 client_test interface [device_cert ca_certs..]
                        <subtype[:1][/path] | URI> [commands]
+并执行
 */
 void options (int argc, char **argv) {
   int i = 2, index; char *name = argv[1];
@@ -97,18 +107,17 @@ void options (int argc, char **argv) {
     printf ("options: interface %s not found\n", name); exit (0);
   }
   net_select (index); der_init ();
+  
   // process certificates and base query
   while (i < argc) { DerDevice *d;
-    if (subtype_query (argv[i], name)
-	|| uri_retrieval (argv[i])) {
+    if (subtype_query (argv[i], name)	|| uri_retrieval (argv[i])) { //获取到参数中所标注的这些资源
       i++; break;
     } else if (!secure) {
       client_init (name, argv[i]); secure = 1;
       d = get_device (device_sfdi);
       memcpy (d->lfdi, device_lfdi, 20);
     } else if (!cert_name (argv[i])) {
-      printf ("options: certificate file or directory %s does not exist\n",
-	      argv[i]); exit (0);
+      printf ("options: certificate file or directory %s does not exist\n",argv[i]); exit (0);
     } i++;
   }
   if (!secure) {
@@ -118,6 +127,7 @@ void options (int argc, char **argv) {
     printf ("options: no CA certificates specified, using ./certs\n");
     load_cert_dir ("certs");
   }
+  
   // process tests
   while (i < argc) { uint64_t sfdi;
     const char * const commands[] =
@@ -127,7 +137,7 @@ void options (int argc, char **argv) {
     switch (string_index (argv[i], commands, 18)) {
     case 0: // sfdi
       if (++i == argc || !number64 (&device_sfdi, argv[i])) {
-	printf ("sfdi command expects number argument\n"); exit (0);
+      	printf ("sfdi command expects number argument\n"); exit (0);
       } break;
     case 1: // edev
       test |= GET_EDEV | GET_FSA; primary = 1; break;
@@ -139,7 +149,7 @@ void options (int argc, char **argv) {
     case 4: // pin
       test |= PUT_PIN;
       if (++i == argc || !number (&pin, argv[i])) {
-	printf ("pin command expects number argument\n"); exit (0);
+	      printf ("pin command expects number argument\n"); exit (0);
       } break;
     case 5: // primary
       primary = 1;
@@ -161,20 +171,20 @@ void options (int argc, char **argv) {
       test |= GET_ALL | REGISTER_TEST | ALARM_TEST; break;
     case 13: // poll
       if (++i == argc || !number (&active_poll_rate, argv[i])) {
-	printf ("poll command expects an interval in seconds\n"); exit (0);
+	      printf ("poll command expects an interval in seconds\n"); exit (0);
       } break;
     case 14: // load
       if (++i == argc || !number64 (&sfdi, argv[i]) || ++i == argc) {
-	printf ("load command expects SFDI and directory name\n"); exit (0);
+      	printf ("load command expects SFDI and directory name\n"); exit (0);
       } device_settings (sfdi, argv[i]); break;
     case 15: // device
       if (++i == argc || file_type (argv[i]) != FILE_DIR) {
-	printf ("device command expects a directory name\n"); exit (0);
+      	printf ("device command expects a directory name\n"); exit (0);
       } device_certs (argv[i]);
       test |= GET_EDEV | GET_FSA | DEVICE_TEST; break;
     case 16: // delete
       if (++i == argc || !number64 (&delete_sfdi, argv[i])) {
-	printf ("delete command expects number argument\n"); exit (0);
+      	printf ("delete command expects number argument\n"); exit (0);
       } test |= GET_EDEV | DELETE_DEVICE; break;
     case 17: // inverter
       test |= INVERTER_CLIENT; break;
@@ -497,23 +507,25 @@ int main (int argc, char **argv) {
   Service *s; void *any;
   version ();
   platform_init ();
+
   options (argc, argv);
+  
   while (1) {
     switch (der_poll (&any, -1)) {
     case SERVICE_FOUND: s = any;
       print_service (s);
       if (test) get_dcap (s, secure);
       else if (path)
-	get_resource (service_connect (s, secure), -1, path, 0);
+      	get_resource (service_connect (s, secure), -1, path, 0);
       else get_path (s, secure); break;
     case TCP_ACCEPT:
       // accept_notifier (any);
     case TCP_PORT:      //可能是连接到了服务器？
       if (conn_session (any)) {
-	http_debug (any, 1);
-	// if (http_client (any))
-	process_http (any, test_dep);
-	// else process_notifications (any, test_dep);
+	      http_debug (any, 1);
+      	// if (http_client (any))
+      	process_http (any, test_dep);
+      	// else process_notifications (any, test_dep);
       }
       break;
     case TCP_TIMEOUT:

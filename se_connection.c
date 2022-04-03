@@ -139,12 +139,17 @@ void *get_conn (Address *addr);
 
 #ifndef HEADER_ONLY
 
+
+/*
+一个面向某一个服务器的“连接”对象。
+包含了HTTP连接，连接后返回的数据的解析的全部所需的过程。
+*/
 typedef struct _SeConnection {
-  HttpConnection http;
-  Address host;
-  Parser parser;
+  HttpConnection http;//构建HTTP请求的所有要素的对象
+  Address host;     //当前连接的服务器的地址
+  Parser parser;    //返回的响应数据的解析器
   int state, media;
-  uint64_t sfdi;
+  uint64_t sfdi;  
   struct _SeConnection *next;
 } SeConnection;
 
@@ -258,9 +263,11 @@ int se_receive (void *conn) {
   return SE_ERROR;
 }
 
-SeConnection *connections = NULL;
-int se_media = SE_XML;
+SeConnection *connections = NULL; //在本应用中，所有的连接到的服务器的连接对象集合
+int se_media = SE_XML;  //在本应用中，所使用的交互数据“媒介”，可选的 有XML和EXI，这里选择XML格式。
 
+
+//构建一个新的连接并且插入到原先的链表中。
 void *new_conn (int client) {
   SeConnection *c = type_alloc (SeConnection);
   char *accept = se_media == SE_XML? "application/sep+xml; level=-S1"
@@ -269,16 +276,19 @@ void *new_conn (int client) {
     : "application/sep-exi";
   http_init (c, client, accept, media);
   c->media = se_media;
-  c->next = connections; connections = c;
+  c->next = connections; connections = c; //新的连接总是排在链表的开头，旧的连接总是排在末尾。即从开头插入数据。connections总是指向第一个成员。
   return c;
 }
 
-void *find_conn (Address *addr) { SeConnection *c;
+/* 根据IP地址，在connections这个队列中找到对应的“连接对象” */
+void *find_conn (Address *addr) { 
+  SeConnection *c;
   foreach (c, connections)
     if (http_client (c) && address_eq (&c->host, addr)) return c;
   return NULL;
 }
 
+/*给出一个服务器的IP地址，获取一个连接对象*/
 void *get_conn (Address *addr) {
   SeConnection *c = find_conn (addr);
   return c? c : new_conn (1);
@@ -297,12 +307,13 @@ void *se_connect_uri (Uri *uri) {
   return se_connect (uri->host, secure);
 }
 
-/*这个函数应用于服务端，在本Demo代码中并没有用到。*/
+/*这个函数应用于服务端，在本Demo代码中并没有用到，所以不用关注。*/
 void *se_accept (Acceptor *a, int secure) {
   return conn_accept (new_conn (0), a, secure);
 }
 
 
+//将一个数据通过HTTP方式完整的发送出去
 void *se_send (void *conn, void *data, int type,
 	       char *href, int method) {
   Uri128 buf; Uri *uri = &buf.uri;

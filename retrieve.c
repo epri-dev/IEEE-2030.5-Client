@@ -24,6 +24,7 @@
 #define RETRIEVE_FAIL (EVENT_NEW+9)
 
 /*
+
 time_t类型在time.h中定义：
 #ifndef __TIME_T
 #define __TIME_T
@@ -117,7 +118,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
     @returns a pointer to the subordinate resource Stub
 */
 #define get_dep(r, obj, type)					\
-  new_dep (r, get_root ((r)->conn, obj, type), SE_##type##Link_exists)
+  new_dep (r, get_root ((r)->conn, obj, type), SE_##type##Link_exists) 
 
 /** @brief Get a subordinate %List resource Stub and make the parent resource a
     dependent.
@@ -189,11 +190,13 @@ void remove_deps (Stub *s, List *deps) { List *l;
 }
 
 void *find_stub (Stub **head, char *name, void *conn) {
-  if (*head = find_resource (name)) { Stub *s;
+  if (*head = find_resource (name)) { 
+    Stub *s;
     foreach (s, *head) if (s->conn == conn) return s;
   } return NULL;
 }
 
+/*如果stub不存在，那么就新建一个存放起来*/
 void *get_stub (char *name, int type, void *conn) {
   Stub *head, *s = find_stub (&head, name, conn);
   if (!s) {
@@ -291,6 +294,7 @@ void *get_subordinate (Stub *s, int type) { List *l;
   } return NULL;
 }
 
+/*获取到resource? 每一个URL代表了一个resource */
 Stub *get_resource (void *conn, int type, const char *href, int count) {
   Stub *s; Uri128 buf; Uri *uri = &buf.uri;
   if (!http_parse_uri (&buf, conn, href, 127)) return NULL;
@@ -309,7 +313,7 @@ void poll_resource (Stub *s) {
     time_t end = ev->interval.start + ev->interval.duration;
     if (s->poll_rate >= (end - now)) return;
   }
-  if (s->poll_next <= now) {
+  if (s->poll_next <= now) {  //如果poll时刻 已经到达，那么就向event列表中插入一个事件。该事件将被执行？？（在哪里被执行？）
     s->poll_next = next; insert_event (s, RESOURCE_POLL, next);
   }
 }
@@ -383,7 +387,8 @@ int list_object (Stub *s, void *obj, DepFunc dep) {
   return count;
 }
 
-Stub *find_target (void *conn) { Stub *head;
+Stub *find_target (void *conn) { 
+  Stub *head;
   return find_stub (&head, http_path (conn), conn);
 }
 

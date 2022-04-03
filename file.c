@@ -7,6 +7,7 @@
 
 #ifndef HEADER_ONLY
 
+//将文件读取出来并放到一个buffer中。
 char *file_read (const char *name, int *length) {
   FILE *f = fopen (name, "rb");
   char *buffer; int end;
@@ -35,6 +36,7 @@ char *break_line (char *buffer) {
   return line == start ? NULL : start;
 }
 
+//如果s中仅仅包含空格或者\t则认为是空白行，即empty
 int empty_line (char *s) { int c;
   while ((c = *s++) != '\0')
     if (!(c == ' ' || c == '\t')) return 0;

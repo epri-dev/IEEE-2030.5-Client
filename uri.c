@@ -14,7 +14,7 @@ typedef struct {
   char *name; ///< is the host name (if any)
   char *end; ///< is a pointer to the end of the host name
   char *path; ///< is the URI path
-  char *query; ///< is the URI query
+  char *query; ///< is the URI query query中的三个参数：s，l，a
   Address *host; ///< is pointer to the URI host
   int port; ///< is the URI port
 } Uri;
@@ -26,7 +26,9 @@ typedef struct {
   char buffer[];
 } UriBuffered;
 
-/** A buffered URI instance type */
+/** A buffered URI instance type 
+实际的有关URL的数据存储在buffer[128]这个数组中，前面的Uri uri则存放了一些指针，指向了buffer字符串中
+*/
 typedef struct {
   Uri uri;
   Address host;
@@ -91,7 +93,7 @@ void terminate_host (Uri *uri) {
 }
 
 // parse URI-reference (RFC 3986)
-/*将URL中的各个要素都解析出来*/
+/*将URL中的各个要素都解析出来。将修改原始的字符串，将需要截断的地方写入\0来截断。最终将参数uri的中的各个元素填充好。*/
 char *parse_uri (Uri *uri, Address *host, int state, char *data) {
   char *p; int c; uri->name = uri->path = uri->query = NULL; uri->host = NULL;
   while (1) { c = *data;

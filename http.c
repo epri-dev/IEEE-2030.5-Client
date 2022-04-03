@@ -26,7 +26,7 @@ enum HttpMethod {HTTP_GET, HTTP_PUT, HTTP_POST, HTTP_DELETE, HTTP_HEAD,
 /** @brief An HTTP request */
 typedef struct _HttpRequest {
   struct _HttpRequest *next;
-  void *context;
+  void *context;  //可能是用户自定义的上下文数据。
   uint8_t method; char uri[];
 } HttpRequest;
 
@@ -308,9 +308,9 @@ typedef struct _HttpConnection {
   Connection tcp;
   char *query, *content_type, *media_range, *location;
   Address host; // host from the Host: header field
-  char *headers, *version;
+  char *headers, *version;  //version -- "HTTP/1.1";
   const char *media; // media type for POST/PUT
-  const char *accept; // media types accepted
+  const char *accept; // media types accepted 接收类型，在header中表示，比如指定接收文本。
   char *data; // pointer to the next header line or http content
   int end;    // buffer + end = the end of the http message
   int length; // the amount of data in buffer
@@ -318,7 +318,7 @@ typedef struct _HttpConnection {
   uint8_t state, method, request_method;
   unsigned body : 1; // response or request has a body
   unsigned close : 1; // close signaled in last request/response
-  unsigned client : 1; // true for client connection
+  unsigned client : 1; // true for client connection 表示是否是一个客户端连接
   unsigned debug : 1;
   int status, error, header;
   void *context; // request context
@@ -351,6 +351,8 @@ void print_http_status (void *conn) { HttpConnection *c = conn;
   printf ("%s %s: %d\n", method, c->uri.path, c->status);  
 }
 
+
+//对传入的conn执行部分数据的初始化
 void http_init (void *conn, int client,
 		const char *accept,
 		const char *media) {
@@ -380,9 +382,11 @@ void http_flush (void *conn) {
   if (queue_empty (&h->send) && h->close) conn_close (h);
 }
 
+
+/*感觉这个操作是异步操作，不是同步等待回复的？？待验证。*/
 void http_write (void *conn, void *data, int length) {
   HttpConnection *h = conn;
-  if (h->send.first || conn_write (conn, data, length) < 0) {
+  if (h->send.first || conn_write (conn, data, length) < 0) {//如果当前网络层忙，则加入queue中等待后续发送？？
     SendQueueItem *i = malloc (sizeof (SendQueueItem) + length);
     i->length = length; i->next = NULL;
     memcpy (i->buffer, data, length);
@@ -420,6 +424,8 @@ int http_request (void *conn, char *buffer, const char *uri, int method) {
   queue_request (conn, method, uri); return n;
 }
 
+
+/*GET一个URL指向的对象。但是不确定HTTP报文是否是异步获取到的。*/
 void http_get (void *conn, const char *uri) { char buffer[256];
   int n = http_request (conn, buffer, uri, HTTP_GET);
   n += sprintf (buffer+n, "\r\n");
@@ -438,6 +444,7 @@ int http_content (char *buffer, const char *media, int length) {
   return n;
 }
 
+//发送HTTP header
 int http_send (void *conn, char *buffer, const char *uri, int method) {
   HttpConnection *c = conn;
   int n = http_request (conn, buffer, uri, method);

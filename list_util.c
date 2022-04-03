@@ -63,12 +63,13 @@ void *list_cat (void *la, void *lb) {
   } return lb;
 }
 
+//看起来像是将一个list中的各个元素的next方向互换，具体还不是很清楚。
 void *list_reverse (void *list) {
   List *l = list, *rev = NULL;
   while (l != NULL) {
-    List *n = l->next;
-    l->next = rev;
-    rev = l; l = n;
+    List *n = l->next;  //将l->next的值暂时存到List *n中
+    l->next = rev;  //修改l->next的值，指向rev，第一次是NULL。
+    rev = l; l = n; //rev被赋予了l的值。l被赋予了n的值，也就是之前l->next的值。n是一个中间变量，此时l本身的值与l->next的值互换了。
   } return rev;
 }
 

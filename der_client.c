@@ -75,7 +75,7 @@ int der_poll (void **any, int timeout) {
     case RESOURCE_UPDATE: update_resource (*any); break;
     case RESOURCE_REMOVE:
       if (se_event (resource_type (*any)))
-	delete_blocks (*any);
+      	delete_blocks (*any);
     case RETRIEVE_FAIL:
       remove_stub (*any); break;
     default: return event;

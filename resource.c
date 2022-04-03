@@ -26,11 +26,18 @@ typedef struct _Resource {
 #define resource_data(r) ((Resource *)r)->data
 #define resource_type(r) ((Resource *)r)->type
 
+/*
+下面的find,insert，delete和init函数，已经在宏定义
+global_hash(resource, string, 512)
+中定义好了。
+*/
+
 /** @brief Find a resource with the matching name.
     @param name is a pointer to a string of the name to match
     @returns a pointer to a Resource with a matching name, or NULL if none were
     found.
 */
+
 void *find_resource (void *name);
 
 /** @brief Insert a resource into the database.

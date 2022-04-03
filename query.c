@@ -2,13 +2,14 @@ typedef struct {
   int64_t after;
   uint16_t start;
   uint8_t limit;
-} Query;
+} Query;  //HTTPS request中的3个重要参数 
 
 int parse_query (Query *q, char *query) {
   int state = 0, c, p; int64_t x;
   if (!query) return 1;
   q->start = 0; q->after = 0; q->limit = 1;
-  while (1) { c = *query;
+  while (1) { 
+    c = *query;
     switch (state) {
     case 0: if (c == '\0') return 1; state++;
     case 1: p = c; state++; break;
@@ -17,13 +18,13 @@ int parse_query (Query *q, char *query) {
     case 4: switch (c) {
       case '&': state = 0; query++;
       case '\0': state++; switch (p) {
-	case 'a': q->after = x; break;
-	case 'l': q->limit = x; break;
-	case 's': q->start = x; break;
-	default: return 0;
-	} break;
+	    case 'a': q->after = x; break;  //after，requeset参数
+    	case 'l': q->limit = x; break;  //limit
+    	case 's': q->start = x; break;  //start
+    	default: return 0;
+	  } break;
       default: if (digit (c)) x = x * 10 + (c - '0');
-	else return 0; query++; 
+                else return 0; query++; 
       } continue;
     case 5: return 1;
     }
