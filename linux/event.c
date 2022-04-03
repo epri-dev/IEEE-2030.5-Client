@@ -6,20 +6,21 @@
 struct epoll_event
 
 这两天在看项目的数据结构定义及关系，遇到一些关于socket的知识点，还有一些C++的知识点，下面总结下：
+
 1. struct epoll_event
 
-   结构体epoll_event被用于注册所感兴趣的事件和回传所发生待处理的事件，定义如下：
+   结构体 epoll_event 被用于注册所感兴趣的事件和回传所发生待处理的事件，定义如下：
 
     typedef union epoll_data {
-        void *ptr;
-         int fd;
-         __uint32_t u32;
-         __uint64_t u64;
-     } epoll_data_t;//保存触发事件的某个文件描述符相关的数据
+        void *ptr;  //携带的用户数据本身的指针。
+        int fd;     //
+        __uint32_t u32;
+        __uint64_t u64;
+     } epoll_data_t;  //保存触发事件的某个文件描述符相关的数据
 
      struct epoll_event {
-         __uint32_t events;      // epoll event
-         epoll_data_t data;      // User data variable
+        __uint32_t events;  //epoll event
+        epoll_data_t data;  //User data variable
      };
 
    其中events表示感兴趣的事件和被触发的事件，可能的取值为：
@@ -35,11 +36,12 @@ struct epoll_event
 1、epoll_create函数
     函数声明：int epoll_create(int size)
    功能：该函数生成一个epoll专用的文件描述符，其中的参数是指定生成描述符的最大范围；
-2、epoll_ctl函数
+   
+2、epoll_ctl 函数
     函数声明：int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
     功能：用于控制某个文件描述符上的事件，可以注册事件，修改事件，删除事件。
-    @epfd：由epoll_create生成的epoll专用的文件描述符
-     @op：要进行的操作，EPOLL_CTL_ADD注册、EPOLL_CTL_MOD修改、EPOLL_CTL_DEL删除
+    @epfd：由 epoll_create 生成的 epoll 专用的文件描述符
+     @op：要进行的操作 ， EPOLL_CTL_ADD 注册 、 EPOLL_CTL_MOD 修改 、 EPOLL_CTL_DEL 删除
      @fd：关联的文件描述符；
     @event：指向epoll_event的指针；
    成功：0；失败：-1
@@ -48,9 +50,9 @@ struct epoll_event
 3、epoll_wait 函数
    函数声明:int epoll_wait(int epfd,struct epoll_event * events,int maxevents,int timeout)
    功能：该函数用于轮询I/O事件的发生；
-    @epfd：由epoll_create生成的epoll专用的文件描述符；
+    @epfd：由 epoll_create 生成的epoll专用的文件描述符；
     @epoll_event：用于回传待处理事件的数组；
-    @maxevents：每次能处理的事件数；
+    @maxevents：每次能处理的事件数；应当小于等于前面的数组长度。
     @timeout：等待I/O事件发生的超时值；
    成功：返回发生的事件数；失败：-1
 
@@ -78,6 +80,7 @@ bool setnonblocking(int sock)//设置socket为非阻塞方式
     return true;
 }
 
+
 int main()
 {
 　　int i, maxi, listenfd, new_fd, sockfd,epfd,nfds;
@@ -91,7 +94,7 @@ int main()
 
 　　epfd=epoll_create(256);//生成用于处理accept的epoll专用的文件描述符
 　　ev.data.fd=listenfd;//设置与要处理的事件相关的文件描述符
-　　ev.events=EPOLLIN|EPOLLET;//设置要处理的事件类型
+　　ev.events=EPOLLIN|EPOLLET;//设置要处理的事件类型。EPOLLIN：表示对应的文件描述符可以读；ET的epoll工作模式；
 
 　　epoll_ctl(epfd,EPOLL_CTL_ADD,listenfd,&ev);//注册epoll事件
 
@@ -107,7 +110,7 @@ int main()
 　　maxi = 0;
 　　for ( ; ; )
       {
-         //epoll_wait：等待epoll事件的发生，并将发生的sokct fd和事件类型放入到events数组中；
+         //epoll_wait：等待epoll事件的发生，并将发生的sokct fd和事件类型放入到 events 数组中；
          //nfds：为发生的事件的个数。
          //注：
 　　    nfds=epoll_wait(epfd,events,20,500);
@@ -115,7 +118,7 @@ int main()
 　　    //处理所发生的所有事件
 　　    for(i=0;i<nfds;++i)
 　　    {
-　　        if(events[i].data.fd==listenfd)//事件发生在listenfd上
+　　        if(events[i].data.fd == listenfd)// 事件发生在listenfd上
 　　        {
                //获取发生事件端口信息，存于clientaddr中；
                *new_fd：返回的新的socket描述符，用它来对该事件进行recv/send操作
@@ -131,7 +134,7 @@ int main()
 　　            ev.events=EPOLLIN|EPOLLET;//设置用于注测的读操作事件
 　　            epoll_ctl(epfd,,,&ev);//注册ev
 　　        }
-　　        else if(events[i].events&EPOLLIN)
+　　        else if(events[i].events & EPOLLIN) //有数据可读
 　　        {
 　　            if ( (sockfd = events[i].data.fd) < 0)
                        continue;
@@ -154,7 +157,7 @@ int main()
 　　           ev.events=EPOLLOUT|EPOLLET;//设置用于注测的写操作事件
 　　           epoll_ctl(epfd,,sockfd,&ev);//修改sockfd上要处理的事件为EPOLLOUT
 　　      }
-　　     else if(events[i].events&EPOLLOUT)
+　　     else if(events[i].events & EPOLLOUT)
 　　     {
 　　         sockfd = events[i].data.fd;
 　　          write(sockfd, line, n);
@@ -168,58 +171,72 @@ int main()
 */
 
 int event_poll (void **any, int timeout) {
-  PollEvent *pe; TcpPort *p; uint64_t value;
+  PollEvent *pe;
+  TcpPort *p;
+  uint64_t value;
   static struct epoll_event events[MAX_EVENTS];
-  static int i = 0, n = 0; int event;
+  static int i = 0, n = 0;
+  int event;
   static PollEvent *prev = NULL;
   if (prev) {
     if (!event_done (prev)) queue_add (&_active, prev); //往当前活动的_active的queue中添加prev，prev与本函数中后面的代码的执行有关。
     prev = NULL;
   }
- poll:
+poll:
   if (i == n) {
     if (pe = queue_remove (&_active)) {//返回首个元素
       event = pe->type;
       switch (pe->type) {
-      case TCP_ACCEPTOR: goto accept;
-      case TCP_ACCEPT: case TCP_CONNECT:
-	pe->type = TCP_PORT;
-      case TCP_PORT: case UDP_PORT:
-	prev = pe;
-      } *any = pe; return event;
+      case TCP_ACCEPTOR:
+        goto accept;
+      case TCP_ACCEPT:
+      case TCP_CONNECT:
+        pe->type = TCP_PORT;
+      case TCP_PORT:
+      case UDP_PORT:
+        prev = pe;
+      } *any = pe;
+      return event;
     }
-  retry:
-/*
-  3、epoll_wait 函数
-     函数声明:int epoll_wait(int epfd,struct epoll_event * events,int maxevents,int timeout)
-     功能：该函数用于轮询I/O事件的发生；
-      @epfd：由epoll_create生成的epoll专用的文件描述符；
-      @epoll_event：用于回传待处理事件的数组；
-      @maxevents：每次能处理的事件数；
-      @timeout：等待I/O事件发生的超时值；
-     成功：返回发生的事件数；失败：-1
+retry:
+    /*
+      3、epoll_wait 函数
+         函数声明:int epoll_wait(int epfd,struct epoll_event * events,int maxevents,int timeout)
+         功能：该函数用于轮询I/O事件的发生；
+          @epfd：由epoll_create生成的epoll专用的文件描述符；
+          @epoll_event：用于回传待处理事件的数组；
+          @maxevents：每次能处理的事件数；
+          @timeout：等待I/O事件发生的超时值；
+         成功：返回发生的事件数；失败：-1
 
-  */  
-    n = epoll_wait (poll_fd, events, MAX_EVENTS, timeout); i = 0;
+      */
+    n = epoll_wait (poll_fd, events, MAX_EVENTS, timeout);
+    i = 0;
     if (n < 0) goto retry; // perror ("event_poll");
     if (n == 0) return POLL_TIMEOUT;
   }
-  
+
   /*如果发生了事件*/
-  event = events[i].events; *any = pe = events[i].data.ptr; i++;
+  event = events[i].events;
+  *any = pe = events[i].data.ptr;
+  i++;
   // printf ("event_poll %x %p %d\n", event, pe, pe->type);
   switch (pe->type) {
-  case TCP_CONNECT: p = *any;
+  case TCP_CONNECT:
+    p = *any;
     /*EPOLLOUT：表示对应的文件描述符可以写；*/
     if (event & EPOLLOUT && bsd_connected (pe->socket)) {
       clear_timeout (pe);
-      pe->status = Connected; pe->type = TCP_PORT;
-      prev = pe; return TCP_CONNECT;
+      pe->status = Connected;
+      pe->type = TCP_PORT;
+      prev = pe;
+      return TCP_CONNECT;
     }
     if (event & EPOLLRDHUP || event & EPOLLHUP)
       net_close (*any);
     goto poll;
-  case TCP_PORT: prev = pe;
+  case TCP_PORT:
+    prev = pe;
     clear_timeout (pe);
     /*EPOLLIN：表示对应的文件描述符可以读；*/
     if (event & EPOLLIN)
@@ -234,17 +251,20 @@ int event_poll (void **any, int timeout) {
     https://blog.csdn.net/midion9/article/details/49883063
     */
     if (event & EPOLLRDHUP || event & EPOLLHUP) {
-      pe->status = Closed; prev = NULL;
+      pe->status = Closed;
+      prev = NULL;
       return TCP_CLOSED;
-    } break;
-  accept:
+    }
+    break;
+accept:
   case TCP_ACCEPTOR:
     if (prev = accept_queued (pe)) {
       queue_add (&_active, pe);
       prev->type = TCP_PORT;
       *any = prev;
       return TCP_ACCEPT;
-    } goto poll;
+    }
+    goto poll;
   case TIMER_EVENT:
     read (pe->fd, &value, 8);
     if (pe->id == TCP_TIMEOUT)

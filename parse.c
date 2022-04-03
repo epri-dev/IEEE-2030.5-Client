@@ -8,7 +8,7 @@
     structure (the order and types of elements and values) is predefined by an
     XML schema. Successful parsing means that the document conforms to the
     schema, failure means that the document did not conform or that the
-    document is incomplete. 
+    document is incomplete.
     parser是状态化的，能够随时停止和开始解析，所以意味着可以一个大型的文档能够以分段的方式来解析。
     The parser has a state and can stop and resume parsing at any point in the
     document, this means that a large document can be parsed in segments.
@@ -41,7 +41,7 @@ typedef struct _Parser Parser;
 */
 void *parse_doc (Parser *p, int *type);
 
-/** @brief Is there an error in parsing the document? 
+/** @brief Is there an error in parsing the document?
 
     Parsing can fail if the document is incomplete or there is an error in the
     document. This function checks for a parse error.
@@ -89,8 +89,9 @@ void parser_rebuffer (Parser *p, void *data, int length);
 #include "string_table.c"
 
 enum ParserState {PARSE_START, PARSE_ELEMENT, PARSE_NEXT, PARSE_ATTRIBUTE,
-		  PARSE_VALUE, PARSE_END, PARSE_SEQUENCE, SEQUENCE_END,
-		  PARSE_INVALID};
+                  PARSE_VALUE, PARSE_END, PARSE_SEQUENCE, SEQUENCE_END,
+                  PARSE_INVALID
+                 };
 enum ParserError {ERROR_NONE, UNKNOWN_ELEMENT, STACK_OVERFLOW};
 
 #define MAX_STACK 32 // document tree can be 32 levels deep
@@ -100,7 +101,10 @@ typedef struct {
   void *base;
   Queue queue;
   int size, count;
-  union { int all; int diff; };
+  union {
+    int all;
+    int diff;
+  };
 } StackItem;
 
 typedef struct {
@@ -114,13 +118,15 @@ struct _XmlParser;  //这样的声明方法是什么意思。
 struct _ParserDriver;
 
 typedef struct _Parser {
-  void *obj; int type; // completed object and type 完成解析后的数据对象和类型
+  void *obj;
+  int type; // completed object and type 完成解析后的数据对象和类型
   struct _XmlParser *xml;
   ElementStack stack;
   const Schema *schema;
   const SchemaElement *se;
   const struct _ParserDriver *driver;
-  void *base; uint8_t *ptr, *end;
+  void *base;
+  uint8_t *ptr, *end;
   StringTable *global, *local;
   int state, token, flag, bit;
   unsigned int xml_decl : 1;
@@ -141,23 +147,31 @@ typedef struct _ParserDriver {
   void (*rebuffer) (Parser *, char *, int length);
 } ParserDriver;
 
-StackItem *push_element (ElementStack *stack, const SchemaElement *se,void *base) { 
+StackItem *push_element (ElementStack *stack, const SchemaElement *se, void *base) {
   StackItem *t;
   if (stack->n == MAX_STACK) return NULL;
-  stack->n++; t = stack_top (stack);
+  stack->n++;
+  t = stack_top (stack);
   memset (t, 0, sizeof (StackItem));
-  t->se = se; t->base = base; return t;
+  t->se = se;
+  t->base = base;
+  return t;
 }
 
 const SchemaElement *pop_element (ElementStack *stack, void **base) {
-  StackItem *t = stack_top (stack); stack->n--;
-  *base = t->base; return t->se;
+  StackItem *t = stack_top (stack);
+  stack->n--;
+  *base = t->base;
+  return t->se;
 }
 
-int parse_error (Parser *p) { return p->state != PARSE_START; }
+int parse_error (Parser *p) {
+  return p->state != PARSE_START;
+}
 
 void print_stack (ElementStack *stack, const Schema *schema) {
-  StackItem *t = stack->items; int i;
+  StackItem *t = stack->items;
+  int i;
   printf ("parse_stack:\n");
   for (i = 0; i < stack->n; i++, t++)
     printf ("  %d %s\n", i, se_name (t->se, schema));
@@ -168,7 +182,9 @@ void print_parse_stack (Parser *p) {
   print_stack (&p->stack, p->schema);
 }
 
-char *parser_data (Parser *p) { return p->ptr; }
+char *parser_data (Parser *p) {
+  return p->ptr;
+}
 
 void parser_rebuffer (Parser *p, void *data, int length) {
   p->driver->rebuffer (p, data, length);
@@ -184,8 +200,9 @@ void *calloc(size_t n, size_t size);
 calloc()函数适合为数组申请空间，可以将size设置为数组元素的空间长度，将n设置为数组的容量。
 */
 void *add_element (StackItem *t) {
-  List *l = list_insert (NULL, calloc (1, t->size)); 
-  queue_add (&t->queue, l); return l;
+  List *l = list_insert (NULL, calloc (1, t->size));
+  queue_add (&t->queue, l);
+  return l;
 }
 
 // return parsed object on success NULL otherwise
@@ -193,82 +210,109 @@ void *parse_doc (Parser *p, int *type) {
   const SchemaElement *se;
   const ParserDriver *d = p->driver;
   ElementStack *stack = &p->stack;
-  StackItem *t; int size;
+  StackItem *t;
+  int size;
   while (1) {
     switch (p->state) {
     case PARSE_START:
       ok (d->parse_start (p));
-      stack->n = 0; p->state++;
+      stack->n = 0;
+      p->state++;
       size = object_element_size (p->se, p->schema);
-      p->obj = p->base = calloc (1, size); break;
+      p->obj = p->base = calloc (1, size);
+      break;
     case PARSE_ELEMENT:
-      se = p->se; p->flag = se->bit;
+      se = p->se;
+      p->flag = se->bit;
       if (se->attribute) {
-	if (!se->min && !is_pointer (se->xs_type)) {
-	  set_count (p->base, 1, p->flag); p->flag++;
-	} p->state = PARSE_ATTRIBUTE; continue;
+        if (!se->min && !is_pointer (se->xs_type)) {
+          set_count (p->base, 1, p->flag);
+          p->flag++;
+        }
+        p->state = PARSE_ATTRIBUTE;
+        continue;
       } else if (t = push_element (stack, se, p->base)) {
-	p->base += se->offset;
-	t->size = object_element_size (se, p->schema);
-	if (se->unbounded) {
-	  List *l = *(List **)p->base = add_element (t);
-	  p->base = l->data;
-	} else {
-	  t->diff = se->max - se->min;
-	  if (t->diff && !(se->simple && is_pointer (se->xs_type)))
-	    p->flag += bit_count (t->diff);
-	}
+        p->base += se->offset;
+        t->size = object_element_size (se, p->schema);
+        if (se->unbounded) {
+          List *l = *(List **)p->base = add_element (t);
+          p->base = l->data;
+        } else {
+          t->diff = se->max - se->min;
+          if (t->diff && !(se->simple && is_pointer (se->xs_type)))
+            p->flag += bit_count (t->diff);
+        }
       } else goto parse_error;
-    parse_element:
+parse_element:
       if (se->simple) goto parse_value;
-      p->se = &p->schema->elements[se->index+1];
+      p->se = &p->schema->elements[se->index + 1];
       p->state = PARSE_NEXT;
     case PARSE_NEXT:
-      ok (d->parse_next (p)); break;
+      ok (d->parse_next (p));
+      break;
     case PARSE_ATTRIBUTE:
-      ok (d->parse_attr_value (p, p->base+p->se->offset));
-      p->state--; p->se++; break;
-    parse_value:
+      ok (d->parse_attr_value (p, p->base + p->se->offset));
+      p->state--;
+      p->se++;
+      break;
+parse_value:
       p->state = PARSE_VALUE;
     case PARSE_VALUE:
-      ok (d->parse_value (p, p->base)); p->state++; break;
+      ok (d->parse_value (p, p->base));
+      p->state++;
+      break;
     case PARSE_END:
       if(stack->n) {
-	t = stack_top (stack); se = t->se;
-	ok (d->parse_end (p, se)); t->count++;
-	if (se->unbounded || t->count < se->max)
-	  p->state = PARSE_SEQUENCE;
-	else p->state = SEQUENCE_END;
+        t = stack_top (stack);
+        se = t->se;
+        ok (d->parse_end (p, se));
+        t->count++;
+        if (se->unbounded || t->count < se->max)
+          p->state = PARSE_SEQUENCE;
+        else p->state = SEQUENCE_END;
       } else {
-	d->parse_done (p);
-	p->state = PARSE_START;
-	*type = p->type; return p->obj;
-      } break;
+        d->parse_done (p);
+        p->state = PARSE_START;
+        *type = p->type;
+        return p->obj;
+      }
+      break;
     case PARSE_SEQUENCE:
-      t = stack_top (stack); se = t->se;
+      t = stack_top (stack);
+      se = t->se;
       if (d->parse_sequence (p, t)) {
-	if (se->unbounded)
-	  p->base = list_data (add_element (t));
-	else if (t->count < se->max)
-	  p->base += t->size;
-	else goto parse_error;
-	p->flag++; goto parse_element;
+        if (se->unbounded)
+          p->base = list_data (add_element (t));
+        else if (t->count < se->max)
+          p->base += t->size;
+        else goto parse_error;
+        p->flag++;
+        goto parse_element;
       } else if (p->state == PARSE_SEQUENCE)
-	return NULL; break;
+        return NULL;
+      break;
     case SEQUENCE_END:
       if (t->diff)
-	set_count (t->base, t->count-se->min, se->bit);
-      p->se = pop_element (stack, &p->base)+1;
-      p->state = PARSE_NEXT; break;      
-    case PARSE_INVALID: return NULL;
+        set_count (t->base, t->count - se->min, se->bit);
+      p->se = pop_element (stack, &p->base) + 1;
+      p->state = PARSE_NEXT;
+      break;
+    case PARSE_INVALID:
+      return NULL;
     }
   }
- parse_error:
-  p->state = PARSE_INVALID; return NULL;
+parse_error:
+  p->state = PARSE_INVALID;
+  return NULL;
 }
 
-Parser *parser_new () { return calloc (1, sizeof (Parser)); }
+Parser *parser_new () {
+  return calloc (1, sizeof (Parser));
+}
 
-void parser_free (Parser *p) { if (p->xml) free (p->xml); free (p); }
+void parser_free (Parser *p) {
+  if (p->xml) free (p->xml);
+  free (p);
+}
 
 #endif

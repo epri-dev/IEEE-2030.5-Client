@@ -21,19 +21,25 @@ char *timestamp () {
   return ctime (&now);
 }
 
-void print_event_start (EventBlock *eb) { Resource *r = eb->event;
+void print_event_start (EventBlock *eb) {
+  Resource *r = eb->event;
   DerDevice *device = eb->context;
-  SE_Event_t *ev = r->data; SE_DERControl_t *derc;
+  SE_Event_t *ev = r->data;
+  SE_DERControl_t *derc;
   printf ("Event Start \"%s\" -- %s", ev->description, timestamp ());
   printf ("EndDevice: %ld\n", device->sfdi);
   switch (r->type) {
-  case SE_DERControl: derc = r->data;
+  case SE_DERControl:
+    derc = r->data;
     print_se_object (&derc->DERControlBase, SE_DERControlBase);
-  } printf ("\n");
+  }
+  printf ("\n");
 }
 
-void print_event_end (EventBlock *eb) { Resource *r = eb->event;
-  DerDevice *device = eb->context; SE_Event_t *ev = r->data;
+void print_event_end (EventBlock *eb) {
+  Resource *r = eb->event;
+  DerDevice *device = eb->context;
+  SE_Event_t *ev = r->data;
   printf ("Event End \"%s\" -- %s", ev->description, timestamp ());
   printf ("EndDevice: %ld\n\n", device->sfdi);
 }
@@ -55,35 +61,49 @@ void print_blocks (EventBlock *eb) {
 }
 
 void print_event_schedule (DerDevice *d) {
-  Schedule *s = &d->schedule; EventBlock *eb = s->scheduled;
+  Schedule *s = &d->schedule;
+  EventBlock *eb = s->scheduled;
   printf ("Event Schedule for device %ld -- %s", d->sfdi, timestamp ());
   printf ("  Start       End         Description\n");
   print_blocks (s->scheduled);
   printf ("Active Blocks:\n");
-  print_blocks (s->active); printf ("\n");
+  print_blocks (s->active);
+  printf ("\n");
 }
 
 int der_poll (void **any, int timeout) {
-  Schedule *s; int event;
-  while (event = next_event (any)) {
+  Schedule *s;
+  int event;
+  while (event = next_event (any)) {  //查询下一个event是否已经到来
     switch (event) {
-    case SCHEDULE_UPDATE: s = *any; update_schedule (s);
-      if (!s->active) { DerDevice *d = s->context;
-	if (d->dderc) insert_event (d, DEFAULT_CONTROL, 0);
-      } break;
-    case RESOURCE_POLL: poll_resource (*any);
-    case RESOURCE_UPDATE: update_resource (*any); break;
+    case SCHEDULE_UPDATE:
+      s = *any;
+      update_schedule (s);
+      if (!s->active) {
+        DerDevice *d = s->context;
+        if (d->dderc) insert_event (d, DEFAULT_CONTROL, 0);
+      }
+      break;
+    case RESOURCE_POLL:
+      poll_resource (*any);
+    case RESOURCE_UPDATE:
+      update_resource (*any);
+      break;
     case RESOURCE_REMOVE:
       if (se_event (resource_type (*any)))
-      	delete_blocks (*any);
+        delete_blocks (*any);
     case RETRIEVE_FAIL:
-      remove_stub (*any); break;
-    default: return event;
+      remove_stub (*any);
+      break;
+    default:
+      return event;
     }
   }
   return client_poll (any, timeout);
 }
 
 void der_init () {
-  device_init (); resource_init (); event_init ();
+  device_init ();
+  resource_init ();
+  event_init ();
 }

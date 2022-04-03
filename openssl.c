@@ -52,11 +52,13 @@ void load_cert_dir (const char *path);
 #include <openssl/x509v3.h>
 
 void print_ssl_error (char *func) {
-  char buffer[120]; int err;
+  char buffer[120];
+  int err;
   while (err = ERR_get_error()) {
     ERR_error_string (err, buffer);
-    printf ("%s: %d, %s\n", func, err, buffer); fflush (stdout);
-  } 
+    printf ("%s: %d, %s\n", func, err, buffer);
+    fflush (stdout);
+  }
 }
 
 SSL_CTX *ssl_ctx = NULL;
@@ -67,7 +69,7 @@ int bio_read (BIO *bio, char *buffer, int size) {
   // printf ("ssl_read %d, %d\n", size, n); fflush (stdout);
   BIO_clear_retry_flags (bio);
   if (n == -1 && event_pending (p))
-      BIO_set_retry_read (bio);
+    BIO_set_retry_read (bio);
   return n;
 }
 
@@ -111,35 +113,41 @@ int check_cert (int status, X509 *cert) {
     unsigned nid = OBJ_obj2nid (obj);
     switch (nid) {
     case NID_policy_mappings:
-    case NID_name_constraints: return 0;
+    case NID_name_constraints:
+      return 0;
     case NID_subject_alt_name:
       if (X509_check_ca (cert)) return 0;
     case NID_key_usage:
     case NID_basic_constraints:
     case NID_certificate_policies:
-      if (!critical) return 0; break;
+      if (!critical) return 0;
+      break;
     case NID_authority_key_identifier:
     case NID_subject_key_identifier:
-    default: if (critical) return 0;
+    default:
+      if (critical) return 0;
     }
-  } return status;
+  }
+  return status;
 }
 
 int verify_peer (int status, X509_STORE_CTX *ctx) {
   SSL *ssl = X509_STORE_CTX_get_ex_data
-    (ctx, SSL_get_ex_data_X509_STORE_CTX_idx ());
+             (ctx, SSL_get_ex_data_X509_STORE_CTX_idx ());
   void *user = SSL_get_app_data (ssl);
   X509 *x509 = X509_STORE_CTX_get0_cert (ctx), // peer cert
-    *curr = X509_STORE_CTX_get_current_cert (ctx);
+        *curr = X509_STORE_CTX_get_current_cert (ctx);
   status = check_cert (status, x509);
   if (x509 != curr) return status; // only check the peer cert
   if (x509 && _verify_peer) {
     int length = i2d_X509 (x509, NULL);
-    uint8_t *cert, *p = malloc (sha256_size (length)); cert = p;
+    uint8_t *cert, *p = malloc (sha256_size (length));
+    cert = p;
     i2d_X509 (x509, &p);
     if (!_verify_peer (user, cert, length)) status = 0;
     free (cert);
-  } return status;
+  }
+  return status;
 }
 
 const uint8_t *ssl_session_id (void *ssl) {
@@ -155,7 +163,8 @@ void load_cert (const char *path) {
   if (ssl_load_cert (path) != 1) {
     printf ("load_cert: error opening certificate file: %s\n", path);
     exit (0);
-  } printf ("loaded certificate \"%s\"\n", path);
+  }
+  printf ("loaded certificate \"%s\"\n", path);
 }
 
 void _load_cert (const char *path, void *ctx) {
@@ -169,30 +178,36 @@ void load_cert_dir (const char *path) {
 int _tls_initialized = 0;
 
 void tls_init (const char *path, VerifyFunc verify) {
-  int ret, type; char *private = strdup (path), *ext;
+  int ret, type;
+  char *private = strdup (path), *ext;
   if ((ssl_ctx = SSL_CTX_new (TLS_method ())) == NULL) {
-    print_ssl_error ("tls_init"); exit (0);
+    print_ssl_error ("tls_init");
+    exit (0);
   }
-  init_bio (); _verify_peer = verify;
+  init_bio ();
+  _verify_peer = verify;
   SSL_CTX_set_verify (ssl_ctx, SSL_VERIFY_PEER |
-		      SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_peer);
+                      SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_peer);
   if (!SSL_CTX_set_cipher_list (ssl_ctx, CIPHER_LIST)) {
     printf ("tls_init: error selecting %s cipher list\n", CIPHER_LIST);
     exit (0);
   }
   if (ext = strstr (private, ".x509")) {
-    strcpy (ext, ".pem"); type = SSL_FILETYPE_ASN1;
+    strcpy (ext, ".pem");
+    type = SSL_FILETYPE_ASN1;
   } else type = SSL_FILETYPE_PEM;
   if (SSL_CTX_use_certificate_file (ssl_ctx, path, type) != 1) {
     printf ("tls_init: error opening certificate file: %s\n", path);
     exit (0);
   }
   if ((ret = SSL_CTX_use_PrivateKey_file
-       (ssl_ctx, private, SSL_FILETYPE_PEM)) != 1) {
+             (ssl_ctx, private, SSL_FILETYPE_PEM)) != 1) {
     printf ("tls_init: error (%d) opening private key file: %s\n",
-	    ret, private);
+            ret, private);
     exit (0);
-  } free (private); _tls_initialized = 1;
+  }
+  free (private);
+  _tls_initialized = 1;
 }
 
 void *ssl_new (void *conn) {
@@ -204,7 +219,9 @@ void *ssl_new (void *conn) {
     SSL_set_bio (ssl, bio, bio);
     SSL_set_app_data (ssl, conn);
     return ssl;
-  } printf ("ssl_new: error, TLS library not initialized\n"); exit (0);
+  }
+  printf ("ssl_new: error, TLS library not initialized\n");
+  exit (0);
 }
 
 #define ssl_free(ssl) SSL_free (ssl)
@@ -215,20 +232,25 @@ int ssl_ret, ssl_err;
 #define ssl_pending() \
   (ssl_err == SSL_ERROR_WANT_READ || ssl_err == SSL_ERROR_WANT_WRITE)
 
-int ssl_handshake (void *ssl) { ERR_clear_error ();
+int ssl_handshake (void *ssl) {
+  ERR_clear_error ();
   if ((ssl_ret = SSL_do_handshake (ssl)) == 1) return 1;
   ssl_err = SSL_get_error (ssl, ssl_ret);
   return 0;
 }
 
-int ssl_read (void *ssl, char *buffer, int size) { int ret;
-  ERR_clear_error (); ret = SSL_read (ssl, buffer, size);
-  if (ret <= 0) ssl_err = SSL_get_error (ssl, ret); 
+int ssl_read (void *ssl, char *buffer, int size) {
+  int ret;
+  ERR_clear_error ();
+  ret = SSL_read (ssl, buffer, size);
+  if (ret <= 0) ssl_err = SSL_get_error (ssl, ret);
   return ret;
 }
 
-int ssl_write (void *ssl, const char *data, int length) { int ret;
-  ERR_clear_error (); ret = SSL_write (ssl, data, length);
+int ssl_write (void *ssl, const char *data, int length) {
+  int ret;
+  ERR_clear_error ();
+  ret = SSL_write (ssl, data, length);
   if (ret <= 0) ssl_err = SSL_get_error (ssl, ret);
   return ret;
 }

@@ -22,11 +22,11 @@ typedef struct {
 } Key;
 
 typedef struct {
-  unsigned short id;
-  unsigned short base;
-  unsigned short offset;
-  unsigned short type;
-  Key key[3];
+  unsigned short id;    //本代码中，为每一个资源（Resource）都定义了一个唯一的 id 。在se_types.h中定义。
+  unsigned short base;  //这个什么含义不是很清楚？？
+  unsigned short offset;//List元素在其所从属的上级数据结构中的地址偏移量。
+  unsigned short type;  //为每一个Resource定义的一个唯一的id。在se_types.h中定义。
+  Key key[3]; //？？？ 不清楚什么意思
 } ListInfo;
 
 /** @brief Get the list field of a IEEE 2030.5 list type object
@@ -37,10 +37,10 @@ typedef struct {
 #define se_list_field(obj, info) (List **)((obj)+(info)->offset)
 
 /** @brief Is an IEEE 2030.5 object type derived from a base type?
-    
+
     Queries the schema to determine if an object of certain type is derived
     from a base object. This is useful for dealing with certain classes of
-    objects (e.g se_type_is_a (type, SE_Resource), or 
+    objects (e.g se_type_is_a (type, SE_Resource), or
     se_type_is_a (type, SE_Event)).
     @param type is the type of the derived object
     @param base is the type of the base object
@@ -54,7 +54,9 @@ typedef struct {
 #define se_list(type) (se_type_is_a (type, SE_SubscribableList) \
 		       || se_type_is_a (type, SE_List))
 
-/** @brief Is an IEEE 2030.5 object type an Event derived type?
+
+/** @brief Is an IEEE 2030.5 object type an Event derived type? 
+  是否是一个Event类型派生出来的type？IEEE中的Event指的是需要定时完成的某一个任务。
     @returns 1 if the type is a Event type, 0 otherwise
 */
 #define se_event(type) se_type_is_a (type, SE_Event)
@@ -98,7 +100,7 @@ ListInfo *find_list_info (unsigned short type);
     @param b is an IEEE 2030.5 object
     @param info is a pointer to a ListInfo structure
     @returns a result < 0 if a comes before b, a result > 0 if a comes after b,
-    and a result == 0 if a and b can occupy the same position 
+    and a result == 0 if a and b can occupy the same position
 */
 int compare_keys (void *a, void *b, ListInfo *info);
 
@@ -142,12 +144,14 @@ extern Schema se_schema;
 int pen_id = 54321;
 
 void mrid_gen (uint8_t *mrid) {
-  static int count = 0; int r;
-  srand (time (NULL)); r = rand ();
+  static int count = 0;
+  int r;
+  srand (time (NULL));
+  r = rand ();
   memset (mrid, 0, 4);
-  PACK32 (mrid+4, r);
-  PACK32 (mrid+8, count++);
-  PACK32 (mrid+12, pen_id);
+  PACK32 (mrid + 4, r);
+  PACK32 (mrid + 8, count++);
+  PACK32 (mrid + 12, pen_id);
 }
 
 int compare_ids (const void *a, const void *b) {
@@ -155,66 +159,111 @@ int compare_ids (const void *a, const void *b) {
   return *x - *y;
 }
 
+/*
+
+二分搜索 bsearch
+
+其基本原理是待搜索的元素是经过排序的。通过每次检查排在正中间的那个元素，可以去掉一半的不匹配元素。
+如此，最多可以通过log2(n)次比较找到要找的元素（或者确认它不存在）。
+void *bsearch(const void *key, const void *base, size_t num, size_t size, int (*cmp)(const void *,const void *));
+key   指向要查找的元素
+base  指向进行查找的数组
+num   数组中元素的个数
+size  数组中每个元素的大小，一般用sizeof()表示
+cmp   比较两个元素的函数，定义比较规则。需要注意的是，查找数组必须是经过预先排序的，而排序的规则要和比较子函数cmp的规则相同。
+
+
+*/
+
+//这个函数的作用是通过type值，就是一个Resource值来找到对应的ListInfo结构体。
 ListInfo *find_list_info (unsigned short type) {
-  return bsearch (&type, se_list_info, SE_LIST_LENGTH,
-		  sizeof (ListInfo), compare_ids);  
+  return bsearch (&type, se_list_info, SE_LIST_LENGTH, sizeof (ListInfo), compare_ids);
 }
 
+/*比较两个数字中的某一个bit位大小。*/
 int compare_binary (uint8_t *a, uint8_t *b, int n) {
   while (n--) {
     if (a[n] < b[n]) return -1;
     if (a[n] > b[n]) return 1;
-  } return 0;
+  }
+  return 0;
 }
 
 #define compare_uint(a, b, type) \
   (*(type)a < *(type)b)? -1 : (*(type)a - *(type)b)
 
-int compare_key (void *a, void *b, Key *key) { int type, n;
-  if (key->type < 0) { void *t = a; a = b; b = t; type = -key->type; }
-  else type = key->type;
-  n = type >> 4; type &= 0xf;
-  a += key->offset; b += key->offset;
+//
+int compare_key (void *a, void *b, Key *key) {
+  int type, n;
+  if (key->type < 0) {
+    void *t = a;
+    a = b;
+    b = t;
+    type = -key->type;
+  } else type = key->type;
+  n = type >> 4;
+  type &= 0xf;
+  a += key->offset;
+  b += key->offset;
   switch (type) {
-  case XS_STRING: case XS_ANY_URI: return strcmp (a, b);
-  case XS_HEX_BINARY: return compare_binary (a, b, n);
-  case XS_LONG: return *(int64_t *)a - *(int64_t *)b;
-  case XS_INT: return *(int32_t *)a - *(int32_t *)b;
-  case XS_SHORT: return *(int16_t *)a - *(int16_t *)b;
-  case XS_BYTE: return *(int8_t *)a - *(int8_t *)b;
-  case XS_ULONG: return compare_uint (a, b, uint64_t *);
-  case XS_UINT: return compare_uint (a, b, uint32_t *);
-  case XS_USHORT: return compare_uint (a, b, uint16_t *);
-  case XS_UBYTE: return compare_uint (a, b, uint8_t *);
-  } return -1;
+  case XS_STRING:
+  case XS_ANY_URI:
+    return strcmp (a, b);
+  case XS_HEX_BINARY:
+    return compare_binary (a, b, n);
+  case XS_LONG:
+    return *(int64_t *)a - *(int64_t *)b;
+  case XS_INT:
+    return *(int32_t *)a - *(int32_t *)b;
+  case XS_SHORT:
+    return *(int16_t *)a - *(int16_t *)b;
+  case XS_BYTE:
+    return *(int8_t *)a - *(int8_t *)b;
+  case XS_ULONG:
+    return compare_uint (a, b, uint64_t *);
+  case XS_UINT:
+    return compare_uint (a, b, uint32_t *);
+  case XS_USHORT:
+    return compare_uint (a, b, uint16_t *);
+  case XS_UBYTE:
+    return compare_uint (a, b, uint8_t *);
+  }
+  return -1;
 }
 
 int compare_keys (void *a, void *b, ListInfo *info) {
-  Key *key = info->key; int i = 0, ret;
+  Key *key = info->key;
+  int i = 0, ret;
   while (i < 3 && key->type) {
     if (ret = compare_key (a, b, key)) return ret;
-    i++; key++;
-  } return ret;
+    i++;
+    key++;
+  }
+  return ret;
 }
 
+//以排序后的顺序来插入一个新的 ListInfo 元素。
 void *insert_se_object (List *list, List *n, ListInfo *info) {
   List *prev = NULL, *l = list;
   while (l && (compare_keys (n->data, l->data, info) > 0))
     prev = l, l = l->next;
-  if (prev) prev->next = n; else list = n;
-  n->next = l; return list;
+  if (prev) prev->next = n;
+  else list = n;
+  n->next = l;
+  return list;
 }
 
 
 /*初始化se输出对象。
 指定schema，驱动函数等。*/
 void se_output_init (Output *o, char *buffer, int size, int xml) {
-  if (xml) output_init (o, &se_schema, buffer, size); 
+  if (xml) output_init (o, &se_schema, buffer, size);
   else exi_output_init (o, &se_schema, buffer, size);
 }
 
 void print_se_object (void *obj, int type) {
-  Output o; char buffer[1024];
+  Output o;
+  char buffer[1024];
   output_init (&o, &se_schema, buffer, 1024);
   while (output_doc (&o, obj, type)) printf ("%s", buffer);
 }

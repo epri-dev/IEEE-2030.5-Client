@@ -4,8 +4,8 @@
 /** @defgroup se_connection SeConnection
     @ingroup http_connection
 
-    An SeConnection extends an HttpConnection and provides support for the 
-    IEEE 2030.5 media types "application/sep+xml" and "application/sep-exi". 
+    An SeConnection extends an HttpConnection and provides support for the
+    IEEE 2030.5 media types "application/sep+xml" and "application/sep-exi".
     @{
 */
 
@@ -14,12 +14,13 @@
 #define SE_ERROR (HTTP_RESPONSE+1)
 #define SE_INCOMPLETE (HTTP_RESPONSE+2)
 
-enum ResponseType {EventReceived=1, EventStarted, EventCompleted,
-		   EventOptOut, EventOptIn, EventCanceled, EventSuperseded,
-		   EventPartialOptOut, EventPartialOptIn, EventCompleteOptOut,
-		   EventAcknowledge, EventNoDisplay, EventAbortedServer,
-		   EventAbortedProgram,
-		   EventInapplicable=252, EventInvalid, EventExpired};
+enum ResponseType {EventReceived = 1, EventStarted, EventCompleted,
+                   EventOptOut, EventOptIn, EventCanceled, EventSuperseded,
+                   EventPartialOptOut, EventPartialOptIn, EventCompleteOptOut,
+                   EventAcknowledge, EventNoDisplay, EventAbortedServer,
+                   EventAbortedProgram,
+                   EventInapplicable = 252, EventInvalid, EventExpired
+                  };
 
 typedef struct _SeConnection SeConnection;
 enum SeMediaType {SE_EXI, SE_XML, APPLICATION_XML};
@@ -38,9 +39,9 @@ enum SeMediaType {SE_EXI, SE_XML, APPLICATION_XML};
 
 /** @brief PUT or POST an IEEE 2030.5 object to a server.
 
-    Use the conn parameter to send the object if the host address matches the 
+    Use the conn parameter to send the object if the host address matches the
     server specified in the the href parameter, otherwise attempt a new
-    connection and send the object on that connection. 
+    connection and send the object on that connection.
     @param conn is a pointer to an SeConnection
     @param obj is a pointer to an IEEE 2030.5 object
     @param type is the schema type of the object
@@ -59,10 +60,10 @@ void *se_send (void *conn, void *obj, int type, char *href, int method);
 void se_response (void *resp, SE_Event_t *ev, char *lfdi, int status);
 
 /** @brief Get the SFDI of the server or client.
-    
+
     When a secure connection is established, certificates are exchanged between
     the client and server. The SFDI is a hash reduction of a device's
-    certificate. Use this function to  
+    certificate. Use this function to
 */
 uint64_t *se_sfdi (void *conn);
 
@@ -89,7 +90,7 @@ void *se_body (void *conn, int *type);
 /** @brief Free the IEEE 2030.5 object parsed from the HTTP message
     body (if any).
     @param conn is a pointer to an SeConnection
-*/ 
+*/
 void free_se_body (void *conn);
 
 /** @brief Receive an IEEE 2030.5 message.
@@ -139,21 +140,16 @@ void *get_conn (Address *addr);
 
 #ifndef HEADER_ONLY
 
-
-/*
-一个面向某一个服务器的“连接”对象。
-包含了HTTP连接，连接后返回的数据的解析的全部所需的过程。
-*/
 typedef struct _SeConnection {
-  HttpConnection http;//构建HTTP请求的所有要素的对象
-  Address host;     //当前连接的服务器的地址
-  Parser parser;    //返回的响应数据的解析器
+  HttpConnection http;
+  Address host;
+  Parser parser;
   int state, media;
-  uint64_t sfdi;  
+  uint64_t sfdi;
   struct _SeConnection *next;
 } SeConnection;
 
-const char * const se_ranges[] = {
+const char *const se_ranges[] = {
   "application/sep-exi", "application/sep+xml",
   "application/xml", "application/*", "*/*"
 };
@@ -163,42 +159,56 @@ int se_range (char *range) {
 }
 
 const char *se_content_type (void *conn, int *type) {
-  SeConnection *s = conn; *type = s->media;
+  SeConnection *s = conn;
+  *type = s->media;
   return se_ranges[s->media];
 }
 
 // content negotiation
 int select_media (char *range) {
-  MediaType media; int type = SE_XML, quality = 0;
+  MediaType media;
+  int type = SE_XML, quality = 0;
   while (range = media_range (&media, range)) {
     int index = se_range (media.type);
     switch (index) {
-    case SE_EXI: case SE_XML: case APPLICATION_XML:
+    case SE_EXI:
+    case SE_XML:
+    case APPLICATION_XML:
       if (media.quality > quality) {
-	quality = media.quality;
-	type = index;
-      } break;
+        quality = media.quality;
+        type = index;
+      }
+      break;
     }
-  } return type;
+  }
+  return type;
 }
 
 int se_parse_init (void *conn) {
   SeConnection *c = conn;
   HttpConnection *h = &c->http;
-  MediaType media; int type = 3;
+  MediaType media;
+  int type = 3;
   Parser *p = &c->parser;
   if (h->content_type && media_range (&media, h->content_type))
     type = se_range (media.type);
   switch (type) {
-  case SE_EXI: exi_parse_init (p, &se_schema, NULL, 0); break;
-  case SE_XML: case APPLICATION_XML:
-    parse_init (p, &se_schema, NULL); break;
-  default: return 0;
-  } return 1;
+  case SE_EXI:
+    exi_parse_init (p, &se_schema, NULL, 0);
+    break;
+  case SE_XML:
+  case APPLICATION_XML:
+    parse_init (p, &se_schema, NULL);
+    break;
+  default:
+    return 0;
+  }
+  return 1;
 }
 
 uint64_t *se_sfdi (void *conn) {
-  SeConnection *s = conn; return &s->sfdi;
+  SeConnection *s = conn;
+  return &s->sfdi;
 }
 
 void free_se_body (void *conn) {
@@ -210,17 +220,19 @@ void free_se_body (void *conn) {
 }
 
 void *se_body (void *conn, int *type) {
-  SeConnection *s = conn; void *body;
-  if (body = s->parser.obj) { 
+  SeConnection *s = conn;
+  void *body;
+  if (body = s->parser.obj) {
     *type = s->parser.type;
     s->parser.obj = NULL;
-  } return body; 
+  }
+  return body;
 }
 
 #define SE_START 0
 #define SE_DATA 1
 
-// return HTTP method, SE_ERROR, or SE_INCOMPLETE 
+// return HTTP method, SE_ERROR, or SE_INCOMPLETE
 int se_receive (void *conn) {
   SeConnection *s = conn;
   HttpConnection *h = conn;
@@ -229,77 +241,84 @@ int se_receive (void *conn) {
   int length, type, code, method;
   http_flush (h);
   switch (method = http_receive (h)) {
-  case HTTP_NONE: break;
-  case HTTP_ERROR: return SE_ERROR;
+  case HTTP_NONE:
+    break;
+  case HTTP_ERROR:
+    return SE_ERROR;
   default:
     switch (s->state) {
-    case SE_START: p->obj = NULL;
+    case SE_START:
+      p->obj = NULL;
       print_http_status (h);
       if (h->media_range)
-	s->media = select_media (h->media_range);
+        s->media = select_media (h->media_range);
       if (h->body) {
-	if (se_parse_init (s)) s->state++;
-	else { code = 415; goto error; }
+        if (se_parse_init (s)) s->state++;
+        else {
+          code = 415;
+          goto error;
+        }
       } else return method;
     case SE_DATA:
       while (data = http_data (h, &length)) {
-	parser_rebuffer (p, data, length);
-	if (parse_doc (p, &type)) {
-	  s->state = SE_START; return method;
-	} else if (!http_complete (h)) {
-	  http_rebuffer (h, p->ptr);
-	} else {
-	  printf ("parse error in message body\n");
-	  print_parse_stack (p);
-	  code = 400; goto error;
-	}
-      } set_timeout (s);
+        parser_rebuffer (p, data, length);
+        if (parse_doc (p, &type)) {
+          s->state = SE_START;
+          return method;
+        } else if (!http_complete (h)) {
+          http_rebuffer (h, p->ptr);
+        } else {
+          printf ("parse error in message body\n");
+          print_parse_stack (p);
+          code = 400;
+          goto error;
+        }
+      }
+      set_timeout (s);
     }
   }
   return SE_INCOMPLETE;
- error:
+error:
   if (h->method == HTTP_RESPONSE) http_close (h);
   else http_error (h, code);
   return SE_ERROR;
 }
 
-SeConnection *connections = NULL; //在本应用中，所有的连接到的服务器的连接对象集合
-int se_media = SE_XML;  //在本应用中，所使用的交互数据“媒介”，可选的 有XML和EXI，这里选择XML格式。
+SeConnection *connections = NULL;
+int se_media = SE_XML;
 
-
-//构建一个新的连接并且插入到原先的链表中。
 void *new_conn (int client) {
   SeConnection *c = type_alloc (SeConnection);
-  char *accept = se_media == SE_XML? "application/sep+xml; level=-S1"
-    : "application/sep-exi; level=-S1, application/sep+xml; level=-S1";
-  char *media = se_media == SE_XML? "application/sep+xml"
-    : "application/sep-exi";
+  char *accept = se_media == SE_XML ? "application/sep+xml; level=-S1"
+                 : "application/sep-exi; level=-S1, application/sep+xml; level=-S1";
+  char *media = se_media == SE_XML ? "application/sep+xml"
+                : "application/sep-exi";
   http_init (c, client, accept, media);
   c->media = se_media;
-  c->next = connections; connections = c; //新的连接总是排在链表的开头，旧的连接总是排在末尾。即从开头插入数据。connections总是指向第一个成员。
+  c->next = connections;
+  connections = c;
   return c;
 }
 
-/* 根据IP地址，在connections这个队列中找到对应的“连接对象” */
-void *find_conn (Address *addr) { 
+void *find_conn (Address *addr) {
   SeConnection *c;
   foreach (c, connections)
-    if (http_client (c) && address_eq (&c->host, addr)) return c;
+  if (http_client (c) && address_eq (&c->host, addr)) return c;
   return NULL;
 }
 
-/*给出一个服务器的IP地址，获取一个连接对象*/
 void *get_conn (Address *addr) {
   SeConnection *c = find_conn (addr);
-  return c? c : new_conn (1);
+  return c ? c : new_conn (1);
 }
 
 void *se_connect (Address *addr, int secure) {
   SeConnection *c = get_conn (addr);
-  address_copy (&c->host, addr); 
+  address_copy (&c->host, addr);
   if (net_status (c) == Closed)
     conn_connect (c, addr, secure);
-  if (conn_session (c)) http_flush (c); return c;
+  if (conn_session (c)) http_flush (c);
+  return c;
 }
 
 void *se_connect_uri (Uri *uri) {
@@ -307,34 +326,41 @@ void *se_connect_uri (Uri *uri) {
   return se_connect (uri->host, secure);
 }
 
-/*这个函数应用于服务端，在本Demo代码中并没有用到，所以不用关注。*/
+/*这个函数应用于服务端，在本Demo代码中并没有用到。*/
 void *se_accept (Acceptor *a, int secure) {
   return conn_accept (new_conn (0), a, secure);
 }
 
 
-//将一个数据通过HTTP方式完整的发送出去
 void *se_send (void *conn, void *data, int type,
-	       char *href, int method) {
-  Uri128 buf; Uri *uri = &buf.uri;
+               char *href, int method) {
+  Uri128 buf;
+  Uri *uri = &buf.uri;
   http_parse_uri (&buf, conn, href, 127);
   if (uri->host) conn = se_connect_uri (uri);
-  if (conn) { Output o; char buffer[4096];
-    SeConnection *c = conn; int length, header;
+  if (conn) {
+    Output o;
+    char buffer[4096];
+    SeConnection *c = conn;
+    int length, header;
     header = http_send (conn, buffer, uri->path, method);
-    se_output_init (&o, buffer+header, 4096-header, c->media);
+    se_output_init (&o, buffer + header, 4096 - header, c->media);
     length = output_doc (&o, data, type);
-    set_content_length (buffer, length); length += header;
+    set_content_length (buffer, length);
+    length += header;
     printf ("se_send:\n");
     http_write (conn, buffer, length);
-    print_se_object (data, type); printf ("\n");
-  } return conn;
+    print_se_object (data, type);
+    printf ("\n");
+  }
+  return conn;
 }
 
 void se_response (void *resp, SE_Event_t *ev, char *lfdi, int status) {
   SE_Response_t *r = resp;
   r->_flags = SE_createdDateTime_exists | SE_status_exists;
-  r->href = NULL; r->createdDateTime = time (NULL);
+  r->href = NULL;
+  r->createdDateTime = time (NULL);
   memcpy (r->endDeviceLFDI, lfdi, 20);
   r->status = status;
   memcpy (r->subject, ev->mRID, 16);

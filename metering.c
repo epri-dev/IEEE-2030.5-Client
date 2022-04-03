@@ -31,9 +31,9 @@ enum RoleFlags {
     @param lfdi is a pointer to a device LFDI
 */
 void create_mirror (SE_MirrorUsagePoint_t *mup, char *desc,
-		    int flags, char *lfdi);
+                    int flags, char *lfdi);
 
-/** @brief Create a new MirrorMeterReading and add it to the list. 
+/** @brief Create a new MirrorMeterReading and add it to the list.
     @param rds is a pointer to a List of MirrorMeterReadings
     @param desc is a pointer to a string, the reading description, or NULL for
     no description
@@ -45,7 +45,7 @@ List *create_reading (List *rds, char *desc, int uom, int kind);
 /** @} */
 
 void create_mirror (SE_MirrorUsagePoint_t *mup, char *desc,
-		    int flags, char *lfdi) {
+                    int flags, char *lfdi) {
   memset (mup, 0, sizeof (SE_MirrorUsagePoint_t));
   mrid_gen (mup->mRID);
   if (desc) {
@@ -53,7 +53,7 @@ void create_mirror (SE_MirrorUsagePoint_t *mup, char *desc,
     snprintf (mup->description, 32, "%s", desc);
   }
   flags |= isMirror | isDER;
-  PACK16 (mup->roleFlags, flags); 
+  PACK16 (mup->roleFlags, flags);
   mup->status = 1; // on
   memcpy (mup->deviceLFDI, lfdi, 20);
 }
@@ -68,8 +68,11 @@ List *create_reading (List *rds, char *desc, int uom, int kind) {
   }
   se_set (mmr, ReadingType);
   rt->_flags = SE_uom_exists | SE_powerOfTenMultiplier_exists
-    | SE_flowDirection_exists | SE_commodity_exists | SE_kind_exists;
-  rt->uom = uom; rt->powerOfTenMultiplier = 0;
-  rt->flowDirection = 1; rt->commodity = 1; rt->kind = kind;
+               | SE_flowDirection_exists | SE_commodity_exists | SE_kind_exists;
+  rt->uom = uom;
+  rt->powerOfTenMultiplier = 0;
+  rt->flowDirection = 1;
+  rt->commodity = 1;
+  rt->kind = kind;
   return list_insert (rds, mmr);
 }

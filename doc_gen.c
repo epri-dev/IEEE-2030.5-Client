@@ -16,12 +16,14 @@ void print_field_doc (char *name, Field *f) {
 }
 
 void print_particle_doc (char *name, Particle *part, SchemaType *head) {
-  Particle *p; Field *f;
+  Particle *p;
+  Field *f;
   foreach (p, part) {
     switch (p->kind) {
-    case PartElement: f = &p->field;
+    case PartElement:
+      f = &p->field;
       if (f->prim != XS_BOOLEAN)
-	print_field_doc (name, &p->field);
+        print_field_doc (name, &p->field);
       break;
     case PartGroup:
     case PartChoice:
@@ -34,7 +36,8 @@ void print_particle_doc (char *name, Particle *part, SchemaType *head) {
 }
 
 void print_fields_doc (char *name, SchemaType *t, SchemaType *head) {
-  List *attr; SchemaType *u;
+  List *attr;
+  SchemaType *u;
   if (t->base && (u = find_by_name (head, t->base)))
     print_fields_doc (name, u, head);
   if (!t->restriction) {
@@ -46,15 +49,17 @@ void print_fields_doc (char *name, SchemaType *t, SchemaType *head) {
   }
 }
 
-void print_flags_doc (SchemaType *t, SchemaType *head) { List *f;
+void print_flags_doc (SchemaType *t, SchemaType *head) {
+  List *f;
   if (t->base) print_flags_doc (find_by_name (head, t->base), head);
   foreach (f, t->flags) {
-    print_flag (f->data, 0); print ("\n");
+    print_flag (f->data, 0);
+    print ("\n");
   }
 }
 
 void print_type_doc (SchemaType *t, SchemaType *head) {
-  char *base = t->base? t->base : "se_types";
+  char *base = t->base ? t->base : "se_types";
   print ("/** @defgroup %s %s\n", t->name, t->name);
   switch (t->kind) {
   case ComplexType:
@@ -82,7 +87,8 @@ void print_type_doc (SchemaType *t, SchemaType *head) {
   print ("*/\n\n/** @} */\n\n");
 }
 
-void print_types_doc (List *list, SchemaType *head) { List *l;
+void print_types_doc (List *list, SchemaType *head) {
+  List *l;
   print ("/** @defgroup se_types IEEE 2030.5 Types */\n\n");
   print ("/** @defgroup se_typedefs Typedefs \n");
   print ("    @ingroup se_types */\n\n");

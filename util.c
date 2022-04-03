@@ -3,7 +3,7 @@
 
 /** @defgroup util Utility
 
-    Provides base layer idiomatic C macros and functions. 
+    Provides base layer idiomatic C macros and functions.
     @{
 */
 
@@ -26,7 +26,7 @@
 #define number_q(x, data) (digit (*(data))? number (x, data) : data)
 
 int bit_count (uint32_t x);
-int string_index (const char *s, const char * const *ss, int n);
+int string_index (const char *s, const char *const *ss, int n);
 char *trim (char *data);
 char *to_lower (char *s);
 char *number (int *x, char *data);
@@ -36,18 +36,27 @@ char *number64 (uint64_t *x, char *data);
 
 #ifndef HEADER_ONLY
 
-int bit_count (uint32_t x) { int n = 0;
-  while (x) x >>= 1, n++; return n;
+int bit_count (uint32_t x) {
+  int n = 0;
+  while (x) x >>= 1, n++;
+  return n;
 }
 
-int string_index (const char *s, const char * const *ss, int n) { int i;
-  for (i = 0; i < n; i++) if (streq (s, ss[i])) break; return i;
+int string_index (const char *s, const char *const *ss, int n) {
+  int i;
+  for (i = 0; i < n; i++) if (streq (s, ss[i])) break;
+  return i;
 }
 
-char *trim (char *data) { while (ws (*data)) data++; return data; }
+char *trim (char *data) {
+  while (ws (*data)) data++;
+  return data;
+}
 
-char *to_lower (char *s) { char *t = s;
-  while (*t) *t = tolower (*t), t++; return s;
+char *to_lower (char *s) {
+  char *t = s;
+  while (*t) *t = tolower (*t), t++;
+  return s;
 }
 
 //将一个表示10进制数值的字符，转换成一个数值。
@@ -56,14 +65,15 @@ char *number (int *x, char *data) {
   int y = 0, n = 0;
   while (digit (*data))     //连续执行，直到遇到一个不是表示10进制的字符。
     y = y * 10 + (*data++ - '0'), n++;
-  return n > 0? *x = y, data : NULL;
+  return n > 0 ? *x = y, data : NULL;
 }
 
 char *number64 (uint64_t *x, char *data) {
-  uint64_t y = 0; int n = 0;
+  uint64_t y = 0;
+  int n = 0;
   while (digit (*data))
     y = y * 10 + (*data++ - '0'), n++;
-  return n > 0? *x = y, data : NULL;
+  return n > 0 ? *x = y, data : NULL;
 }
 
 #endif

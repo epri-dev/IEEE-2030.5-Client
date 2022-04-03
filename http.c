@@ -21,13 +21,15 @@
 typedef struct _HttpConnection HttpConnection;
 
 enum HttpMethod {HTTP_GET, HTTP_PUT, HTTP_POST, HTTP_DELETE, HTTP_HEAD,
-		 HTTP_UNKNOWN, HTTP_RESPONSE, HTTP_NONE, HTTP_ERROR};
+                 HTTP_UNKNOWN, HTTP_RESPONSE, HTTP_NONE, HTTP_ERROR
+                };
 
 /** @brief An HTTP request */
 typedef struct _HttpRequest {
   struct _HttpRequest *next;
-  void *context;  //可能是用户自定义的上下文数据。
-  uint8_t method; char uri[];
+  void *context;
+  uint8_t method;
+  char uri[];
 } HttpRequest;
 
 /** @brief Write a POST request to a buffer and queue the request.
@@ -51,7 +53,7 @@ typedef struct _HttpRequest {
 */
 void http_init (void *conn, int client, const char *accept, const char *media);
 
-/** @brief Flush queued data to an HTTP connection.
+/** @brief Flush queued data to an HTTP connection. 将已经放在队列中的请求发送出去
     @param conn is a pointer to an HttpConnection
 */
 void http_flush (void *conn);
@@ -80,7 +82,7 @@ void http_delete (void *conn, const char *uri);
 
 /** @brief Write a PUT or POST request message to a buffer and queue the
     request.
-    
+
     Use the length returned as a location for the request content. Use the
     function @ref set_content_length to update the Content-Length. Finally, use
     the function @ref http_write to complete the request.
@@ -154,7 +156,7 @@ void http_no_content (void *conn, const char *uri);
 
 /** @brief Send HTTP response with status and close connection.
     @param conn is a pointer to an HttpConnection
-    @param status is the status code to return 
+    @param status is the status code to return
 */
 void http_error (void *conn, int status);
 
@@ -162,7 +164,7 @@ void http_error (void *conn, int status);
     @param conn is a pointer to an HttpConnection
     @returns one of HTTP_GET, HTTP_PUT, HTTP_POST, HTTP_DELETE, HTTP_HEAD if
     an HTTP request is succesfully received (server).
-    
+
     HTTP_UNKNOWN for a request with an method other than GET, PUT, POST, DELETE,
     or HEAD (server).
 
@@ -196,7 +198,7 @@ char *http_data (void *conn, int *length);
     function clears data and moves the remainder of the data to the beginning
     of the buffer so more data can be read.
     @param conn is a pointer to an HttpConnection
-    @param data is a pointer to 
+    @param data is a pointer to
 */
 void http_rebuffer (void *conn, char *data);
 
@@ -278,7 +280,7 @@ void set_request_context (void *conn, void *context);
 
     Use @ref set_request_context to set the value of the context for a request,
     this value can then be retrieved using this function once a response has
-    been successfully received. 
+    been successfully received.
     @param conn is a pointer to an HttpConnection
     @returns the value associated with the request
 */
@@ -290,11 +292,14 @@ void *http_context (void *conn);
 
 #include <time.h>
 
+//看起来像是一个状态机中的几个状态
 enum HttpState {HTTP_START, HTTP_HEADER, HTTP_DATA, HTTP_COMPLETE, HTTP_CLOSED};
 
-const char * const http_methods[] =
-  {"GET", "PUT", "POST", "DELETE", "HEAD", ""};
+const char *const http_methods[] =
+{"GET", "PUT", "POST", "DELETE", "HEAD", ""};
 
+
+//看起来像是一个发送队列，数据的长度不定，这里仅仅定义了一个不定长数组buffer[]
 typedef struct _SendQueueItem {
   struct _SendQueueItem *next;
   int length;
@@ -308,9 +313,9 @@ typedef struct _HttpConnection {
   Connection tcp;
   char *query, *content_type, *media_range, *location;
   Address host; // host from the Host: header field
-  char *headers, *version;  //version -- "HTTP/1.1";
+  char *headers, *version;
   const char *media; // media type for POST/PUT
-  const char *accept; // media types accepted 接收类型，在header中表示，比如指定接收文本。
+  const char *accept; // media types accepted
   char *data; // pointer to the next header line or http content
   int end;    // buffer + end = the end of the http message
   int length; // the amount of data in buffer
@@ -318,12 +323,13 @@ typedef struct _HttpConnection {
   uint8_t state, method, request_method;
   unsigned body : 1; // response or request has a body
   unsigned close : 1; // close signaled in last request/response
-  unsigned client : 1; // true for client connection 表示是否是一个客户端连接
+  unsigned client : 1; // true for client connection
   unsigned debug : 1;
   int status, error, header;
   void *context; // request context
-  Queue send, request;
-  char target[256]; Uri uri; // request target
+  Queue send, request;  //数据发送Queue，和请求Queue??
+  char target[256];
+  Uri uri; // request target
   char buffer[BUFFER_SIZE];
 } HttpConnection;
 
@@ -333,29 +339,49 @@ typedef struct _HttpConnection {
 
 #define http_field(conn, name) struct_field (HttpConnection, conn, name)
 
-int http_body (void *conn) { return http_field (conn, body); }
+int http_body (void *conn) {
+  return http_field (conn, body);
+}
 int http_content_length (void *conn) {
-  return http_field (conn, content_length); }
-int http_status (void *conn) { return http_field (conn, status); }
-int http_method (void *conn) { return http_field (conn, request_method); }
-char *http_path (void *conn) { return http_field (conn, uri.path); }
-char *http_query (void *conn) { return http_field (conn, uri.query); }
-char *http_range (void *conn) { return http_field (conn, media_range); }
-int http_client (void *conn) { return http_field (conn, client); }
-char *http_location (void *conn) { return http_field (conn, location); }
-void http_debug (void *conn, int enable) { http_field (conn, debug) = enable; }
-void *http_context (void *conn) { return http_field (conn, context); }
-
-void print_http_status (void *conn) { HttpConnection *c = conn;
-  const char *method = http_methods[c->request_method];
-  printf ("%s %s: %d\n", method, c->uri.path, c->status);  
+  return http_field (conn, content_length);
+}
+int http_status (void *conn) {
+  return http_field (conn, status);
+}
+int http_method (void *conn) {
+  return http_field (conn, request_method);
+}
+char *http_path (void *conn) {
+  return http_field (conn, uri.path);
+}
+char *http_query (void *conn) {
+  return http_field (conn, uri.query);
+}
+char *http_range (void *conn) {
+  return http_field (conn, media_range);
+}
+int http_client (void *conn) {
+  return http_field (conn, client);
+}
+char *http_location (void *conn) {
+  return http_field (conn, location);
+}
+void http_debug (void *conn, int enable) {
+  http_field (conn, debug) = enable;
+}
+void *http_context (void *conn) {
+  return http_field (conn, context);
 }
 
+void print_http_status (void *conn) {
+  HttpConnection *c = conn;
+  const char *method = http_methods[c->request_method];
+  printf ("%s %s: %d\n", method, c->uri.path, c->status);
+}
 
-//对传入的conn执行部分数据的初始化
 void http_init (void *conn, int client,
-		const char *accept,
-		const char *media) {
+                const char *accept,
+                const char *media) {
   HttpConnection *c = conn;
   c->client = client;
   c->data = c->buffer;
@@ -365,43 +391,53 @@ void http_init (void *conn, int client,
   c->headers = "";
 }
 
-void print_headers (void *conn, char *buffer) { char *end;
-  if (end = strstr (buffer, "\r\n\r\n")) { *end = '\0';
+void print_headers (void *conn, char *buffer) {
+  char *end;
+  if (end = strstr (buffer, "\r\n\r\n")) {
+    *end = '\0';
     printf ("--- conn = %p -->\n"
-	    "%s\r\n\r\n", conn, buffer); *end = '\r';
+            "%s\r\n\r\n", conn, buffer);
+    *end = '\r';
   }
 }
 
 void http_flush (void *conn) {
-  HttpConnection *h = conn; SendQueueItem *i;
+  HttpConnection *h = conn;
+  SendQueueItem *i;
   while ((i = queue_peek (&h->send))
-	 && conn_write (conn, i->buffer, i->length) > 0) {
+         && conn_write (conn, i->buffer, i->length) > 0) {
     if (h->debug) print_headers (conn, i->buffer);
     free (queue_remove (&h->send));
   }
   if (queue_empty (&h->send) && h->close) conn_close (h);
 }
 
-
-/*感觉这个操作是异步操作，不是同步等待回复的？？待验证。*/
+//尝试发送，或者如果发送失败则写入到队列
 void http_write (void *conn, void *data, int length) {
   HttpConnection *h = conn;
-  if (h->send.first || conn_write (conn, data, length) < 0) {//如果当前网络层忙，则加入queue中等待后续发送？？
+  if (h->send.first || conn_write (conn, data, length) < 0) { //如果队列里面还有没有发送完毕的（h->send.first非空）则写入到发送队列，或者发送失败，也加入到队列
     SendQueueItem *i = malloc (sizeof (SendQueueItem) + length);
-    i->length = length; i->next = NULL;
+    i->length = length;
+    i->next = NULL;
     memcpy (i->buffer, data, length);
-    queue_add (&h->send, i); return;
-  } if (h->debug) print_headers (conn, data);
+    queue_add (&h->send, i);
+    return;
+  }
+  if (h->debug) print_headers (conn, data);
 }
 
+//将Request封装好之后，放到 HttpConnection 中的队列中。还不是直接发送。
 void queue_request (HttpConnection *c, int method, const char *uri) {
   HttpRequest *r = malloc (sizeof (HttpRequest) + strlen (uri) + 1);
-  r->next = r->context = NULL; r->method = method; strcpy (r->uri, uri);
+  r->next = r->context = NULL;
+  r->method = method;
+  strcpy (r->uri, uri);
   queue_add (&c->request, r);
 }
 
 void set_request_context (void *conn, void *context) {
-  HttpConnection *c = conn; HttpRequest *r;
+  HttpConnection *c = conn;
+  HttpRequest *r;
   if (r = queue_tail (&c->request)) r->context = context;
 }
 
@@ -410,57 +446,66 @@ HttpRequest *dequeue_request (HttpConnection *c) {
 }
 
 int http_date (char *buffer) {
-  time_t now = time (NULL); struct tm tm = *gmtime (&now);
+  time_t now = time (NULL);
+  struct tm tm = *gmtime (&now);
   return strftime (buffer, 1024, "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", &tm);
 }
 
+
+//将HTTP 的Header写好，放到发送缓冲区中
 int http_request (void *conn, char *buffer, const char *uri, int method) {
-  HttpConnection *c = conn; Address addr;
+  HttpConnection *c = conn;
+  Address addr;
   const char *name = http_methods[method];
   int n = sprintf (buffer, "%s %s %s\r\n", name, uri, c->version);
-  n += http_date (buffer+n); n += sprintf (buffer+n, "Host: ");
-  n += write_address_port (buffer+n, net_remote (&addr, c));
-  n += sprintf (buffer+n, "\r\nAccept: %s\r\n", c->accept);
-  queue_request (conn, method, uri); return n;
+  n += http_date (buffer + n);
+  n += sprintf (buffer + n, "Host: ");
+  n += write_address_port (buffer + n, net_remote (&addr, c));
+  n += sprintf (buffer + n, "\r\nAccept: %s\r\n", c->accept);
+  queue_request (conn, method, uri);
+  return n;
 }
 
-
-/*GET一个URL指向的对象。但是不确定HTTP报文是否是异步获取到的。*/
-void http_get (void *conn, const char *uri) { char buffer[256];
+//构建好HTTP Header和写入实际数据，然后发送。
+void http_get (void *conn, const char *uri) {
+  char buffer[256];
   int n = http_request (conn, buffer, uri, HTTP_GET);
-  n += sprintf (buffer+n, "\r\n");
+  n += sprintf (buffer + n, "\r\n");
   http_write (conn, buffer, n);
 }
 
-void http_delete (void *conn, const char *uri) { char buffer[256];
+void http_delete (void *conn, const char *uri) {
+  char buffer[256];
   int n = http_request (conn, buffer, uri, HTTP_DELETE);
-  n += sprintf (buffer+n, "\r\n");
+  n += sprintf (buffer + n, "\r\n");
   http_write (conn, buffer, n);
 }
 
 int http_content (char *buffer, const char *media, int length) {
   int n = sprintf (buffer, "Content-Type: %s\r\n", media);
-  n += sprintf (buffer+n, "Content-Length: %-6d\r\n\r\n", length);
+  n += sprintf (buffer + n, "Content-Length: %-6d\r\n\r\n", length);
   return n;
 }
 
-//发送HTTP header
 int http_send (void *conn, char *buffer, const char *uri, int method) {
   HttpConnection *c = conn;
   int n = http_request (conn, buffer, uri, method);
-  return n + http_content (buffer+n, c->media, 0);
+  return n + http_content (buffer + n, c->media, 0);
 }
 
 void set_content_length (char *buffer, int length) {
   char *field = strstr (buffer, "Content-Length:") + 16;
-  field += sprintf (field, "%d", length); *field = ' ';
+  field += sprintf (field, "%d", length);
+  *field = ' ';
 }
 
 HttpRequest *http_queued (void *conn) {
   HttpConnection *h = conn;
   HttpRequest *r = queue_peek (&h->request);
-  queue_free (&h->send); queue_clear (&h->request);
-  conn_close (h); h->state = HTTP_CLOSED;
+  queue_free (&h->send);
+  queue_clear (&h->request);
+  conn_close (h);
+  h->state = HTTP_CLOSED;
   return r;
 }
 
@@ -471,66 +516,83 @@ void http_close (void *conn) {
 
 int http_status_line (char *buffer, int status, const char *reason) {
   int n = sprintf (buffer, "HTTP/1.1 %d %s\r\n", status, reason);
-  return n + http_date (buffer+n);
+  return n + http_date (buffer + n);
 }
 
-void http_created (void *conn, const char *uri) { char buffer[512];
+void http_created (void *conn, const char *uri) {
+  char buffer[512];
   int n = http_status_line (buffer, 201, "Created");
-  n += sprintf (buffer+n, "Content-Length: 0\r\nLocation: %s\r\n\r\n", uri);
+  n += sprintf (buffer + n, "Content-Length: 0\r\nLocation: %s\r\n\r\n", uri);
   http_write (conn, buffer, n);
 }
 
-void http_no_content (void *conn, const char *uri) { char buffer[512];
+void http_no_content (void *conn, const char *uri) {
+  char buffer[512];
   int n = http_status_line (buffer, 204, "No Content");
-  n += sprintf (buffer+n, "Location: %s\r\n\r\n", uri);
+  n += sprintf (buffer + n, "Location: %s\r\n\r\n", uri);
   http_write (conn, buffer, n);
 }
 
-void http_allow (void *conn, const char *allow) { char buffer[512];
+void http_allow (void *conn, const char *allow) {
+  char buffer[512];
   int n = http_status_line (buffer, 405, "Method Not Allowed");
-  n += sprintf (buffer+n, "Allow: %s\r\n\r\n", allow);
+  n += sprintf (buffer + n, "Allow: %s\r\n\r\n", allow);
   http_write (conn, buffer, n);
 }
 
 const char *http_reason (int status) {
   switch (status) {
-  case 204: return "No Content";
-  case 400: return "Bad Request";
-  case 403: return "Forbidden";
-  case 404: return "Not Found";
-  case 405: return "Method Not Allowed";
-  case 408: return "Request Timeout";
-  case 406: return "Not Acceptable";
-  case 415: return "Unsupported Media Type";
-  case 500: return "Internal Server Error";
-  default: return "";
+  case 204:
+    return "No Content";
+  case 400:
+    return "Bad Request";
+  case 403:
+    return "Forbidden";
+  case 404:
+    return "Not Found";
+  case 405:
+    return "Method Not Allowed";
+  case 408:
+    return "Request Timeout";
+  case 406:
+    return "Not Acceptable";
+  case 415:
+    return "Unsupported Media Type";
+  case 500:
+    return "Internal Server Error";
+  default:
+    return "";
   }
 }
 
-void http_respond (void *conn, int status) { char buffer[512];
+void http_respond (void *conn, int status) {
+  char buffer[512];
   const char *reason = http_reason (status);
   int n = http_status_line (buffer, status, reason);
-  n += sprintf (buffer+n, "Content-Length: 0\r\n\r\n");
+  n += sprintf (buffer + n, "Content-Length: 0\r\n\r\n");
   http_write (conn, buffer, n);
 }
 
 // fatal error, send status and close connection
 void http_error (void *conn, int status) {
-  printf ("http_error %p %d\n", conn, status); fflush (stdout);
-  http_respond (conn, status); http_close (conn);
+  printf ("http_error %p %d\n", conn, status);
+  fflush (stdout);
+  http_respond (conn, status);
+  http_close (conn);
 }
 
 int http_read (void *conn) {
   HttpConnection *h = conn;
-  int n = conn_read (conn, h->buffer+h->length,
-		     BUFFER_SIZE-h->length-1);
+  int n = conn_read (conn, h->buffer + h->length,
+                     BUFFER_SIZE - h->length - 1);
   if (n <= 0) return n;
   h->length += n;
   h->buffer[h->length] = '\0';
   return n;
 }
 
-int http_complete (void *conn) { HttpConnection *c = conn;
+int http_complete (void *conn) {
+  HttpConnection *c = conn;
   return c->state == HTTP_CLOSED || c->end <= c->length;
 }
 
@@ -538,39 +600,45 @@ int http_complete (void *conn) { HttpConnection *c = conn;
 char *http_data (void *conn, int *length) {
   HttpConnection *c = conn;
   if (c->state != HTTP_DATA) return NULL;
- top:
+top:
   if (c->close) {
     if (net_status (c) == Closed) c->state++; // HTTP_COMPLETE
-    http_read (c); *length = c->length;
+    http_read (c);
+    *length = c->length;
   } else if (c->end <= c->length) {
-    *length = c->end; c->state++; // HTTP_COMPLETE
+    *length = c->end;
+    c->state++; // HTTP_COMPLETE
   } else if (!buffer_full (c) && http_read (c) > 0)
     goto top;
   else *length = c->length;
   *length -= c->data - c->buffer;
   return c->data;
-}					       
+}
 
 void http_rebuffer (void *conn, char *data) {
-  HttpConnection *c = conn; int n;
+  HttpConnection *c = conn;
+  int n;
   if (n = data - c->buffer) {
     if (c->end) c->end -= n;
-    c->length -= n; c->data = c->buffer;
-    memmove (c->buffer, data, c->length+1);
+    c->length -= n;
+    c->data = c->buffer;
+    memmove (c->buffer, data, c->length + 1);
   }
 }
 
 // return next complete line in message or NULL
 static char *next_line (HttpConnection *h) {
-  int c; char *data = h->data;
- top:
+  int c;
+  char *data = h->data;
+top:
   while ((c = *data)) {
-    if (c == '\r' && *(data+1) == '\n') {
+    if (c == '\r' && *(data + 1) == '\n') {
       *data = '\0';
-      return data+2;
+      return data + 2;
     }
     data++;
-  } if (http_read (h) > 0) goto top;
+  }
+  if (http_read (h) > 0) goto top;
   if (data != h->data || h->state != HTTP_START)
     set_timeout (h);
   return NULL;
@@ -586,102 +654,129 @@ static char *next_line (HttpConnection *h) {
 
 // receive an HTTP message
 int http_receive (void *conn) {
-  HttpConnection *c = conn; HttpRequest *r; Uri uri; int i;
-  const char * const headers[] = {"host", "accept", "content-type",
-				  "content-length", "connection",
-				  "location"}; 
+  HttpConnection *c = conn;
+  HttpRequest *r;
+  Uri uri;
+  int i;
+  const char *const headers[] = {"host", "accept", "content-type",
+                                 "content-length", "connection",
+                                 "location"
+                                };
   char *header, *method, *target, *text, *data, *next;
   while (1) {
     switch (c->state) {
     case HTTP_START: // request/status line
-      ok_v (next = next_line (c), HTTP_NONE); data = c->data;
+      ok_v (next = next_line (c), HTTP_NONE);
+      data = c->data;
       if (*data == '\0') break; // allow empty lines to start
       if (c->debug) printf ("<-- conn = %p ---\n"
-			    "%s\r\n", c, data);
+                              "%s\r\n", c, data);
       c->close = c->end = c->header = c->error = 0;
-      c->content_type = c->media_range = NULL; c->body = 1;
+      c->content_type = c->media_range = NULL;
+      c->body = 1;
       c->content_length = -1;
       if (c->client) {
-	if ((data = token_sp (&text, data))
-	    && streq (text, c->version) // status line
-	    && (data = token_sp (&text, data))
-	    && number (&c->status, text)
-	    && c->status <= 999
-	    && (r = dequeue_request (c))
-	    && request_target (c, r->uri)) {
-	  c->context = r->context;
-	  c->method = HTTP_RESPONSE;
-	  c->request_method = r->method; free (r);
-	} else goto close;
+        if ((data = token_sp (&text, data))
+            && streq (text, c->version) // status line
+            && (data = token_sp (&text, data))
+            && number (&c->status, text)
+            && c->status <= 999
+            && (r = dequeue_request (c))
+            && request_target (c, r->uri)) {
+          c->context = r->context;
+          c->method = HTTP_RESPONSE;
+          c->request_method = r->method;
+          free (r);
+        } else goto close;
       } else if ((data = token_sp (&method, data))
-		 && (data = token_sp (&target, data))
-		 && request_target (c, target)
-		 && streq (data, c->version)) { // request line
-	c->request_method = c->method = string_index (method, http_methods, 5);
-      } else { http_error (c, 400); return HTTP_ERROR; }
-      c->state++; break;
+                 && (data = token_sp (&target, data))
+                 && request_target (c, target)
+                 && streq (data, c->version)) { // request line
+        c->request_method = c->method = string_index (method, http_methods, 5);
+      } else {
+        http_error (c, 400);
+        return HTTP_ERROR;
+      }
+      c->state++;
+      break;
     case HTTP_HEADER:
-      ok_v (next = next_line (c), HTTP_NONE); data = c->data;
+      ok_v (next = next_line (c), HTTP_NONE);
+      data = c->data;
       if (c->debug) printf ("%s\r\n", data);
       switch (*data) {
       case '\0': // end of headers
-	if (c->error) {
-	  if (c->method == HTTP_RESPONSE) goto close;
-	  http_error (c, c->error); return HTTP_ERROR;
-	}
-	if ((c->method == HTTP_RESPONSE
-	     && ((c->header & HTTP_CONTENT_LENGTH && !c->end)
-		 || ((c->status >= 100 && c->status <= 199)
-		     || c->status == 204 || c->status == 304)))
-	     || (c->method != HTTP_RESPONSE && !c->end)) {
-	  // response or request with no body
-	  c->body = 0; c->state = HTTP_COMPLETE;
-	} else { c->state++; // HTTP_DATA
-	  if (!c->end) c->close = 1; // close-delimited message
-	}
-	c->end += next - c->buffer; // message end	
-	c->data = next;
-	return c->method;
-      case ' ': case '\t': c->error = 400; break; // obsolete line folding
+        if (c->error) {
+          if (c->method == HTTP_RESPONSE) goto close;
+          http_error (c, c->error);
+          return HTTP_ERROR;
+        }
+        if ((c->method == HTTP_RESPONSE
+             && ((c->header & HTTP_CONTENT_LENGTH && !c->end)
+                 || ((c->status >= 100 && c->status <= 199)
+                     || c->status == 204 || c->status == 304)))
+            || (c->method != HTTP_RESPONSE && !c->end)) {
+          // response or request with no body
+          c->body = 0;
+          c->state = HTTP_COMPLETE;
+        } else {
+          c->state++; // HTTP_DATA
+          if (!c->end) c->close = 1; // close-delimited message
+        }
+        c->end += next - c->buffer; // message end
+        c->data = next;
+        return c->method;
+      case ' ':
+      case '\t':
+        c->error = 400;
+        break; // obsolete line folding
       default:
-	if (data = token_colon (&header, data)) {
-	  i = string_index (to_lower (header), headers, 6);
-	  c->header |= 1 << i;
-	  switch (i) {
-	  case 0: // Host
-	    data = ows (parse_host (&uri, &c->host, data));
-	    if (*data != '\0') c->error = 400; break;
-	  case 1: // Accept
-	    c->media_range = data; break;
-	  case 2: // Content-Type
-	    c->content_type = data; break;
-	  case 3: // Content-Length
-	    data = ows (number (&c->end, data));
-	    if (data && *data == '\0')
-	      c->content_length = c->end;
-	    else c->error = 400; break;
-	  case 4: // Connection
-	    if (data = token (&text, data))
-	      c->close = streq (to_lower (text), "close");
-	    break;
-	  case 5: // Location
-	    c->location = data;
-	  }
-	} else c->error = 400;
-      } break;
-    case HTTP_DATA: return c->method;
+        if (data = token_colon (&header, data)) {
+          i = string_index (to_lower (header), headers, 6);
+          c->header |= 1 << i;
+          switch (i) {
+          case 0: // Host
+            data = ows (parse_host (&uri, &c->host, data));
+            if (*data != '\0') c->error = 400;
+            break;
+          case 1: // Accept
+            c->media_range = data;
+            break;
+          case 2: // Content-Type
+            c->content_type = data;
+            break;
+          case 3: // Content-Length
+            data = ows (number (&c->end, data));
+            if (data && *data == '\0')
+              c->content_length = c->end;
+            else c->error = 400;
+            break;
+          case 4: // Connection
+            if (data = token (&text, data))
+              c->close = streq (to_lower (text), "close");
+            break;
+          case 5: // Location
+            c->location = data;
+          }
+        } else c->error = 400;
+      }
+      break;
+    case HTTP_DATA:
+      return c->method;
     case HTTP_COMPLETE:
       if (!c->close) {
-	http_rebuffer (c, c->buffer + c->end);
-	c->state = HTTP_START; continue;
-      } c->state++;
+        http_rebuffer (c, c->buffer + c->end);
+        c->state = HTTP_START;
+        continue;
+      }
+      c->state++;
     case HTTP_CLOSED:
       return HTTP_NONE;
     }
     c->data = next;
   }
- close:
-  http_close (c); return HTTP_NONE;
+close:
+  http_close (c);
+  return HTTP_NONE;
 }
 
 #endif

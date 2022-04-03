@@ -20,7 +20,7 @@ enum SessionStatus {SESSION_NONE, SESSION_CONNECTED, SESSION_NEW};
 typedef struct _Connection Connection;
 
 /** @brief Return the session status of a Connection.
-    
+
     For a TLS connection, perform session negotiation including client/server
     Hello messages and the exchange of certificates.
     @param conn is a pointer to a Connection
@@ -82,7 +82,7 @@ void *conn_accept (void *conn, Acceptor *a, int secure);
 void *conn_connect (void *conn, Address *server, int secure);
 
 /** @brief Get the TLS session ID.
-    
+
     The session ID is a 32 byte value that identifies a client/server session.
     @param conn is a pointer to a Connection
     @returns the session ID for a TLS connection, NULL otherwise
@@ -95,43 +95,43 @@ const uint8_t *tls_session_id (void *conn);
 
 enum TlsState {TLS_NONE, TLS_NEGOTIATE, TLS_SHUTDOWN, TLS_SESSION};
 
-//一个网络连接对象
 typedef struct _Connection {
   TcpPort tcp;
-  void *tls;  
+  void *tls;
   unsigned tls_state : 2;
-  int (*session) (void *);                  //表达当前的连接状态
-  int (*read) (void *, char *, int);        //网络层读数据函数，详见tcp_setup或者tls_setup
-  int (*write) (void *, const char *, int); //网络层写数据函数，详见tcp_setup或者tls_setup
-  void (*close) (void *);                   //网络层关闭连接函数，详见tcp_setup或者tls_setup
+  int (*session) (void *);
+  int (*read) (void *, char *, int);
+  int (*write) (void *, const char *, int);
+  void (*close) (void *);
 } Connection;
 
 #define conn_field(conn, name) struct_field (Connection, conn, name)
 
-int conn_session (void *conn) { return conn_field (conn, session (conn)); }
-
-//从网络中读取数据函数，注意这里调用的read函数
+int conn_session (void *conn) {
+  return conn_field (conn, session (conn));
+}
 int conn_read (void *conn, char *buffer, int size) {
   return conn_field (conn, read (conn, buffer, size));
 }
-
-//向网络中写入数据，注意这里的write函数。
 int conn_write (void *conn, const char *data, int length) {
   return conn_field (conn, write (conn, data, length));
 }
-
-int conn_secure (void *conn) { return conn_field (conn, tls) != NULL; }
-
-//关闭连接，注意这里的close函数
-void conn_close (void *conn) { conn_field (conn, close (conn)); }
+int conn_secure (void *conn) {
+  return conn_field (conn, tls) != NULL;
+}
+void conn_close (void *conn) {
+  conn_field (conn, close (conn));
+}
 
 int tcp_session (void *conn) {
   return net_status (conn) == Connected;
 }
 
 void tcp_setup (Connection *c) {
-  c->tls = NULL; c->session = tcp_session;
-  c->read = net_read; c->write = net_write;
+  c->tls = NULL;
+  c->session = tcp_session;
+  c->read = net_read;
+  c->write = net_write;
   c->close = net_close;
 }
 
@@ -141,29 +141,32 @@ const uint8_t *tls_session_id (void *conn) {
   return NULL;
 }
 
-
 int tls_session (void *conn) {
   Connection *c = conn;
   if (net_status (c) == Connected) {
     switch (c->tls_state) {
     case TLS_NEGOTIATE:
-    if (ssl_handshake (c->tls)) {
-      c->tls_state = TLS_SESSION; return SESSION_NEW;
-    } else if (!ssl_pending ()) {
-      c->tls_state = TLS_SHUTDOWN;
-      print_ssl_error ("tls_session");
-    } else break;
+      if (ssl_handshake (c->tls)) {
+        c->tls_state = TLS_SESSION;
+        return SESSION_NEW;
+      } else if (!ssl_pending ()) {
+        c->tls_state = TLS_SHUTDOWN;
+        print_ssl_error ("tls_session");
+      } else break;
     case TLS_SHUTDOWN:
       if (ssl_close (c->tls)) {
-	c->tls_state = TLS_NONE;
-	ssl_free (c->tls); c->tls = NULL;
-	net_close (c);
-      } break;
-    case TLS_SESSION: return SESSION_CONNECTED;
+        c->tls_state = TLS_NONE;
+        ssl_free (c->tls);
+        c->tls = NULL;
+        net_close (c);
+      }
+      break;
+    case TLS_SESSION:
+      return SESSION_CONNECTED;
     }
-  } return SESSION_NONE;
+  }
+  return SESSION_NONE;
 }
-
 
 void tls_close (void *conn) {
   Connection *c = conn;
@@ -172,7 +175,8 @@ void tls_close (void *conn) {
 }
 
 int tls_read (void *conn, char *data, int length) {
-  Connection *c = conn; int ret = -1;
+  Connection *c = conn;
+  int ret = -1;
   if (c->tls_state == TLS_SESSION) {
     ret = ssl_read (c->tls, data, length);
     if (ret <= 0 && !ssl_pending ()) tls_close (conn);
@@ -181,7 +185,8 @@ int tls_read (void *conn, char *data, int length) {
 }
 
 int tls_write (void *conn, const char *data, int length) {
-  Connection *c = conn; int ret = -1;
+  Connection *c = conn;
+  int ret = -1;
   if (c->tls_state == TLS_SESSION) {
     ret = ssl_write (c->tls, data, length);
     if (ret <= 0 && !ssl_pending ()) tls_close (conn);
@@ -190,26 +195,34 @@ int tls_write (void *conn, const char *data, int length) {
 }
 
 void tls_setup (Connection *c) {
-  c->tls = ssl_new (c); c->session = tls_session;
-  c->read = tls_read; c->write = tls_write;
+  c->tls = ssl_new (c);
+  c->session = tls_session;
+  c->read = tls_read;
+  c->write = tls_write;
   c->close = tls_close;
   c->tls_state = TLS_NEGOTIATE;
 }
 
-
-//建立连接，根据连接是否加密来做不同的初始化
 void *conn_accept (void *conn, Acceptor *a, int secure) {
-  Connection *c = conn; net_accept (conn, a);
-  if (secure) { tls_setup (conn); ssl_accept (c->tls); }
-  else tcp_setup (conn); return conn;
+  Connection *c = conn;
+  net_accept (conn, a);
+  if (secure) {
+    tls_setup (conn);
+    ssl_accept (c->tls);
+  } else tcp_setup (conn);
+  return conn;
 }
 
 
-/*建立到服务器的TCP连接*/
+/*建立TCP连接*/
 void *conn_connect (void *conn, Address *server, int secure) {
-  Connection *c = conn; net_connect (conn, server);
-  if (secure) { tls_setup (conn); ssl_connect (c->tls); }
-  else tcp_setup (c); return conn;
+  Connection *c = conn;
+  net_connect (conn, server);
+  if (secure) {
+    tls_setup (conn);
+    ssl_connect (c->tls);
+  } else tcp_setup (c);
+  return conn;
 }
 
 #endif

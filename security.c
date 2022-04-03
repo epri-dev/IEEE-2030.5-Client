@@ -63,19 +63,26 @@ extern uint64_t device_sfdi;
 uint8_t device_lfdi[20];
 uint64_t device_sfdi = 0;
 
-void print_bytes (unsigned char *data, int n) { int i;
+void print_bytes (unsigned char *data, int n) {
+  int i;
   for (i = 0; i < n; i++) printf ("%02x", data[i]);
 }
 
-int check_digit (uint64_t x) { int sum = 0;
-  while (x) { sum += x % 10; x /= 10; }
+int check_digit (uint64_t x) {
+  int sum = 0;
+  while (x) {
+    sum += x % 10;
+    x /= 10;
+  }
   return (10 - (sum % 10)) % 10;
 }
 
 uint64_t sfdi_gen(uint8_t *lfdi) {
-  int i = 0; uint64_t sfdi = 0;
+  int i = 0;
+  uint64_t sfdi = 0;
   while (i < 5) sfdi = (sfdi << 8) + lfdi[i++];
-  sfdi >>= 4; sfdi = sfdi * 10 + check_digit (sfdi);
+  sfdi >>= 4;
+  sfdi = sfdi * 10 + check_digit (sfdi);
   return sfdi;
 }
 
@@ -87,25 +94,35 @@ uint64_t lfdi_hash (uint8_t *lfdi, uint8_t *buffer, int length) {
 }
 
 uint64_t lfdi_gen (uint8_t *lfdi, const char *path) {
-  uint8_t *buffer; int length; uint64_t sfdi;
+  uint8_t *buffer;
+  int length;
+  uint64_t sfdi;
   FILE *f = fopen (path, "r");
-  if (!f) { printf ("error opening file %s\n", path); exit (0); }
-  fseek (f, 0, SEEK_END); length = ftell (f); fseek (f, 0, SEEK_SET);
+  if (!f) {
+    printf ("error opening file %s\n", path);
+    exit (0);
+  }
+  fseek (f, 0, SEEK_END);
+  length = ftell (f);
+  fseek (f, 0, SEEK_SET);
   buffer = malloc (sha256_size (length));
-  fread (buffer, length, 1, f); fclose (f);
+  fread (buffer, length, 1, f);
+  fclose (f);
   sfdi = lfdi_hash (lfdi, buffer, length);
-  free (buffer); return sfdi;
+  free (buffer);
+  return sfdi;
 }
 
 uint64_t load_device_cert (uint8_t *lfdi, const char *path) {
   uint64_t sfdi = lfdi_gen (lfdi, path);
   printf ("load device certificate: %s\n", path);
-  printf ("  lfdi: "); print_bytes (lfdi, 20);
+  printf ("  lfdi: ");
+  print_bytes (lfdi, 20);
   printf ("\n  sfdi: %" PRIu64 "\n", sfdi);
   return sfdi;
 }
 
-// generate lfdi/sfdi from device certificate 
+// generate lfdi/sfdi from device certificate
 void security_init (const char *path) {
   device_sfdi = load_device_cert (device_lfdi, path);
 }

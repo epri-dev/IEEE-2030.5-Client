@@ -20,8 +20,8 @@ typedef struct {
   int metering_rate; ///< is the post rate for meter readings
   Stub *mup; ///< is a pointer to the MirrorUsagePoint for this EndDevice
   List *readings; ///< is a list of MirrorMeterReadings
-  List *derpl; ///< is a list of DER programs 
-  SE_DERControlBase_t base; 
+  List *derpl; ///< is a list of DER programs
+  SE_DERControlBase_t base;
   SE_DefaultDERControl_t *dderc; ///< is the default DER control
   Schedule schedule; ///< is the DER schedule for this device
   Settings settings; ///< is the DER device settings
@@ -74,7 +74,8 @@ DerDevice *get_device (uint64_t sfdi) {
     schedule_init (&d->schedule);
     d->schedule.context = d;
     insert_device (d);
-  } return d;
+  }
+  return d;
 }
 
 void device_settings (uint64_t sfdi, char *path) {
@@ -103,9 +104,10 @@ void device_certs (char *path) {
   if (se_true (b, field)) se_set_true (a, field)
 
 void copy_der_base (SE_DERControlBase_t *a,
-		    SE_DERControlBase_t *b, uint32_t mask) {
+                    SE_DERControlBase_t *b, uint32_t mask) {
   uint32_t flags = b->_flags;
-  b->_flags &= mask; a->_flags |= mask;
+  b->_flags &= mask;
+  a->_flags |= mask;
   copy_boolean (a, b, opModConnect);
   copy_boolean (a, b, opModEnergize);
   copy_field (a, b, opModFixedPF);
@@ -143,16 +145,19 @@ void update_der (EventBlock *eb, int event) {
 */
 
 void remove_programs (Schedule *s, List *derpl) {
-  EventBlock *eb; HashPointer p;
+  EventBlock *eb;
+  HashPointer p;
   if (derpl == NULL) return;
   foreach_h (eb, &p, s->blocks) {
     if (find_by_data (derpl, eb->program)) {
       remove_block (s, eb);
       if (eb->status == Active) {
-	device_response (s->device, eb->event, EventAbortedProgram);
-      } eb->status = Aborted;
+        device_response (s->device, eb->event, EventAbortedProgram);
+      }
+      eb->status = Aborted;
     }
-  } free_list (derpl);
+  }
+  free_list (derpl);
 }
 
 void schedule_der (Stub *edev) {
@@ -165,28 +170,32 @@ void schedule_der (Stub *edev) {
   printf ("schedule_der\n");
   if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) return;
   // add the lFDI if not provided by the server
-  if (!se_exists (e, lFDI)) { se_set (e, lFDI);
+  if (!se_exists (e, lFDI)) {
+    se_set (e, lFDI);
     memcpy (e->lFDI, device->lfdi, 20);
   }
   // collect all DERPrograms for the device (sorted by primacy)
   foreach (l, fsa->reqs)
-    if (s = get_subordinate (l->data, SE_DERProgramList))
-      foreach (m, s->reqs)
-	derpl = insert_stub (derpl, m->data, s->base.info);
+  if (s = get_subordinate (l->data, SE_DERProgramList))
+    foreach (m, s->reqs)
+    derpl = insert_stub (derpl, m->data, s->base.info);
   // handle program removal
-  remove_programs (schedule, list_subtract (device->derpl, derpl)); 
+  remove_programs (schedule, list_subtract (device->derpl, derpl));
   /* event block schedule might change as a result of program removal and
      primacy change so clear the block lists */
   schedule->scheduled = schedule->active = schedule->superseded = NULL;
   schedule->device = edev;
   // insert DER Control events into the schedule
-  foreach (l, derpl) { s = l->data;
+  foreach (l, derpl) {
+    s = l->data;
     SE_DERProgram_t *derp = resource_data (s);
     if (t = get_subordinate (s, SE_DERControlList))
-      foreach (m, t->reqs) { EventBlock *eb;
-	eb = schedule_event (schedule, m->data, derp->primacy);
-	eb->program = s; eb->context = device;
-      }
+      foreach (m, t->reqs) {
+      EventBlock *eb;
+      eb = schedule_event (schedule, m->data, derp->primacy);
+      eb->program = s;
+      eb->context = device;
+    }
     if (!dderc && (t = get_subordinate (s, SE_DefaultDERControl)))
       dderc = resource_data (t);
   }
