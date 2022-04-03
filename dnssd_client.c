@@ -411,6 +411,7 @@ Service *dnssd_receive (UdpPort *port) {
 }
 
 // return next completed service not yet seen
+//DNSSD中的下一个服务
 Service *service_next (Service *s) {
   while (s) { // process discovered services
     if (s->complete && !s->seen) {  //如果一个服务已经完成，但是还有没有被seen的服务，则返回。

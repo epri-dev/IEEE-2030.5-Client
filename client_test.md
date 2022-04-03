@@ -1,8 +1,9 @@
 Client Test Application
 =======================
-
+基于之前文档中的API(在client.md文档中有说明)构建的一个测试应用，用于展示于SunSpec 测试过程的顺应性问题。
 The purpose of the client_test application is demonstrate usage of the EPRI
 2030.5 client API and demonstrate compliance with the SunSpec test procedure.
+
 
 Usage
 -----

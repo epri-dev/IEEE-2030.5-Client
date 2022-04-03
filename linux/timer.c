@@ -103,9 +103,9 @@ Timer *add_timer (int id) {
   Timer *timer = malloc (sizeof (Timer));
   timer->pe.type = TIMER_EVENT;
   timer->pe.id = id;
-  timer->pe.fd = timerfd_create (CLOCK_MONOTONIC, 0); //file handle
+  timer->pe.fd = timerfd_create (CLOCK_MONOTONIC, 0); //file handle 看起来是在系统中构建了一个独立的进程用于实现timer
   timer->pe.end = 1;
-  event_add (timer->pe.fd, timer);
+  event_add (timer->pe.fd, timer);  //将这个timer跟Event相互关联起来，通过查询Event可以判定timer是否溢出。
   return timer;
 }
 

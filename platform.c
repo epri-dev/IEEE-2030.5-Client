@@ -34,10 +34,10 @@ enum EventType {
   TCP_CONNECT, ///< A newly connected TcpPort
   TCP_ACCEPT, ///< A newly accepted TcpPort
   TCP_CLOSED, ///< A TcpPort that was closed.
-  TCP_TIMEOUT, ///< A TcpPort that timed out
-  TIMER_EVENT, ///< A timer that expired.
-  POLL_TIMEOUT, ///< The event_poll function timed out waiting for an event.
-  EVENT_NEW = 32 ///< A place holder for higher level events.
+  TCP_TIMEOUT, ///< A TcpPort that timed out  
+  TIMER_EVENT, ///< A timer that expired. 一个定时溢出
+  POLL_TIMEOUT, ///< The event_poll function timed out waiting for an event.  
+  EVENT_NEW = 32 ///< A place holder for higher level events.  别的Event类型都在这个基础上叠加
 };
 
 /** @brief Poll an event from the Platform layer.

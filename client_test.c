@@ -603,6 +603,9 @@ void test_dep (Stub *r) {
   }
 }
 
+
+//client_test。这个是一个测试程序，用于展示这套代码提供的API在通过SunSpec 测试程序中的顺应性测试。
+
 int main (int argc, char **argv) {
   Service *s;
   void *any;

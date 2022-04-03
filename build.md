@@ -5,7 +5,8 @@ Build System
 simplify C based cross platform development using gcc. While the script shares
 features of a build system it is not intended as a replacement for existing
 build systems such as `make` and the 'auto'-tools (`automake`/`autoconf`) whose
-scope and application are much broader. The scope here is limited to simply
+scope and application are much broader（adj. 广大的；一片的比较级）. 
+The scope here is limited to simply
 compiling applications and libraries that are part this framework using gcc as
 the compiler and Bash as the shell/scripting environment.
 

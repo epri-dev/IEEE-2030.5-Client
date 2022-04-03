@@ -7,7 +7,7 @@
     @{
 */
 
-#define SERVICE_FOUND (EVENT_NEW+1)
+#define SERVICE_FOUND (EVENT_NEW+1) // EVENT_NEW 值属于 EventType
 
 /** @brief Perform polling on the behalf of a client(在……一方（on behalf of）).
 
@@ -36,8 +36,8 @@ int client_poll (void **any, int timeout) {
   static Service *s = NULL;
 top:
   if (s = service_next (s)) {
-    *any = s;
-    return SERVICE_FOUND;
+    *any = s; //Returns SERVICE_FOUND with a pointer to a Service as the event object
+    return SERVICE_FOUND; //发现了一个新服务
   }
 
   /*我的注解：看起来作为client，仅仅关注下面这三种Event类型*/

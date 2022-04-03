@@ -182,12 +182,13 @@ int event_poll (void **any, int timeout) {
     if (!event_done (prev)) queue_add (&_active, prev); //往当前活动的_active的queue中添加prev，prev与本函数中后面的代码的执行有关。
     prev = NULL;
   }
+  
 poll:
-  if (i == n) {
+  if (i == n) { //这个意思是在第一次调用这个函数的时候？？
     if (pe = queue_remove (&_active)) {//返回首个元素
       event = pe->type;
       switch (pe->type) {
-      case TCP_ACCEPTOR:
+      case TCP_ACCEPTOR:  //通过查询TCP_ACCEPTOR关键词发现，整个工程中只有 net_listen 函数应用了 TCP_ACCEPTOR 这个类型
         goto accept;
       case TCP_ACCEPT:
       case TCP_CONNECT:

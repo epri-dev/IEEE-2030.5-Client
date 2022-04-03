@@ -30,28 +30,34 @@ int net_send (UdpPort *p, char *buffer, int length, Address *addr) {
                  (struct sockaddr *)(addr), addr->length);
 }
 
+
 int net_reply (UdpPort *p, char *buffer, int length) {
   return sendto (p->pe.socket, buffer, length, 0,
                  (struct sockaddr *)(&p->source), p->source.length);
 }
 
+//创建一个UDP PORT 对象
 UdpPort *new_udp_port (int size) {
   UdpPort *p = calloc (1, sizeof (UdpPort) + size);
-  p->pe.type = UDP_PORT;
+  p->pe.type = UDP_PORT;  //与Poll Event相互关联。
   p->size = size;
   return p;
 }
 
+
+//打开一个UDP port
 void net_open (UdpPort *p, Address *address) {
   if ((p->pe.socket = socket (address->family, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     print_error ("udp_open, socket");
   non_block_enable (p->pe.socket);
-  reuse_address (p->pe.socket);
-  event_add (p->pe.socket, p);
-  if (bind (p->pe.socket, (struct sockaddr *)address, address->length) < 0)
+  reuse_address (p->pe.socket); //设定UDP port resue。
+  event_add (p->pe.socket, p);  //加入到Poll event queue中去，一旦有数据发生，则将产生event poll事件
+  if (bind (p->pe.socket, (struct sockaddr *)address, address->length) < 0) //
     print_error ("upd_open, bind");
 }
 
+
+//这个可能是针对IPV6协议的。
 void net_join_group (UdpPort *p, const char *addr, int loop) {
   multicast_join (p->pe.socket, addr, loop);
 }

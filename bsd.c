@@ -30,7 +30,7 @@ typedef struct _Address {
 
 #include "address.c"
 
-int global_if_index;
+int global_if_index;  //全局网络接口
 
 void net_select (int index) {
   global_if_index = index;
@@ -140,6 +140,7 @@ int bsd_listen (Address *address) {
 }
 
 
+//判断socket连接是否有问题？？
 int bsd_connected (int socket) {
   int error;
   socklen_t n = sizeof (int);
@@ -147,6 +148,8 @@ int bsd_connected (int socket) {
   return error == 0;
 }
 
+
+//看起来是针对IPV6协议的，跟IPV4没有太多关系。
 void multicast_join (int socket, const char *addr, int loop) {
   struct ipv6_mreq group;
   int value = 0;

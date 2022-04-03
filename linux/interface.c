@@ -36,14 +36,15 @@ int interface_index (char *name) {
   strcpy(request.ifr_name, name);
   ret = ioctl (s, SIOCGIFINDEX, &request);
   close (s);
-  return ret < 0 ? ret : request.ifr_ifindex;
+  return ret < 0 ? ret : request.ifr_ifindex; //应该是系统分配下来的网络接口的index。
 }
+
 
 int interface_mac (uint8_t *mac, char *name) {
   int s = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP), ret;
   struct ifreq request;
   strcpy(request.ifr_name, name);
-  ret = ioctl (s, SIOCGIFHWADDR, &request);
+  ret = ioctl (s, SIOCGIFHWADDR, &request); /* interface index */
   close (s);
   if (ret == 0)
     memcpy (mac, request.ifr_hwaddr.sa_data, 6);

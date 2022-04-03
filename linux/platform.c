@@ -30,10 +30,10 @@ typedef struct _PollEvent {
   };    /* 这里把socket和文件当做同一类事情 */
 } PollEvent;
 
-#define MAX_EVENTS 10 //最大handle值
+#define MAX_EVENTS 10 //event对象的最大 handle 值
 #define TCP_ACCEPTOR SYSTEM_EVENT
 
-int poll_fd;  //整个系统中，所有的事件都是以整个handle来轮询。
+int poll_fd;  //整个系统中，所有的事件 ( event ) 都是以整个handle来轮询。
 Timer *_tcp_timer;  //看起来是用来检测TCP上的数据的超时时间
 
 

@@ -21,7 +21,7 @@ UdpPort *mdns_open (char *name, int loop) {
   char zero[16] = {0};
   const char mcast[16] = "\xff\x05\0\0\0\0\0\0\0\0\0\0\0\0\0\xfb";
   net_select (interface_index (name));
-  ipv6_address (&multicast, mcast, MDNS_PORT);
+  ipv6_address (&multicast, mcast, MDNS_PORT);  //看起来仅仅用于IPV6网络。
   net_open (mdns, ipv6_address (&addr, zero, MDNS_PORT));
   net_join_group (mdns, mcast, loop);
   return mdns;
