@@ -31,6 +31,7 @@ void client_init (char *name, const char *cert);
 
 #ifndef HEADER_ONLY
 
+//查询dnssd返回的数据和网络层面的数据活动
 int client_poll (void **any, int timeout) {
   int event;
   static Service *s = NULL;
@@ -44,7 +45,7 @@ top:
   switch (event = event_poll (any, timeout)) {
   case TCP_CONNECT:
     return TCP_PORT;
-  case UDP_PORT:
+  case UDP_PORT:  //dnssd返回的数据
     if (s = service_receive (*any)) goto top;
   }
   return event;

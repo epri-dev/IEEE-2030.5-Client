@@ -350,7 +350,10 @@ Stub *get_resource (void *conn, int type, const char *href, int count) {
   return s;
 }
 
-//之类的poll资源，主要是针对 SE_Event_t 数据 。但是看起来他并没有去做向服务器Poll的动作？？
+/*
+之类的poll资源，主要是针对 SE_Event_t 数据 。但是看起来他并没有去做向服务器Poll的动作？？
+*/
+
 void poll_resource (Stub *s) {
   time_t now = se_time ();
   time_t next = now + s->poll_rate;

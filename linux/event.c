@@ -211,16 +211,17 @@ retry:
          成功：返回发生的事件数；失败：-1
 
       */
-    n = epoll_wait (poll_fd, events, MAX_EVENTS, timeout);
+    n = epoll_wait (poll_fd, events, MAX_EVENTS, timeout);  //这个函数应该是阻塞式函数，等待 timeout 事件
+    
     i = 0;
-    if (n < 0) goto retry; // perror ("event_poll");
-    if (n == 0) return POLL_TIMEOUT;
+    if (n < 0) goto retry;    //perror ("event_poll");  //如果没有事件发生，则循环等待
+    if (n == 0) return POLL_TIMEOUT;  //如果返回是0，则表示超时？
   }
 
-  /*如果发生了事件*/
+  /* 如果发生了事件... */
   event = events[i].events;
   *any = pe = events[i].data.ptr;
-  i++;
+  i++;  //每发生一件event，i值就增加1
   // printf ("event_poll %x %p %d\n", event, pe, pe->type);
   switch (pe->type) {
   case TCP_CONNECT:
@@ -229,19 +230,10 @@ retry:
     if (event & EPOLLOUT && bsd_connected (pe->socket)) {
       clear_timeout (pe);
       pe->status = Connected;
-      pe->type = TCP_PORT;
+      pe->type = TCP_PORT;  //连接上之后，type的值转换成 TCP_PORT 。相当于一个状态机中的状态发生了转换。
       prev = pe;
       return TCP_CONNECT;
     }
-    if (event & EPOLLRDHUP || event & EPOLLHUP)
-      net_close (*any);
-    goto poll;
-  case TCP_PORT:
-    prev = pe;
-    clear_timeout (pe);
-    /*EPOLLIN：表示对应的文件描述符可以读；*/
-    if (event & EPOLLIN)
-      return TCP_PORT;
     /*在使用 epoll 时，对端正常断开连接（调用 close()），在服务器端会触发一个 epoll 事件。
     在低于 2.6.17 版本的内核中，这个 epoll 事件一般是 EPOLLIN，即 0x1，代表连接可读。
     不过，2.6.17 版本内核中增加了 EPOLLRDHUP 事件，代表对端断开连接，
@@ -251,26 +243,38 @@ retry:
     有了这个事件，对端断开连接的异常就可以在底层进行处理了，不用再移交到上层。
     https://blog.csdn.net/midion9/article/details/49883063
     */
+    if (event & EPOLLRDHUP || event & EPOLLHUP) //EPOLLHUP : 文件被挂断。这个事件是一直监控的，即使没有明确指定
+      net_close (*any); //如果对端挂断连接，则此时本地端也要同步挂断连接
+    goto poll;
+    
+  case TCP_PORT:  
+    prev = pe;
+    clear_timeout (pe);
+    /*EPOLLIN：表示对应的文件描述符可以读；*/
+    if (event & EPOLLIN)
+      return TCP_PORT;
     if (event & EPOLLRDHUP || event & EPOLLHUP) {
       pe->status = Closed;
       prev = NULL;
       return TCP_CLOSED;
     }
     break;
+    
 accept:
-  case TCP_ACCEPTOR:
+  case TCP_ACCEPTOR:  // 面向于服务器程序的 ？
     if (prev = accept_queued (pe)) {
-      queue_add (&_active, pe);
+      queue_add (&_active, pe); //放到“活动的_active”队列中
       prev->type = TCP_PORT;
       *any = prev;
       return TCP_ACCEPT;
     }
     goto poll;
-  case TIMER_EVENT:
-    read (pe->fd, &value, 8);
+    
+  case TIMER_EVENT: //由add timer来构建这个event。
+    read (pe->fd, &value, 8); //value的长度是64bit。定时器timer的数据长度是64bit吗？
     if (pe->id == TCP_TIMEOUT)
-      *any = tcp_expired ();
-    return pe->id;
+      *any = tcp_expired ();  //超时了，比如无法连接上，则关闭该连接
+    return pe->id;  //除了TCP_TIMEOUT之外的情况，正常返回
   }
   return pe->type;
 }

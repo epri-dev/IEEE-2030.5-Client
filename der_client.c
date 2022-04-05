@@ -71,10 +71,11 @@ void print_event_schedule (DerDevice *d) {
   printf ("\n");
 }
 
+
 int der_poll (void **any, int timeout) {
   Schedule *s;
   int event;
-  while (event = next_event (any)) {  //查询下一个event是否已经到来
+  while (event = next_event (any)) {  // 查询下一个event是否已经到来
     switch (event) {
     case SCHEDULE_UPDATE:
       s = *any;
@@ -99,7 +100,7 @@ int der_poll (void **any, int timeout) {
       return event;
     }
   }
-  return client_poll (any, timeout);
+  return client_poll (any, timeout);  //定时器查询、dnssd查阅、网络层面数据活动查阅
 }
 
 void der_init () {

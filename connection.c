@@ -3,6 +3,8 @@
 
 /** @defgroup connection Connection
 
+    //Connection对象是对TCPport对象的扩展，为TCP或者TLS连接提供了一个接口。
+    
     A Connection extends a TcpPort and provides an interface to either a TCP
     or TLS connection. Connections are established by calling either
     @ref conn_connect or @ref conn_accept, the "secure" parameter determines
@@ -17,7 +19,10 @@
 
 enum SessionStatus {SESSION_NONE, SESSION_CONNECTED, SESSION_NEW};
 
+
+//Connection 对象
 typedef struct _Connection Connection;
+
 
 /** @brief Return the session status of a Connection.
 
@@ -93,17 +98,20 @@ const uint8_t *tls_session_id (void *conn);
 
 #ifndef HEADER_ONLY
 
+
+//TLS_NONE：无TLS连接？ TLS_NEGOTIATE：协商？ TLS_SHUTDOWN：关闭连接。TLS_SESSION连接已经建立。
 enum TlsState {TLS_NONE, TLS_NEGOTIATE, TLS_SHUTDOWN, TLS_SESSION};
 
 typedef struct _Connection {
   TcpPort tcp;
   void *tls;
-  unsigned tls_state : 2;
-  int (*session) (void *);
-  int (*read) (void *, char *, int);
-  int (*write) (void *, const char *, int);
-  void (*close) (void *);
+  unsigned tls_state : 2; //TlsState
+  int (*session) (void *);  //当前状态
+  int (*read) (void *, char *, int);        //从连接中读取数据
+  int (*write) (void *, const char *, int); //往连接中写入数据
+  void (*close) (void *); //关闭连接
 } Connection;
+
 
 #define conn_field(conn, name) struct_field (Connection, conn, name)
 
@@ -141,6 +149,11 @@ const uint8_t *tls_session_id (void *conn) {
   return NULL;
 }
 
+/*
+In the case of TLS, repeat calls to @ref conn_session might be required to
+fully negotiate a TLS session.
+*/
+
 int tls_session (void *conn) {
   Connection *c = conn;
   if (net_status (c) == Connected) {
@@ -168,32 +181,37 @@ int tls_session (void *conn) {
   return SESSION_NONE;
 }
 
+
+//TLS 关闭连接
 void tls_close (void *conn) {
   Connection *c = conn;
   c->tls_state = TLS_SHUTDOWN;
   tls_session (c);
 }
 
+// TLS 读数据
 int tls_read (void *conn, char *data, int length) {
   Connection *c = conn;
   int ret = -1;
   if (c->tls_state == TLS_SESSION) {
     ret = ssl_read (c->tls, data, length);
-    if (ret <= 0 && !ssl_pending ()) tls_close (conn);
+    if (ret <= 0 && !ssl_pending ()) tls_close (conn);  //如果读取失败，并且没有未读取的数据的情况下，关闭连接
   }
   return ret;
 }
 
+//TLS 写数据
 int tls_write (void *conn, const char *data, int length) {
   Connection *c = conn;
   int ret = -1;
   if (c->tls_state == TLS_SESSION) {
     ret = ssl_write (c->tls, data, length);
-    if (ret <= 0 && !ssl_pending ()) tls_close (conn);
+    if (ret <= 0 && !ssl_pending ()) tls_close (conn);  //如果写入失败，并且没有未读取的数据的情况下，关闭连接
   }
   return ret;
 }
 
+//建立TLS对象的时候直接就构建了连接
 void tls_setup (Connection *c) {
   c->tls = ssl_new (c);
   c->session = tls_session;
@@ -203,6 +221,7 @@ void tls_setup (Connection *c) {
   c->tls_state = TLS_NEGOTIATE;
 }
 
+//接受一个连接 （应该是面向服务器端的程序）
 void *conn_accept (void *conn, Acceptor *a, int secure) {
   Connection *c = conn;
   net_accept (conn, a);

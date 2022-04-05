@@ -85,6 +85,7 @@ void *queue_remove (Queue *q) {
   return item;//并且返回首个元素
 }
 
+//将Queue中的全部成员占用的空间清除
 void queue_free (Queue *q) {
   free_list (q->first);
   queue_clear (q);

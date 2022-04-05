@@ -23,17 +23,17 @@ typedef struct _PollEvent {
   char type, id;    //  enum EventType
   unsigned end : 1; //  end of input
   unsigned status : 2; // connection status 网络连接状态？？
-  unsigned wait : 1;
+  unsigned wait : 1;  //置1表示在等待网络中某个事件的发生。置0表示已经完成了或者超时了，已经没有再等待了。
   union {
     int socket;
-    int fd; //系统定时器的file handle
+    int fd; //系统定时器的file handle，不是别的file
   };    /* 这里把socket和文件当做同一类事情 */
 } PollEvent;
 
 #define MAX_EVENTS 10 //event对象的最大 handle 值
-#define TCP_ACCEPTOR SYSTEM_EVENT
+#define TCP_ACCEPTOR SYSTEM_EVENT //这个事件看起来像是应用于服务器程序的
 
-int poll_fd;  //整个系统中，所有的事件 ( event ) 都是以整个handle来轮询。
+int poll_fd;        //整个系统中，所有的事件 ( event ) 都是以整个handle来轮询。
 Timer *_tcp_timer;  //看起来是用来检测TCP上的数据的超时时间
 
 
@@ -68,7 +68,14 @@ int event_done (void *any) {
 void event_add (int fd, void *data) {
   struct epoll_event ev;
   non_block_enable (fd);
-  /*其中events表示感兴趣的事件和被触发的事件*/
+  /*其中events表示感兴趣的事件和被触发的事件
+  EPOLLIN：表示对应的文件描述符可以读；
+  EPOLLOUT：表示对应的文件描述符可以写；
+  EPOLLPRI：表示对应的文件描述符有紧急的数可读；
+  EPOLLERR：表示对应的文件描述符发生错误；
+  EPOLLHUP：表示对应的文件描述符被挂断；
+  EPOLLET：  ET的epoll工作模式；
+  */
   ev.events = EPOLLIN | EPOLLOUT
               | EPOLLRDHUP | EPOLLHUP | EPOLLET;
   ev.data.ptr = data;
@@ -89,6 +96,7 @@ void event_add (int fd, void *data) {
   
 }
 
+//看起来像是 “活动的TCP连接” 的一个队列
 Queue _active = {0};
 
 #include "time.c"

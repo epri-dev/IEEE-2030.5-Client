@@ -49,7 +49,7 @@ https://www.cnblogs.com/mickole/p/3261879.html
 */
 
 //设定一个定时器的超时时间，定时单位秒
-void set_timer (Timer *timer, int timeout) {
+void set_timer (Timer *timer, int timeout) {  //如果timeout的值是0，则关闭定时器。
   struct itimerspec it = {0};
   it.it_interval.tv_sec = timeout;  //非零，则每隔一段时间则超时一次，即触发一次。
   it.it_value.tv_sec = timeout; //非零启动定时器

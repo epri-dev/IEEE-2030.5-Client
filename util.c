@@ -42,6 +42,7 @@ int bit_count (uint32_t x) {
   return n;
 }
 
+//给出一个字符串在一个字符串列表中的index
 int string_index (const char *s, const char *const *ss, int n) {
   int i;
   for (i = 0; i < n; i++) if (streq (s, ss[i])) break;
