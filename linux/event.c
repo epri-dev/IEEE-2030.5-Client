@@ -271,7 +271,9 @@ accept:
     goto poll;
     
   case TIMER_EVENT: //由add timer来构建这个event。
-    read (pe->fd, &value, 8); //value的长度是64bit。定时器timer的数据长度是64bit吗？
+    if(read (pe->fd, &value, 8) <= 0){
+      printf("failed to read file\n");
+    } //value的长度是64bit。定时器timer的数据长度是64bit吗？
     if (pe->id == TCP_TIMEOUT)
       *any = tcp_expired ();  //超时了，比如无法连接上，则关闭该连接
     return pe->id;  //除了TCP_TIMEOUT之外的情况，正常返回

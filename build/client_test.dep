@@ -1,0 +1,8 @@
+client_test.o: client_test.c der_client.c se_core.h se_core.c pack.c \
+ util.c list.c queue.c platform.c linux/platform.c linux/../bsd.c \
+ linux/../file.c parse.c schema.c xml_parse.c xml_token.c utf8.c \
+ exi_parse.c output.c xml_output.c exi_output.c se_types.h se_object.c \
+ sha256.c openssl.c security.c connection.c uri.c http.c se_connection.c \
+ mdns.c named.c dnssd_client.c se_discover.c client.c list_util.c time.c \
+ event.c hash.c resource.c retrieve.c schedule.c der.c settings.c \
+ metering.c query.c

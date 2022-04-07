@@ -1,0 +1,8 @@
+se_core.o: se_core.c pack.c util.c list.c queue.c platform.c \
+ linux/platform.c linux/../bsd.c linux/../address.c linux/../file.c \
+ linux/time.c linux/timer.c linux/tcp.c linux/udp.c linux/event.c \
+ linux/interface.c linux/file.c parse.c schema.c string_table.c \
+ xml_parse.c xml_token.c utf8.c exi_parse.c output.c xml_output.c \
+ exi_output.c se_types.h se_object.c se_schema.c se_list.c sha256.c \
+ openssl.c security.c connection.c uri.c http.c http_parse.c \
+ se_connection.c mdns.c named.c dnssd_client.c se_discover.c

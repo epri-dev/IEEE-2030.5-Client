@@ -2265,8 +2265,7 @@ const char *const se_names[] = {
   "LogEventList", "LogEventListLink", "ManufacturerStatusType", "MessagingProgram", "MessagingProgramList", "MessagingProgramListLink", "MeterReading",
   "MeterReadingBase", "MeterReadingLink", "MeterReadingList", "MeterReadingListLink", "MirrorMeterReading", "MirrorMeterReadingList", "MirrorReadingSet",
   "MirrorUsagePoint", "MirrorUsagePointList", "MirrorUsagePointListLink", "Neighbor", "NeighborList", "NeighborListLink", "Notification", "NotificationList",
-  "NotificationListLink", "Offset", "OneHourRangeType", "OperationalModeStatusType", "PENTy
-  pe", "PEVInfo", "PINType", "PerCent", "PhaseCode", "PowerConfiguration", "PowerFactor", "PowerOfTenMultiplierType", "PowerSourceType", "PowerStatus",
+  "NotificationListLink", "Offset", "OneHourRangeType", "OperationalModeStatusType", "PENType", "PEVInfo", "PINType", "PerCent", "PhaseCode", "PowerConfiguration", "PowerFactor", "PowerOfTenMultiplierType", "PowerSourceType", "PowerStatus",
   "PowerStatusLink", "PrepayModeType", "PrepayOperationStatus", "PrepayOperationStatusLink", "Prepayment", "PrepaymentLink", "PrepaymentList",
   "PrepaymentListLink", "PriceResponse", "PriceResponseCfg", "PriceResponseCfgList", "PriceResponseCfgListLink", "PrimacyType", "PriorityType",
   "ProjectionReading", "ProjectionReadingList", "ProjectionReadingListLink", "RPLInstance", "RPLInstanceList", "RPLInstanceListLink", "RPLSourceRoutes",
@@ -2321,8 +2320,7 @@ const char *const se_names[] = {
   "timeChargingStatusPEV", "batteryStatus", "changedTime", "currentPowerSource", "estimatedChargeRemaining", "estimatedTimeRemaining",
   "sessionTimeOnBattery", "totalTimeOnBattery", "averageEnergy", "maxDemand", "optionsImplemented", "functionsImplemented", "mfDate",
   "mfInfo", "primaryPower", "secondaryPower", "swActTime", "swVer", "currentTime", "dstEndTime", "dstStartTime", "localTime", "quality",
-  "endDeviceLFDI", "subscribedResource", "newResourceURI", "subscriptionURI", "attributeIdentifier", "lowerThreshold", "upperThreshold", "encoding
-  ", "level", "limit", "notificationURI", "loadShedDeviceCategory", "sFDI", "dateTimeRegistered", "pIN", "enabled", "onCount", "opState", "opTime",
+  "endDeviceLFDI", "subscribedResource", "newResourceURI", "subscriptionURI", "attributeIdentifier", "lowerThreshold", "upperThreshold", "encoding", "level", "limit", "notificationURI", "loadShedDeviceCategory", "sFDI", "dateTimeRegistered", "pIN", "enabled", "onCount", "opState", "opTime",
 };
 
 const uint16_t se_ids[] = {0, 321, 322, 323, 0, 324, 0, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340,

@@ -106,7 +106,11 @@ uint64_t lfdi_gen (uint8_t *lfdi, const char *path) {
   length = ftell (f);
   fseek (f, 0, SEEK_SET);
   buffer = malloc (sha256_size (length));
-  fread (buffer, length, 1, f);
+  int n = fread (buffer, length, 1, f);
+  if(n <= 0){
+    printf("Failed to read from file\n");
+  }
+  
   fclose (f);
   sfdi = lfdi_hash (lfdi, buffer, length);
   free (buffer);

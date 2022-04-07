@@ -1,0 +1,2 @@
+schema_gen.o: schema_gen.c file.c util.c list.c named.c xml_tree.c \
+ xml_token.c utf8.c schema.c list_util.c c_gen.c doc_gen.c

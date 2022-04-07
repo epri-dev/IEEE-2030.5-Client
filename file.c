@@ -19,7 +19,10 @@ char *file_read (const char *name, int *length) {
   end = ftell (f);
   buffer = malloc (end + 1);
   fseek (f, 0, SEEK_SET);
-  fread (buffer, end, 1, f);
+  int n = fread (buffer, end, 1, f);
+  if(n <= 0){
+    printf("failed to read from file\n");
+  }
   fclose (f);
   buffer[end] = '\0';
   if (length) *length = end;
