@@ -121,11 +121,15 @@ client_test interface [device_cert ca_certs..]
 void options (int argc, char **argv) {
   int i = 2, index;
   char *name = argv[1];
-  if (argc < 3) usage ();
+  if (argc < 3){
+    printf("The input argumenet count less than 3,argv[0]=%s\n",argv[0]); 
+    usage (); 
+  }
   if ((index = interface_index (name)) < 0) {
     printf ("options: interface %s not found\n", name);
     exit (0);
   }
+  //
   net_select (index); der_init ();
 
   // process certificates and base query
