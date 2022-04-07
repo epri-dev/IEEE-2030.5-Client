@@ -122,7 +122,7 @@ void options (int argc, char **argv) {
   int i = 2, index;
   char *name = argv[1];
   if (argc < 3){
-    printf("The input argumenet count less than 3,argv[0]=%s\n",argv[0]); 
+    printf("The input argument count less than 3,argv[0]=%s\n",argv[0]); 
     usage (); 
   }
   if ((index = interface_index (name)) < 0) {
