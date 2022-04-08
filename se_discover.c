@@ -80,10 +80,20 @@ const char *const service_name[] = {
 };
 
 const int service_types[] = {
-  SE_CustomerAccountList, SE_DemandResponseProgramList, SE_DERProgramList,
-  SE_FileList, SE_MessagingProgramList, SE_PrepaymentList, SE_ResponseSetList,
-  SE_TariffProfileList, SE_Time, SE_UsagePointList, SE_EndDeviceList,
-  SE_MirrorUsagePointList, SE_SelfDevice, SE_DeviceCapability
+  SE_CustomerAccountList, //0
+  SE_DemandResponseProgramList, //2 
+  SE_DERProgramList,  //4
+  SE_FileList,  //8
+  SE_MessagingProgramList,  //16 
+  SE_PrepaymentList,  //32
+  SE_ResponseSetList, //64
+  SE_TariffProfileList, //128
+  SE_Time,  //256
+  SE_UsagePointList,  //512 
+  SE_EndDeviceList, //1024
+  SE_MirrorUsagePointList,  //2048 
+  SE_SelfDevice, //4096
+  SE_DeviceCapability //8192
 };
 
 int se_subquery (char *name) {

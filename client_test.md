@@ -11,8 +11,7 @@ Usage
 The `client_test` application is a command line tool with the following
 arguments:
 
-    client_test interface [device_cert ca_certs..]
-                           <subtype[:1][/path] | URI> [commands]
+    client_test interface [device_cert ca_certs..] <subtype[:1][/path] | URI> [commands]
 
 The `interface` argument is the the name of the network interface,
 running the `client_test` application with no arguments will list the
@@ -30,9 +29,9 @@ certificates within the directory are loaded. If no certificates or
 directories then the certificates from `./certs` in the local directory
 are loaded.
 
-The `<subtype[:1][/path] | URI>` argument delimits the list of certificates and
-specifies either to perform xmDNS service discovery, or to retrieve the
-document at the specified URI.
+The `<subtype[:1][/path] | URI>` argument delimits(vt. 划界；定界限) the list of certificates and
+specifies either to perform xmDNS service discovery, or to retrieve the document at the specified URI.
+要么使用xmDNS方式来发现服务，要么通过遍历在URI指定下的文档
 
 Subtype DNS-SD queries
 ----------------------

@@ -52,26 +52,40 @@ secure的值表示是否是加密了连接
 int server = 0, test = 0, secure = 0, interval = 5 * 60, primary = 0, pin = 0;
 
 Stub *edevs;
-char *path = NULL;
+char *path = NULL;  //注意这里是一个全局变量
 uint64_t delete_sfdi;
 
-//可能跟msDNS功能有关
+//要解析的指令是 <subtype[:1][/path]  |  URI> ， 可能跟msDNS功能有关
 int subtype_query (char *arg, char *name) {
-  char subtype[12] = {0};
+  
+  printf("arg in subtyupe_query is %s\n",arg);
+
+  char subtype[12] = {0}; //subtype就是在service_name字符串数组中的值
   int qu = 0, n;
   char *p = strchr (arg, ':'), *q = strchr (arg, '/');
   if (p) {
-    if (*(p + 1) == '1') qu = 1;
-    else return 0;
+    if (*(p + 1) == '1') qu = 1;  //在dnssd服务中，设置QU标志为1
+    else {
+      printf("No 1 in subtype,exit\n");
+      return 0;
+    }
     n = p - arg;
   } else if (q) n = q - arg;
   else n = strlen (arg);
-  if (n > 11) return 0;
+  if (n > 11) {
+    printf("The n in subtype_query is more than 11,exit\n");
+    return 0;
+  }
   strncpy (subtype, arg, n);
+  
+  printf("subtype in subtype_query(%d bytes):%s\n",(int)strlen(subtype),subtype);
+
   if (server = se_subquery (subtype)) {
+    printf("Selected server value is %d\n",server);
     if (!secure) client_init (name, NULL);
     se_discover (server, qu);
     path = q;
+    printf("path:%s\n",path);
     return 1;
   }
   return 0;
@@ -90,6 +104,9 @@ int uri_retrieval (char *arg) {
     }
     return 0;
   }
+
+  printf("Connecting to %s\n",uri);
+  
   conn = se_connect_uri (uri);
   if (uri->query && !parse_query (&q, uri->query)) {
     printf ("error parsing URI query \"%s\"\n", uri->query);
@@ -114,13 +131,18 @@ int cert_name (char *arg) {
 }
 
 /*导入本次测试所需要的各项参数
-client_test interface [device_cert ca_certs..]
-                       <subtype[:1][/path] | URI> [commands]
+[0]         [1]       [2]                      [3]           
+client_test interface [device_cert ca_certs..] <subtype[:1][/path] | URI>  [commands]
 并执行
+
+./build/client_test eth0 ./certs/csep_root.pem edev http://192.168.1.13:8080 fsa
+
+./build/client_test eth0 http://192.168.1.13:8088/dcap fsa
+
 */
 void options (int argc, char **argv) {
   int i = 2, index;
-  char *name = argv[1];
+  char *name = argv[1]; //就是网卡名 interface
   if (argc < 3){
     printf("The input argument count less than 3,argv[0]=%s\n",argv[0]); 
     usage (); 
@@ -133,10 +155,11 @@ void options (int argc, char **argv) {
   net_select (index); der_init ();
 
   // process certificates and base query
-  while (i < argc) { DerDevice *d;
+  while (i < argc) { //前面i的值是2，所以从[device_cert ca_certs..] 开始检查参数
+    DerDevice *d;
     if (subtype_query (argv[i], name)	|| uri_retrieval (argv[i])) { //获取到参数中所标注的这些资源
       i++; break;
-    } else if (!secure) {
+    } else if (!secure) { //应该是 [device_cert ca_certs..] 部分参数
       client_init (name, argv[i]);
       secure = 1;
       d = get_device (device_sfdi);
@@ -148,6 +171,7 @@ void options (int argc, char **argv) {
     }
     i++;
   }
+
   if (!secure) {
     printf ("options: warning, no device certificate specified, "
             "TLS library will be uninitialized\n");
@@ -156,7 +180,7 @@ void options (int argc, char **argv) {
     load_cert_dir ("certs");
   }
 
-  // process tests
+  // process tests，应该是指令中的[commands]部分。
   while (i < argc) {
     uint64_t sfdi;
     const char *const commands[] = {
