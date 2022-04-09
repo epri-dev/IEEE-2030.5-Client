@@ -103,8 +103,9 @@ int der_poll (void **any, int timeout) {
   return client_poll (any, timeout);  //定时器查询、dnssd查阅、网络层面数据活动查阅
 }
 
+
 void der_init () {
-  device_init ();
-  resource_init ();
+  device_init ();   // 初始化 设备哈希表
+  resource_init (); //同样的，构建resource哈希表资源
   event_init ();
 }

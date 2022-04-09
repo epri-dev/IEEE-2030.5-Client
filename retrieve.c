@@ -516,6 +516,7 @@ void get_moved (Stub *s, char *location) {
   delete_reqs (s);
 }
 
+//处理HTTP重定向
 void process_redirect (void *conn, int status) {
   Stub *s;
   if (s = find_target (conn)) {
@@ -525,6 +526,7 @@ void process_redirect (void *conn, int status) {
   free_se_body (conn);
 }
 
+//处理HTTP回复的数据
 int process_http (void *conn, DepFunc dep) {
   int status;
   Stub *s;

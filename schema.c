@@ -93,7 +93,7 @@ void replace_object (void *dest, void *src, int type, const Schema *schema);
 
 #ifndef HEADER_ONLY
 
-// pointer types
+// pointer types 判断一个数据类型是否是一个指针类型
 int is_pointer (int type) {
   switch (type) {
   case XS_STRING:
@@ -152,11 +152,11 @@ const char *se_name (const SchemaElement *se, const Schema *schema) {
   return schema->names[id];
 }
 
-
+//不同的元素的占用空间大小
 int object_element_size (const SchemaElement *se, const Schema *schema) {
   if (se->simple) {
-    int n = se->xs_type >> 4;
-    switch (se->xs_type & 0xf) {
+    int n = se->xs_type >> 4; //高4位表示数量
+    switch (se->xs_type & 0xf) {  //第四位表示类型
     case XS_STRING:
       return n ? n : sizeof (char *);
     case XS_BOOLEAN:

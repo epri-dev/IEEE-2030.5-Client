@@ -103,6 +103,7 @@ int se_subquery (char *name) {
 
 UdpPort *mdns_port = NULL, *mdns_source = NULL, *dns_port = NULL;
 
+//这部分是通过dnssd来发现服务的
 void se_discover (int server, int qu) {
   int i = 0;
   char query[1024], name[64], *packet;

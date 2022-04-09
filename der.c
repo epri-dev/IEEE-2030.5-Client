@@ -13,23 +13,25 @@
 
 #include "settings.c"
 
-/** A DerDevice is a representation of a DER EndDevice. */
+
+/** A DerDevice is a representation of a DER EndDevice. 一个DER EndDevice的对象 */
 typedef struct {
   uint64_t sfdi; ///< is the SFDI of the EndDevice
   uint8_t lfdi[20]; ///< is the LFDI of the EndDevice
-  int metering_rate; ///< is the post rate for meter readings
+  int metering_rate; ///< is the post rate for meter readings 上传数据的是时间周期？
   Stub *mup; ///< is a pointer to the MirrorUsagePoint for this EndDevice
   List *readings; ///< is a list of MirrorMeterReadings
   List *derpl; ///< is a list of DER programs
-  SE_DERControlBase_t base;
+  SE_DERControlBase_t base; //基本设定值？
   SE_DefaultDERControl_t *dderc; ///< is the default DER control
-  Schedule schedule; ///< is the DER schedule for this device
+  Schedule schedule; ///< is the DER schedule for this device 
   Settings settings; ///< is the DER device settings
-} DerDevice;
+} DerDevice;  //一个DER设备的对象表示，最终需要操作的就是这个对象
 
 /** @brief Get a DerDevice with the matching SFDI.
     @param sfdi is the EndDevice SFDI
     @returns a pointer to a DerDevice
+    通过哈希表的搜索方法，找到这个设备的找个 “对象” 数据。get_device 通过global_hash实现。
 */
 DerDevice *get_device (uint64_t sfdi);
 
@@ -63,17 +65,18 @@ void *device_key (void *data) {
 }
 
 // find_device, insert_device, remove_device, device_init
-global_hash (device, int64, 64)
+//以64bit的sfdi作为key的哈希表中的寻找响应的资源
+global_hash (device, int64, 64) 
 
-//通过对sfdi作哈希运算快速的得到设备数据指针
+//通过对 sfdi 作哈希运算快速的得到设备数据指针
 DerDevice *get_device (uint64_t sfdi) {
   DerDevice *d = find_device (&sfdi);
   if (!d) {
     d = type_alloc (DerDevice);
     d->sfdi = sfdi;
-    schedule_init (&d->schedule);
-    d->schedule.context = d;
-    insert_device (d);
+    schedule_init (&d->schedule); //构建一个以mRID为索引的哈希表
+    d->schedule.context = d;  //context就是这个对象自己？
+    insert_device (d);  //如果这个对象不存在，则加入一个新的
   }
   return d;
 }

@@ -105,7 +105,11 @@ void terminate_host (Uri *uri) {
 }
 
 // parse URI-reference (RFC 3986)
-/*将URL中的各个要素都解析出来*/
+/*将URL中的各个要素都解析出来.
+
+state 参数用于指定解析过程从哪个步骤开始执行
+
+*/
 char *parse_uri (Uri *uri, Address *host, int state, char *data) {
   char *p;
   int c;

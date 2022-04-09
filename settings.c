@@ -1,6 +1,7 @@
 // Copyright (c) 2018 Electric Power Research Institute, Inc.
 // author: Mark Slicker <mark.slicker@gmail.com>
 
+/* 一个 DER 设备 的设置参数 */
 typedef struct {
   SE_DERAvailability_t *dera;
   SE_DERCapability_t *dercap;
@@ -8,11 +9,12 @@ typedef struct {
   SE_DERStatus_t *ders;
 } Settings;
 
+//导入“settings”目录下的文件
 void load_settings (const char *name, void *ctx) {
   Settings *ds = ctx;
   char *buffer = file_read (name, NULL),
         *data = utf8_start (buffer);
-  Parser *p = parser_new ();
+  Parser *p = parser_new ();  //  导入一个XML的 Parser
   void *obj;
   int type;
   parse_init (p, &se_schema, data);

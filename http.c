@@ -320,7 +320,7 @@ typedef struct _HttpConnection {
   int end;    // buffer + end = the end of the http message
   int length; // the amount of data in buffer
   int content_length; // from the Content-Length header
-  uint8_t state, method, request_method;
+  uint8_t state, method, request_method;  //request_method：请求的方法，比如是GET还是POST
   unsigned body : 1; // response or request has a body
   unsigned close : 1; // close signaled in last request/response
   unsigned client : 1; // true for client connection
@@ -580,7 +580,7 @@ void http_error (void *conn, int status) {
   http_respond (conn, status);
   http_close (conn);
 }
-
+//读取HTTP数据（余下的部分） 
 int http_read (void *conn) {
   HttpConnection *h = conn;
   int n = conn_read (conn, h->buffer + h->length,

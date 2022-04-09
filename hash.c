@@ -3,7 +3,7 @@
 
 /** @defgroup hash Hash
 
-    Provides a dynamically sized hash table implementation based upon sparse
+    Provides a dynamically sized hash table implementation based upon sparse（adj. 稀少的，稀疏的；简朴的）
     groups. Sparse groups are arrays of elements that use a single bit to
     indicate occupancy. Only the elements of the array that are occupied are
     stored, this results in a compact representation of a hash table at the
@@ -187,7 +187,7 @@ void hash_erase (HashPointer *p) {
 #define hash_mark(ht, h, j) { ht->g = h; ht->i = j; }
 #define hash_insert(ht, data) sg_insert (ht->g, ht->i, data);
 
-// return pointer to hash entry with given key or NULL if non-existent
+// return pointer to hash entry （哈希实体）with given key or NULL if non-existent
 void **hash_find (HashTable *ht, void *key) {
   int mask = ht->size - 1, probes = 0;
   int index = ht->hash (key) & mask;
@@ -322,10 +322,12 @@ HashTable *new_int64_hash (int size, void * (*get_key) (void *data)) {
   return ht;
 }
 
+//128bit数据比较函数
 int int128_compare (void *a, void *b) {
   return memcmp (a, b, 16);
 }
 
+//128bit 哈希算法
 int int128_hash (void *data) {
   char *str = data;
   int n = 0;
@@ -335,11 +337,14 @@ int int128_hash (void *data) {
   return hash;
 }
 
+
+// 构建一个以128bit数字作为key的hash表
 HashTable *new_int128_hash (int size, void * (*get_key) (void *data)) {
   HashTable *ht = hash_new (size);
   ht->compare = int128_compare;
   ht->hash = int128_hash;
   ht->get_key = get_key;
+  
   return ht;
 }
 

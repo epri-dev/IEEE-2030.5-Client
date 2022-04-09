@@ -88,17 +88,19 @@ void parser_rebuffer (Parser *p, void *data, int length);
 
 #include "string_table.c"
 
+//Parser的几个状态
 enum ParserState {PARSE_START, PARSE_ELEMENT, PARSE_NEXT, PARSE_ATTRIBUTE,
                   PARSE_VALUE, PARSE_END, PARSE_SEQUENCE, SEQUENCE_END,
                   PARSE_INVALID
                  };
+
 enum ParserError {ERROR_NONE, UNKNOWN_ELEMENT, STACK_OVERFLOW};
 
 #define MAX_STACK 32 // document tree can be 32 levels deep
 
 typedef struct {
   const SchemaElement *se;
-  void *base;
+  void *base; //应该是上面的类的基类
   Queue queue;
   int size, count;
   union {
@@ -118,14 +120,14 @@ struct _XmlParser;  //这样的声明方法是什么意思。
 struct _ParserDriver;
 
 typedef struct _Parser {
-  void *obj;
+  void *obj;//用于存放这个数据对象的空间？？
   int type; // completed object and type 完成解析后的数据对象和类型
   struct _XmlParser *xml;
   ElementStack stack;
   const Schema *schema;
   const SchemaElement *se;
   const struct _ParserDriver *driver;
-  void *base;
+  void *base; //用于存放这个数据对象的空间？？
   uint8_t *ptr, *end;
   StringTable *global, *local;
   int state, token, flag, bit;
@@ -199,9 +201,13 @@ void *calloc(size_t n, size_t size);
 如果执行失败，函数返回NULL。该函数与malloc()函数的一个显著不同时是，calloc()函数得到的内存空间是经过初始化的，其内容全为0。
 calloc()函数适合为数组申请空间，可以将size设置为数组元素的空间长度，将n设置为数组的容量。
 */
+
+/*
+
+*/
 void *add_element (StackItem *t) {
   List *l = list_insert (NULL, calloc (1, t->size));
-  queue_add (&t->queue, l);
+  queue_add (&t->queue, l); //将前面刚刚申请的List成员（单个成员，无后续成员），插入到 t->queue 中
   return l;
 }
 
@@ -212,21 +218,25 @@ void *parse_doc (Parser *p, int *type) {
   ElementStack *stack = &p->stack;
   StackItem *t;
   int size;
+  //printf("Parsing...\n");
   while (1) {
     switch (p->state) {
     case PARSE_START:
+      if( !(d->parse_start(p)) ){
+        printf("d->parse_start (p) == NULL,exit\n");
+      }
       ok (d->parse_start (p));
       stack->n = 0;
       p->state++;
       size = object_element_size (p->se, p->schema);
-      p->obj = p->base = calloc (1, size);
+      p->obj = p->base = calloc (1, size);  //首先是构建了这个对象的基类的存放空间。
       break;
     case PARSE_ELEMENT:
       se = p->se;
       p->flag = se->bit;
-      if (se->attribute) {
+      if (se->attribute) {  //如果含有“属性”成员
         if (!se->min && !is_pointer (se->xs_type)) {
-          set_count (p->base, 1, p->flag);
+          set_count (p->base, 1, p->flag);  //在flag中标记好 "数量" 值
           p->flag++;
         }
         p->state = PARSE_ATTRIBUTE;
@@ -234,7 +244,7 @@ void *parse_doc (Parser *p, int *type) {
       } else if (t = push_element (stack, se, p->base)) {
         p->base += se->offset;
         t->size = object_element_size (se, p->schema);
-        if (se->unbounded) {
+        if (se->unbounded) {  //这段完全不懂
           List *l = *(List **)p->base = add_element (t);
           p->base = l->data;
         } else {
@@ -242,29 +252,44 @@ void *parse_doc (Parser *p, int *type) {
           if (t->diff && !(se->simple && is_pointer (se->xs_type)))
             p->flag += bit_count (t->diff);
         }
-      } else goto parse_error;
+      } else {
+        printf("Error in PARSE_ELEMENT,goto parse_error\n");
+        goto parse_error;
+      }
 parse_element:
       if (se->simple) goto parse_value;
       p->se = &p->schema->elements[se->index + 1];
       p->state = PARSE_NEXT;
     case PARSE_NEXT:
+      if( !(d->parse_next(p)) ){
+        printf("d->parse_next (p) == NULL,exit\n");
+      }
       ok (d->parse_next (p));
       break;
     case PARSE_ATTRIBUTE:
+      if( !(d->parse_attr_value(p, p->base + p->se->offset)) ){
+        printf("d->parse_attr_value(p, p->base + p->se->offset) == NULL,exit\n");
+      }
       ok (d->parse_attr_value (p, p->base + p->se->offset));
-      p->state--;
+      p->state--; //PARSE_NEXT
       p->se++;
       break;
 parse_value:
       p->state = PARSE_VALUE;
     case PARSE_VALUE:
+      if( !(d->parse_value (p, p->base)) ){
+        printf("d->parse_value (p, p->base) == NULL,exit\n");
+      }
       ok (d->parse_value (p, p->base));
-      p->state++;
+      p->state++; //PARSE_END
       break;
     case PARSE_END:
       if(stack->n) {
         t = stack_top (stack);
         se = t->se;
+        if( !(d->parse_end (p, se)) ){
+          printf("d->parse_end (p, se) == NULL,exit\n");
+        }
         ok (d->parse_end (p, se));
         t->count++;
         if (se->unbounded || t->count < se->max)
@@ -274,6 +299,7 @@ parse_value:
         d->parse_done (p);
         p->state = PARSE_START;
         *type = p->type;
+        printf("parse_doc:succeed\n");
         return p->obj;
       }
       break;
@@ -285,11 +311,16 @@ parse_value:
           p->base = list_data (add_element (t));
         else if (t->count < se->max)
           p->base += t->size;
-        else goto parse_error;
+        else{
+          printf("Error in PARSE_SEQUENCE,goto parse_error\n");
+          goto parse_error;
+        }
         p->flag++;
         goto parse_element;
-      } else if (p->state == PARSE_SEQUENCE)
+      } else if (p->state == PARSE_SEQUENCE){
+        printf("p->state == PARSE_SEQUENCE,return NULL\n");
         return NULL;
+      }
       break;
     case SEQUENCE_END:
       if (t->diff)
@@ -298,10 +329,12 @@ parse_value:
       p->state = PARSE_NEXT;
       break;
     case PARSE_INVALID:
+      printf("Parser:PARSE_INVALID\n");
       return NULL;
     }
   }
 parse_error:
+  printf("Parser:PARSE_INVALID,exit\n");
   p->state = PARSE_INVALID;
   return NULL;
 }

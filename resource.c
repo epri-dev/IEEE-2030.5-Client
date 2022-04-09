@@ -69,7 +69,6 @@ void *new_resource (int size, char *name, void *data, int type);
 //这个函数由 global_hash 宏定义来实现。见下面的 global_hash(resource, string, 512)
 void free_resource (void *res);
 
-//这个怎么是一个空函数？
 /** @brief Initialize the Resource database. */
 //这个函数由 global_hash 宏定义来实现。见下面的 global_hash(resource, string, 512)
 void resource_init ();

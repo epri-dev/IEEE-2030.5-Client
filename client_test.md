@@ -31,9 +31,9 @@ are loaded.
 
 The `<subtype[:1][/path] | URI>` argument delimits(vt. 划界；定界限) the list of certificates and
 specifies either to perform xmDNS service discovery, or to retrieve the document at the specified URI.
-要么使用xmDNS方式来发现服务，要么通过遍历在URI指定下的文档
+要么使用xmDNS方式来发现服务Service，要么通过遍历的方式找到在URI指定下的文档
 
-Subtype DNS-SD queries
+Subtype DNS-SD queries 注意，下面的指令只是针对DNS-SD服务
 ----------------------
 
 The `subtype` can be one of:
@@ -68,26 +68,35 @@ specified on the command line. When specified, the client will retrieve the
 resource identified by the path from the server location returned by the DNS-SD
 response.
 
-URI retrieval
+URI retrieval 这个是另外一种方式，前面指令中的“|”符号表示的是“或”的意思。
 -------------
+
+如果前面的Subtype参数没有给出，则将使用这个URI路径的方式来
 
 If a `subtype` is not specified in the list of arguments, the
 `client_test` application attempts to parse a URI. The first argument
 that matches an absolute form URI (e.g <https:://>\[::1\]/dcap ) will
-delimit the list of certificates and attempt to retrieve the URI. The
+delimit（意思就是截断的意思，指如果出现了一个URI，则前面的certificates参数就算是截止了） 
+the list of certificates and attempt to retrieve the URI. The
 URI scheme specified determines the type of connection used to retrieve
 the resource either `http` for an unencrypted connection or `https` for
 a secure TLS connection. If no port is specified, the default ports for
 HTTP and HTTPS are used, 80 and 443 respectively.
 
+通过URI路径中是HTTPS还是HTTP来判断是加密的还是没有加密的
+
+
 Commands
+
 --------
 
 The last set of arguments are a list of commands to be interpreted.
 These can be any of the following:
 
+这个参数应当是第一个参数
 -   `sfdi SFDI` - Use the specified sfdi in performing device registration.
 This command should be the first command in the list of commands.
+
 
 -   `register` - Register the client EndDevice with the server. The
 `client_test` application will first check the available EndDevices in
@@ -106,6 +115,10 @@ device settings to the links provided in the DER instance.
 -   `delete SFDI` - Perform retrieval on the EndDeviceList and perform a DELETE
     request on the EndDevice instance with a matching SFDI.
 
+执行一个“注册”的任务，然后 retrieve 跟这个设备相关的FunctionSetAssignmentsList。
+决定最高优先级，执行与前面的FSA相关联的DERProgramList，然后获取到DERCurveList和DERControlList。
+最后执行各个events。
+
 -   `primary` - Perform all the functions of `register`, then retrieve the
 FunctionSetAssignmentsList associated with each EndDevice. Determine the
 FunctionSetAssignments with the highest priority according to the list
@@ -113,6 +126,8 @@ ordering and retrieve only the DERProgramList associated with that FSA,
 then retrieve the DERCurveList and DERControlList associated with the
 highest priority DERProgram in the DERProgramList. Finally schedule the
 events when retrieval is complete.
+
+跟前面的primary类似，除了所有的DERPrograms和与之相关联的DERCurveLists和DERControlLists。
 
 -   `all` - Perform the same functions as `primary`, except all DERPrograms
 and the associated DERCurveLists and DERControlLists are retrieved.

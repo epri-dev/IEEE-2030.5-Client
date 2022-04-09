@@ -264,6 +264,7 @@ const ParserDriver xml_parser = {
   parse_value, parse_text_value, parse_done, xml_rebuffer
 };
 
+/*XML parser 的初始化*/
 void parse_init (Parser *p, const Schema *schema, char *data) {
   XmlParser *xml = p->xml;
   memset (p, 0, sizeof (Parser));

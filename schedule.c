@@ -48,12 +48,15 @@ typedef struct _EventBlock {
     belong to none of these queues and are eventually removed from the schedule
     when the events expire.
 
+    最初的时候，EventBlocks插入到scheduled队列中，随后可能由于服务器端的修改，会将部分移动到scheduled队列
     Initially all EventBlocks are inserted into the `scheduled` queue using the
     rules for overlapping and nested events. Future events that are superseded
     by scheduling are marked `ScheduleSuperseded` and are placed in the
     superseded queue. If the set of events changes for some reason, these
     events may eventually rejoin the `scheduled` queue.
 
+    
+    当 EventBlocks 变成活动状态时，他们将传输到 active 队列中
     When EventBlocks in the scheduled queue become active (i.e when the current
     time matches the effective start time) they are transfered to the `active`
     queue, in the process they may be superseded by existing active EventBlocks
@@ -61,6 +64,7 @@ typedef struct _EventBlock {
     superseded EventBlocks are removed from the schedule and a Response is sent
     to the server with the response status EventSuperseded.
 
+    //
     If an EventBlock is sucessfully transfered to the `active` queue and the
     EventStatus.currentStatus retrieved from the server is Active then an
     internal EVENT_START event is generated for current time. If the
@@ -75,11 +79,11 @@ typedef struct {
   int64_t next;
   Stub *device; ///< EndDevice that is the subject of scheduling
   void *context; //< is a pointer to device specific information
-  HashTable *blocks; /**< HashTable of EventBlocks that belong to the schedule
-			using the Event mRID as the hash key. */
-  EventBlock *scheduled; ///< EventBlock queue sorted by effective start time
-  EventBlock *active; ///< EventBlock queue sorted by effective end time
-  EventBlock *superseded; ///< EventBlock queue sorted by effective start time
+  /*哈希表，使用Event mRID 作为哈希表的 key */
+  HashTable *blocks; /**< HashTable of EventBlocks that belong to the schedule using the Event mRID as the hash key. */
+  EventBlock *scheduled; ///< EventBlock queue sorted by effective start time 以“开始时间”排序的 EventBlock 队列
+  EventBlock *active; ///< EventBlock queue sorted by effective end time 以“结束时间”排序的 EventBlock 队列
+  EventBlock *superseded; ///< EventBlock queue sorted by effective start time 以“实际开始时间”排序的 EventBlock 队列
 } Schedule;
 
 /** @brief Send an event response to the server on the behalf of a device.
@@ -431,6 +435,7 @@ void *mrid_key (void *data) {
   return e->mRID;
 }
 
+//构建一个以mRID作为key的哈希表
 void schedule_init (Schedule *s) {
   s->blocks = new_int128_hash (64, mrid_key);
 }

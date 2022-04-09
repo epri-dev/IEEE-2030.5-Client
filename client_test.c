@@ -46,7 +46,6 @@ void usage () {
 /*
 test记录了需要测试的内容，用bit位占位表示
 secure的值表示是否是加密了连接
-
 */
 
 int server = 0, test = 0, secure = 0, interval = 5 * 60, primary = 0, pin = 0;
@@ -91,7 +90,9 @@ int subtype_query (char *arg, char *name) {
   return 0;
 }
 
+/* retrieval ： n. 找回，取回；（计算机系统信息的）检索；恢复，挽回 
 
+*/
 int uri_retrieval (char *arg) {
   Uri128 buf = {0};
   Uri *uri = &buf.uri;
@@ -105,7 +106,7 @@ int uri_retrieval (char *arg) {
     return 0;
   }
 
-  printf("Connecting to %s\n",uri);
+  printf("Connecting to host...\n");
   
   conn = se_connect_uri (uri);
   if (uri->query && !parse_query (&q, uri->query)) {
@@ -137,7 +138,7 @@ client_test interface [device_cert ca_certs..] <subtype[:1][/path] | URI>  [comm
 
 ./build/client_test eth0 ./certs/csep_root.pem edev http://192.168.1.13:8080 fsa
 
-./build/client_test eth0 http://192.168.1.13:8088/dcap fsa
+./build/client_test eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 edev
 
 */
 void options (int argc, char **argv) {
@@ -157,10 +158,13 @@ void options (int argc, char **argv) {
   // process certificates and base query
   while (i < argc) { //前面i的值是2，所以从[device_cert ca_certs..] 开始检查参数
     DerDevice *d;
+    /*这里的意思是，选择其中一种方式来获取到数据，对应到前面的 <subtype[:1][/path] | URI> 这个参数项。
+    尖括号表示"必须的选项"的意思，"|"表示“或”的意思。
+    */
     if (subtype_query (argv[i], name)	|| uri_retrieval (argv[i])) { //获取到参数中所标注的这些资源
       i++; break;
-    } else if (!secure) { //应该是 [device_cert ca_certs..] 部分参数
-      client_init (name, argv[i]);
+    } else if (!secure) { //应该是 [device_cert ca_certs...] 部分参数
+      client_init (name, argv[i]);  //初始化有关加密和dnssd相关功能
       secure = 1;
       d = get_device (device_sfdi);
       memcpy (d->lfdi, device_lfdi, 20);
@@ -189,7 +193,7 @@ void options (int argc, char **argv) {
       "device", "delete", "inverter"
     };
     switch (string_index (argv[i], commands, 18)) {
-    case 0: // sfdi
+    case 0: // sfdi，这项参数是必须要加上的
       if (++i == argc || !number64 (&device_sfdi, argv[i])) {
         printf ("sfdi command expects number argument\n");
         exit (0);
