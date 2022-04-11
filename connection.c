@@ -113,21 +113,22 @@ typedef struct _Connection {
 } Connection;
 
 
+/* TCP层面的基本的读、写、关闭连接等基本的操作函数 */
 #define conn_field(conn, name) struct_field (Connection, conn, name)
 
-int conn_session (void *conn) {
+int conn_session (void *conn) { //判断当前是否连接了。
   return conn_field (conn, session (conn));
 }
-int conn_read (void *conn, char *buffer, int size) {
+int conn_read (void *conn, char *buffer, int size) {  //读数据函数
   return conn_field (conn, read (conn, buffer, size));
 }
-int conn_write (void *conn, const char *data, int length) {
+int conn_write (void *conn, const char *data, int length) { //写数据函数
   return conn_field (conn, write (conn, data, length));
 }
-int conn_secure (void *conn) {
+int conn_secure (void *conn) {  //加密函数
   return conn_field (conn, tls) != NULL;
 }
-void conn_close (void *conn) {
+void conn_close (void *conn) {  //关闭连接函数
   conn_field (conn, close (conn));
 }
 
@@ -135,6 +136,8 @@ int tcp_session (void *conn) {
   return net_status (conn) == Connected;
 }
 
+
+//实际的函数指针
 void tcp_setup (Connection *c) {
   c->tls = NULL;
   c->session = tcp_session;

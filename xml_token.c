@@ -11,8 +11,8 @@
 #define MAX_ATTRIBUTE 16
 
 typedef struct _XmlParser {
-  char *name, *content, *data;
-  int state, token, length;
+  char *name, *content, *data;  // content 和 data 指向所要解析的数据（文本）
+  int state, token, length; // state : 当前解析到哪一步了
   char *attr[MAX_ATTRIBUTE * 2];
 } XmlParser;
 
@@ -239,7 +239,7 @@ int xml_token (XmlParser *p) {
         goto incomplete;
       }
       break;
-    case 3: // "<?" (processing instruction)
+    case 3: // "<?" (processing instruction) 这是一个XML处理指令。处理指令以 <? 开始，以 ?> 结束。<? 后的第一个单词是指令名，如xml, 代表XML声明。
       if (next = token_end (data, "?>", 2))
         return xml_pi (p, data) ? p->data = next, p->token : XML_INVALID;
       goto incomplete;
@@ -285,8 +285,8 @@ incomplete:
 }
 
 void xml_init (XmlParser *p, char *buffer) {
-  p->content = p->data = buffer;
-  p->token = XML_NONE;
+  p->content = p->data = buffer;  //指向待解析的字符串文本
+  p->token = XML_NONE;  //??
   p->state = 0;
 }
 

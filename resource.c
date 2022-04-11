@@ -15,7 +15,7 @@ typedef struct _Resource {
   void *data; //< pointer to a 2030.5 object    表示了一个资源？？
   int type; //< the schema type for the object  这个是什么意思？？
   ListInfo *info; //< pointer to the ListInfo for 2030.5 List objects 一个指向了 se_list_info 中的某一个位置的指针。
-  int64_t time; //< the time the resource was created or last updated
+  int64_t time; //< the time the resource was created or last updated 创建或者更新该资源的最后时间，可以辅助判断什么时候去更新该资源。
 } Resource;
 
 // pointer to the list field of a list type resource

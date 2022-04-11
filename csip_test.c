@@ -35,6 +35,8 @@ void fsa (Stub *d) {
   get_list_dep (d, fsa, DERProgramList);
 }
 
+/*`csip_dep` takes a pointer to a `Stub` (the local representation of a resource)
+and calls an appropriate function based on type of resource. */
 void csip_dep (Stub *r) {
   switch (resource_type (r)) {
   case SE_Time:
@@ -54,7 +56,11 @@ void csip_dep (Stub *r) {
   }
 }
 
-/* 由shell端直接可以运行的函数 */
+/* 由shell端直接可以运行的函数
+这个是这个代码中另外一个可以用于验证的程序。
+另外一个是client_test.c中的main
+详见der_clinet.md说明内容。
+*/
 int main (int argc, char **argv) {
   void *any;
   int index;
@@ -82,7 +88,7 @@ int main (int argc, char **argv) {
       print_service (s);
       get_dcap (s, 1);
       break;
-    case TCP_PORT:
+    case TCP_PORT:  //异步处理HTTP的回复。
       if (conn_session (any))
         process_http (any, csip_dep);
       break;

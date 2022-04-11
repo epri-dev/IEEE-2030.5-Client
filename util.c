@@ -19,8 +19,8 @@
 #define in_range(x, a, b) ((x) >= a && (x) <= b)
 #define alpha(c) (in_range (c, 'a', 'z') || in_range (c, 'A', 'Z'))
 #define digit(c) in_range (c, '0', '9')
-#define ws(c) (c == '\n' || c == ' ' || c == '\t' || c == '\r')
-#define only(x) (*trim (x) == '\0')
+#define ws(c) (c == '\n' || c == ' ' || c == '\t' || c == '\r') // 判断是否是空白字符
+#define only(x) (*trim (x) == '\0') /*判断一个字符串是否仅仅存在\r\n\t和空格，如果是则返回true*/
 #define struct_field(type, any, name) ((type *)any)->name
 #define type_alloc(type) calloc (1, sizeof (type))
 #define number_q(x, data) (digit (*(data))? number (x, data) : data)
@@ -50,7 +50,7 @@ int string_index (const char *s, const char *const *ss, int n) {
 }
 
 char *trim (char *data) {
-  while (ws (*data)) data++;
+  while (ws (*data)) data++;  //跳过'\n','\t','空格','\r'这四种字符，找到可以显示的字符(ASCII)
   return data;
 }
 
@@ -69,12 +69,18 @@ char *number (int *x, char *data) {
   return n > 0 ? *x = y, data : NULL;
 }
 
+
+/*将一个表示一个数字的文本转换成一个10进制数字
+参数
+x：返回的1进制数字
+data：传入的文本的首地址
+*/
 char *number64 (uint64_t *x, char *data) {
   uint64_t y = 0;
   int n = 0;
   while (digit (*data))
     y = y * 10 + (*data++ - '0'), n++;
-  return n > 0 ? *x = y, data : NULL;
+  return n > 0 ? *x = y, data : NULL; /*将数字通过x来返回，并且将执行了读取之后的文本位置返回*/
 }
 
 #endif

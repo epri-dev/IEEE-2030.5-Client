@@ -7,6 +7,21 @@
     @{
 */
 
+/*
+详见 der_client.md，选取部分章节
+Included with `der_client.c` is the module `der.c` that provides:
+
+-   a DerDevice structure that stores information associated with a DER EndDevice
+    instance.
+    
+-   a hash table container for DerDevices that uses the EndDevice SFDI as a
+    retrieval key
+    
+-   a function `scheduler_der` that creates a local event schedule for an
+    EndDevice based upon the group assignments for that EndDevice.
+
+*/
+
 #define DEVICE_SCHEDULE (EVENT_NEW+11)
 #define DEVICE_METERING (EVENT_NEW+12)
 #define DEFAULT_CONTROL (EVENT_NEW+13)

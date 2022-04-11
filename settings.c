@@ -17,8 +17,11 @@ void load_settings (const char *name, void *ctx) {
   Parser *p = parser_new ();  //  导入一个XML的 Parser
   void *obj;
   int type;
+  
+  //初始化解析器
   parse_init (p, &se_schema, data);
   obj = parse_doc (p, &type);
+  
   if (parse_error (p)) {
     printf ("load_device_setting: error parsing XML file %s\n", name);
     print_parse_stack (p);

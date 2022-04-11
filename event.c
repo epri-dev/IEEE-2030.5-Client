@@ -7,8 +7,8 @@
     @{
 */
 
-#define EVENT_TIMER (EVENT_NEW+2)
-#define EVENT_START (EVENT_NEW+3)
+#define EVENT_TIMER (EVENT_NEW+2) /*application defined events */
+#define EVENT_START (EVENT_NEW+3) /*DER Controls becoming active and inactive (`EVENT_START`, `EVENT_END`)*/
 #define EVENT_END (EVENT_NEW+4)
 // #define EVENT_UPDATE (EVENT_NEW+5)
 

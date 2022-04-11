@@ -71,6 +71,12 @@ void print_event_schedule (DerDevice *d) {
   printf ("\n");
 }
 
+/*
+
+-   provides an event polling function `der_poll` that handles events such as
+    schedule updates, and resource polling updates.
+
+*/
 
 int der_poll (void **any, int timeout) {
   Schedule *s;

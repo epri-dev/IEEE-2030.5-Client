@@ -19,8 +19,15 @@ void parse_init (Parser *p, const Schema *schema, char *data);
 
 #ifndef HEADER_ONLY
 
+//判断一个字符串是否仅仅包含了了一个表示10进制数字的内容
 #define unsigned_int(x, data) only (number64 (x, data))
 
+/*
+将一个表示有符号10进制数字的字符串，转换成对应的10进制数字。
+参数：
+y:用来返回转换后的数字。
+data:文本地址，在执行完毕该操作后，data将移动到字符串末尾
+*/
 int signed_int (int64_t *y, char *data) {
   int sign = 1;
   if (*data == '-') {
@@ -268,7 +275,7 @@ const ParserDriver xml_parser = {
 void parse_init (Parser *p, const Schema *schema, char *data) {
   XmlParser *xml = p->xml;
   memset (p, 0, sizeof (Parser));
-  p->xml = xml ? xml : calloc (1, sizeof (XmlParser));
+  p->xml = xml ? xml : calloc (1, sizeof (XmlParser));  //如果xml是空的，那么新申请一个
   xml_init (p->xml, data);
   p->schema = schema;
   p->driver = &xml_parser;

@@ -8,8 +8,8 @@
     @{
 */
 
-enum XsType {XS_NULL, XS_STRING, XS_BOOLEAN, XS_HEX_BINARY, XS_ANY_URI,
-             XS_LONG, XS_INT, XS_SHORT, XS_BYTE, XS_ULONG,
+enum XsType { XS_NULL, XS_STRING, XS_BOOLEAN, XS_HEX_BINARY, XS_ANY_URI,
+                XS_LONG, XS_INT, XS_SHORT, XS_BYTE, XS_ULONG,
              XS_UINT, XS_USHORT, XS_UBYTE
             };
 
@@ -18,7 +18,7 @@ enum XsType {XS_NULL, XS_STRING, XS_BOOLEAN, XS_HEX_BINARY, XS_ANY_URI,
 typedef struct {
   union {
     unsigned short offset;
-    unsigned short size;
+    unsigned short size;      //这个对象的占用空间大小
   };
   union {
     unsigned short xs_type;
@@ -26,8 +26,8 @@ typedef struct {
   };
   unsigned char min, max, n;
   unsigned int bit : 5;
-  unsigned int attribute : 1;//表示是否含有属性成员
-  unsigned int simple : 1;  //是否是简单类型，比如整形类型或者指针类型
+  unsigned int attribute : 1; //表示是否含有属性成员
+  unsigned int simple : 1;    //是否是简单类型，比如整形类型或者指针类型
   unsigned int unbounded : 1;
 } SchemaElement;
 
@@ -183,7 +183,7 @@ int object_element_size (const SchemaElement *se, const Schema *schema) {
       return 1;
     }
   } else {
-    se = &schema->elements[se->index];
+    se = &schema->elements[se->index];  //如果不是simple类型，那么就是复杂类型比如一个结构体数据
     return se->size;
   }
   return 0;

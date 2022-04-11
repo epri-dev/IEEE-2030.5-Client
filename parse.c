@@ -120,8 +120,8 @@ struct _XmlParser;  //这样的声明方法是什么意思。
 struct _ParserDriver;
 
 typedef struct _Parser {
-  void *obj;//用于存放这个数据对象的空间？？
-  int type; // completed object and type 完成解析后的数据对象和类型
+  void *obj;  //用于存放这个数据对象的存储空间地址？？
+  int type;   // completed object and type 完成解析后的数据对象和类型
   struct _XmlParser *xml;
   ElementStack stack;
   const Schema *schema;
@@ -132,7 +132,7 @@ typedef struct _Parser {
   StringTable *global, *local;
   int state, token, flag, bit;
   unsigned int xml_decl : 1;
-  unsigned int need_token : 1;
+  unsigned int need_token : 1;  //??
   unsigned int empty : 1;
   unsigned int truncated : 1;
   //unsigned int incomplete : 1;
@@ -213,25 +213,26 @@ void *add_element (StackItem *t) {
 
 // return parsed object on success NULL otherwise
 void *parse_doc (Parser *p, int *type) {
+  static int iterate=0;
   const SchemaElement *se;
   const ParserDriver *d = p->driver;
   ElementStack *stack = &p->stack;
   StackItem *t;
   int size;
-  //printf("Parsing...\n");
+  printf("parse_doc:%d\n",iterate++);
   while (1) {
     switch (p->state) {
     case PARSE_START:
-      if( !(d->parse_start(p)) ){
-        printf("d->parse_start (p) == NULL,exit\n");
-      }
+      printf("parse_doc:PARSE_START:1\n");
       ok (d->parse_start (p));
+      printf("parse_doc:PARSE_START:2\n");
       stack->n = 0;
       p->state++;
       size = object_element_size (p->se, p->schema);
       p->obj = p->base = calloc (1, size);  //首先是构建了这个对象的基类的存放空间。
       break;
     case PARSE_ELEMENT:
+      printf("parse_doc:PARSE_ELEMENT\n");
       se = p->se;
       p->flag = se->bit;
       if (se->attribute) {  //如果含有“属性”成员
@@ -261,36 +262,41 @@ parse_element:
       p->se = &p->schema->elements[se->index + 1];
       p->state = PARSE_NEXT;
     case PARSE_NEXT:
-      if( !(d->parse_next(p)) ){
-        printf("d->parse_next (p) == NULL,exit\n");
-      }
-      ok (d->parse_next (p));
+      printf("parse_doc:PARSE_NEXT:1\n");
+      ok (d->parse_next (p)); 
+      printf("parse_doc:PARSE_NEXT:2\n");
       break;
+      
     case PARSE_ATTRIBUTE:
-      if( !(d->parse_attr_value(p, p->base + p->se->offset)) ){
-        printf("d->parse_attr_value(p, p->base + p->se->offset) == NULL,exit\n");
-      }
+      
+      printf("parse_doc:PARSE_ATTRIBUTE:1\n");
       ok (d->parse_attr_value (p, p->base + p->se->offset));
+      printf("parse_doc:PARSE_ATTRIBUTE:2\n");
+      
       p->state--; //PARSE_NEXT
       p->se++;
       break;
 parse_value:
       p->state = PARSE_VALUE;
+      
     case PARSE_VALUE:
-      if( !(d->parse_value (p, p->base)) ){
-        printf("d->parse_value (p, p->base) == NULL,exit\n");
-      }
-      ok (d->parse_value (p, p->base));
+      
+      printf("parse_doc:PARSE_VALUE:1\n");
+      ok (d->parse_value (p, p->base));      
+      printf("parse_doc:PARSE_VALUE:2\n");
+
       p->state++; //PARSE_END
       break;
     case PARSE_END:
       if(stack->n) {
         t = stack_top (stack);
         se = t->se;
-        if( !(d->parse_end (p, se)) ){
-          printf("d->parse_end (p, se) == NULL,exit\n");
-        }
+
+        //printf("d->parse_end (p, se)=%d,exit\n",(d->parse_end (p, se)));
+        printf("parse_doc:PARSE_END:1\n");
         ok (d->parse_end (p, se));
+        printf("parse_doc:PARSE_END:2\n");
+        
         t->count++;
         if (se->unbounded || t->count < se->max)
           p->state = PARSE_SEQUENCE;
@@ -299,11 +305,12 @@ parse_value:
         d->parse_done (p);
         p->state = PARSE_START;
         *type = p->type;
-        printf("parse_doc:succeed\n");
+        printf("parse_doc:succeed,return p->obj:0x%lx\n",(long)p->obj);
         return p->obj;
       }
       break;
     case PARSE_SEQUENCE:
+      printf("parse_doc:PARSE_SEQUENCE\n");
       t = stack_top (stack);
       se = t->se;
       if (d->parse_sequence (p, t)) {
@@ -323,6 +330,7 @@ parse_value:
       }
       break;
     case SEQUENCE_END:
+      printf("parse_doc:SEQUENCE_END\n");
       if (t->diff)
         set_count (t->base, t->count - se->min, se->bit);
       p->se = pop_element (stack, &p->base) + 1;
@@ -337,6 +345,12 @@ parse_error:
   printf("Parser:PARSE_INVALID,exit\n");
   p->state = PARSE_INVALID;
   return NULL;
+}
+
+void *parse_doc_p (Parser *p, int *type){
+  if(parse_doc(p,type) == NULL){
+    printf("parse_doc return NULL\n");
+  }
 }
 
 Parser *parser_new () {

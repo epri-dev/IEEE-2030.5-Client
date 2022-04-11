@@ -1,5 +1,33 @@
 #define SE_LIST_LENGTH 42
+
+/*
+
+typedef struct {
+  unsigned short id;    //本代码中，为每一个资源（Resource）都定义了一个唯一的 id 。在se_types.h中定义。
+  unsigned short base;  //这个什么含义不是很清楚？？
+  unsigned short offset;//List元素在其所从属的上级数据结构中的地址偏移量。
+  unsigned short type;  //为每一个Resource定义的一个唯一的id。在se_types.h中定义。
+  Key key[3]; //？？？ 不清楚什么意思
+} ListInfo;
+
+
+typedef struct {
+  unsigned short offset;
+  short type;
+} Key;
+
+offsetof(type, member-designator)宏定义
+
+C 库宏 offsetof(type, member-designator) 会生成一个类型为 size_t 的整型常量，它是一个结构成员相对于结构开头的字节偏移量。
+成员是由 member-designator 给定的，结构的名称是在 type 中给定的。
+
+type -- 这是一个 class 类型，其中，member-designator 是一个有效的成员指示器。
+member-designator -- 这是一个 class 类型的成员指示器。
+
+
+*/
 ListInfo se_list_info[] = {
+  /*------id-------------base-----------------List *BillingPeriod;在SE_BillingPeriodList_t中的偏移量--type---------Key key[3]:?????----*/
   {SE_BillingPeriodList, SE_SubscribableList, offsetof(SE_BillingPeriodList_t, BillingPeriod), SE_BillingPeriod, {{offsetof(SE_BillingPeriod_t, interval.start), XS_LONG}, {offsetof(SE_BillingPeriod_t, href), XS_ANY_URI}}},
   {SE_BillingReadingList, SE_List, offsetof(SE_BillingReadingList_t, BillingReading), SE_BillingReading, {{offsetof(SE_BillingReading_t, timePeriod.start), XS_LONG}, {offsetof(SE_BillingReading_t, consumptionBlock), XS_UBYTE}, {offsetof(SE_BillingReading_t, touTier), XS_UBYTE}}},
   {SE_BillingReadingSetList, SE_SubscribableList, offsetof(SE_BillingReadingSetList_t, BillingReadingSet), SE_BillingReadingSet, {{offsetof(SE_BillingReadingSet_t, timePeriod.start), -XS_LONG}, {offsetof(SE_BillingReadingSet_t, mRID), -xs_type(XS_HEX_BINARY, 16)}}},

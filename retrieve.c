@@ -36,13 +36,13 @@ typedef  long  time_t;
 */
 
 /** A Resource Stub. */
-typedef struct _Stub {
-  Resource base; ///< is a container for the resource 这个Stub所要代表的数据本身
-  void *conn; ///< is a pointer to an SeConnection
+typedef struct _Stub {  /* ... the local representation of a resource（在der_client.md文档中定义） */
+  Resource base; ///< is a container for the resource  这个Stub所要代表的数据本身，一个数据容器
+  void *conn; ///< is a pointer to an SeConnection 这个Stub的关联的连接
   int status; ///< is the HTTP status, 0 for a new Stub, -1 for an update
   time_t poll_next; ///< is the next time to poll the resource
-  int16_t poll_rate; ///< is the poll rate for the resource
-  unsigned complete : 1; ///< marks the Stub as complete  表示这个stub已近查询 ( retrieve ) 完毕了。
+  int16_t poll_rate; ///< is the poll rate for the resource 这个资源应当执行的查询频率
+  unsigned complete : 1; ///< marks the Stub as complete  表示这个stub已近查询( retrieve ) 或者填充完毕了。
   unsigned subscribed : 1;
   uint32_t flag; ///< is the marker for this resource in its dependents
   uint32_t flags; ///< is a bitwise requirements checklist
@@ -161,7 +161,7 @@ void get_seq (Stub *s, int offset, int count) {
     char uri[64];
     if (count > 255) count = 255;
     if (offset) sprintf (uri, "%s?s=%d&l=%d", name, offset, count);
-    else sprintf (uri, "%s?l=%d", name, count);
+    else sprintf (uri, "%s?l=%d", name, count); //加上了查询数量
     http_get (s->conn, uri);
   } else http_get (s->conn, name);
   set_request_context (s->conn, s);
@@ -223,15 +223,16 @@ void *find_stub (Stub **head, char *name, void *conn) {
 
 //将已经存储了的数据取出来，如果之前没有存储，那么就新建一个，并且存储到数据库中（hash表）
 void *get_stub (char *name, int type, void *conn) {
+  /*首先在哈希表中寻找*/
   Stub *head, *s = find_stub (&head, name, conn); //*head原本是一个空的指针，在调用了find_stub之后，就有了特定含义。
-  if (!s) {
+  if (!s) {/*如果没有找到那么就新建一个Stub，数据为空*/
     s = new_resource (sizeof (Stub), name, NULL, type); //新建的时候，数据是空的。
     s->conn = conn;
     s->poll_rate = 900; //poll_rate 默认是900？
     if (head) link_insert (list_next (head), s);  //此时数据为空
     else insert_resource (s);
   }
-  return s;
+  return s; //无论在哈希表中找到没有，都返回找个对象
 }
 
 void delete_reqs (Stub *s) {
@@ -302,12 +303,12 @@ void dep_complete (Stub *s) {
 void dep_reset (Stub *s) {
   List *l;
   s->complete = 0;
-  foreach (l, s->deps) {
-    Stub *d = l->data;
-    if (d->base.info)
-      d->reqs = list_delete (d->reqs, s);
-    else d->flags |= s->flag;
-    dep_reset (d);
+  foreach (l, s->deps) {  //取出 deps 子层级中的Stub
+    Stub *d = l->data;    //
+    if (d->base.info) //如果数据存在
+      d->reqs = list_delete (d->reqs, s); //将d->reqs中的包含s数据的项目删除并释放内存占用
+    else d->flags |= s->flag; //??
+    dep_reset (d);    //迭代
   }
 }
 
@@ -341,11 +342,11 @@ Stub *get_resource (void *conn, int type, const char *href, int count) {
   Uri128 buf;
   Uri *uri = &buf.uri;
   if (!http_parse_uri (&buf, conn, href, 127)) return NULL;
-  if (uri->host) conn = se_connect_uri (uri);
+  if (uri->host) conn = se_connect_uri (uri); //首先是连接到服务器
   s = get_stub (uri->path, type, conn);
-  if ((time (NULL) - s->base.time) > s->poll_rate) {
+  if ((time (NULL) - s->base.time) > s->poll_rate) {  /*如果当前时间已经超过了poll_rate，即表示这个资源需要更新了*/
     s->all = count;
-    update_resource (s);
+    update_resource (s);  //在这个函数中去获取到资源（将访问网络），获取到之后，填充到哈希表中去
   }
   return s;
 }

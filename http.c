@@ -27,7 +27,7 @@ enum HttpMethod {HTTP_GET, HTTP_PUT, HTTP_POST, HTTP_DELETE, HTTP_HEAD,
 /** @brief An HTTP request */
 typedef struct _HttpRequest {
   struct _HttpRequest *next;
-  void *context;
+  void *context;  //Stub对象
   uint8_t method;
   char uri[];
 } HttpRequest;
@@ -466,7 +466,7 @@ int http_request (void *conn, char *buffer, const char *uri, int method) {
   return n;
 }
 
-//构建好HTTP Header和写入实际数据，然后发送。
+//构建好HTTP Header和写入实际数据，然后发送。这边只管发送，不管接收。
 void http_get (void *conn, const char *uri) {
   char buffer[256];
   int n = http_request (conn, buffer, uri, HTTP_GET);
@@ -652,7 +652,7 @@ top:
 #define HTTP_CONNECTION 16
 #define HTTP_LOCATION 32
 
-// receive an HTTP message
+// receive an HTTP message 接收HTTP数据。由于接收的数据中包含了基本的数据的信息，所以可以反推出来这项数据该怎么保存？？
 int http_receive (void *conn) {
   HttpConnection *c = conn;
   HttpRequest *r;

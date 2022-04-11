@@ -262,7 +262,8 @@ int se_receive (void *conn) {
     case SE_DATA:
       while (data = http_data (h, &length)) {
         parser_rebuffer (p, data, length);
-        if (parse_doc (p, &type)) {
+        //if (parse_doc (p, &type)) { //parse_doc_p
+        if( parse_doc_p (p, &type) ) {
           s->state = SE_START;
           return method;
         } else if (!http_complete (h)) {
