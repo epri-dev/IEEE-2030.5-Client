@@ -38,18 +38,82 @@ typedef struct {
 
 /** @brief Is an IEEE 2030.5 object type derived from a base type?
 
+    一个IEEE2030.5的类型是否是从一个基类中派生出来的？
+    
+    查询schema以决定某一个类型的对象是否是从一个基类中派生出来的？
     Queries the schema to determine if an object of certain type is derived
     from a base object. This is useful for dealing with certain classes of
     objects (e.g se_type_is_a (type, SE_Resource), or
     se_type_is_a (type, SE_Event)).
-    @param type is the type of the derived object
-    @param base is the type of the base object
-    @returns 1 if object is derived from base, 0 otherwise
+
+    这个有助于处理某些对象类型
+    
+    @param type is the type of the derived object    type参数是派生出来的类型（名）
+    @param base is the type of the base object     base 是基类对象的类型（名）
+    @returns 1 if object is derived from base, 0 otherwise  
 */
-#define se_type_is_a(type, base) type_is_a (type, base, &se_schema)
+#define se_type_is_a(type, base) type_is_a (type, base, &se_schema) //在本应用中，se_schema是确定的，所以可以直接省略掉这个参数。
+
 
 /** @brief Is an IEEE 2030.5 object type a List derived type?
+    判断一个SE对象，是否是一个从“ SE_SubscribableList ” 对象中派生出来的子类（SE_SubscribableList是基类，SE中存在很多基类）
     @returns 1 if the type is a SubscribableList or a List type, 0 otherwise
+*/
+
+
+/* 搜索过程分解演示 ：
+
+1）首先找到这个 SubscribableList 所在的行，对应代码行 base = schema->elements[base].index;  //获得base的值
+  {.min = 1, .max = 1, .index = 539}, // SubscribableList
+
+后面的过程，即执行:
+while (se->index) { //有的index是0，也就是说碰到了index是0的数组的行，那么就不再继续往下搜索了，也就是得到了基类。
+  if (se->index == base) return 1;
+  se = &schema->elements[se->index];  //看起来是一个可以循环跳转的表
+}
+
+看起来像是不断的搜索“父类”的过程，Resource --》SubscribableResource --》SubscribableList
+2）找到539行：这里才是 SE_SubscribableList，即这个类的具体描述。
+    // SubscribableList (539)
+    {.size = sizeof(SE_SubscribableList_t), .index = 496},
+3）找到 496 行：
+    // SubscribableResource (496)
+    {.size = sizeof(SE_SubscribableResource_t), .index = 325},  //offset = 0 
+4）继续找 325 行
+    // Resource (325)
+    {.size = sizeof(SE_Resource_t), .index = 0},
+    {.offset = offsetof(SE_Resource_t, href), .min = 0, .max = 1, .attribute = 1, .xs_type = XS_ANY_URI, .n = 2},
+index的值0，到此为止。
+
+注意，在// SubscribableList (539) 行中，得到539这个数字，搜索se_schema.c，还能找到很多行中的“index=539”的情况，
+这些都是 SE_SubscribableList 的“子类”。
+
+基类是自己的基类。即如果下面宏定义中的type就是SE_SubscribableList，那么也会返回1。
+如果有其他的子类，比如（搜索 539 这个值）
+se_schema.c (Z:\) line 275 :   {.min = 1, .max = 1, .index = 539}, // SubscribableList
+se_schema.c (Z:\) line 602 :   {.size = sizeof(SE_DERProgramList_t), .index = 539},
+se_schema.c (Z:\) line 742 :   {.size = sizeof(SE_DERControlList_t), .index = 539},
+se_schema.c (Z:\) line 908 :   {.size = sizeof(SE_FlowReservationResponseList_t), .index = 539},
+se_schema.c (Z:\) line 1033 :   {.size = sizeof(SE_PrepaymentList_t), .index = 539},
+se_schema.c (Z:\) line 1189 :   {.size = sizeof(SE_CustomerAgreementList_t), .index = 539},
+se_schema.c (Z:\) line 1215 :   {.size = sizeof(SE_CustomerAccountList_t), .index = 539},
+se_schema.c (Z:\) line 1235 :   {.size = sizeof(SE_BillingReadingSetList_t), .index = 539},
+se_schema.c (Z:\) line 1269 :   {.size = sizeof(SE_BillingPeriodList_t), .index = 539},
+se_schema.c (Z:\) line 1291 :   {.size = sizeof(SE_TextMessageList_t), .index = 539},
+se_schema.c (Z:\) line 1317 :   {.size = sizeof(SE_MessagingProgramList_t), .index = 539},
+se_schema.c (Z:\) line 1345 :   {.size = sizeof(SE_TimeTariffIntervalList_t), .index = 539},
+se_schema.c (Z:\) line 1368 :   {.size = sizeof(SE_TariffProfileList_t), .index = 539},
+se_schema.c (Z:\) line 1421 :   {.size = sizeof(SE_UsagePointList_t), .index = 539},
+se_schema.c (Z:\) line 1441 :   {.size = sizeof(SE_ReadingSetList_t), .index = 539},
+se_schema.c (Z:\) line 1448 :   {.size = sizeof(SE_ReadingList_t), .index = 539},
+se_schema.c (Z:\) line 1472 :   {.size = sizeof(SE_MeterReadingList_t), .index = 539},
+se_schema.c (Z:\) line 1521 :   {.size = sizeof(SE_EndDeviceControlList_t), .index = 539},
+se_schema.c (Z:\) line 1547 :   {.size = sizeof(SE_DemandResponseProgramList_t), .index = 539},
+se_schema.c (Z:\) line 1657 :   {.size = sizeof(SE_LogEventList_t), .index = 539},
+se_schema.c (Z:\) line 2064 :   {.size = sizeof(SE_FunctionSetAssignmentsList_t), .index = 539},
+se_schema.c (Z:\) line 2184 :   {.size = sizeof(SE_EndDeviceList_t), .index = 539},
+这些都是 SE_SubscribableList 的子类。
+
 */
 #define se_list(type) (se_type_is_a (type, SE_SubscribableList) \
 		       || se_type_is_a (type, SE_List))
@@ -57,6 +121,7 @@ typedef struct {
 
 /** @brief Is an IEEE 2030.5 object type an Event derived type? 
   是否是一个Event类型派生出来的type？IEEE中的Event指的是需要定时完成的某一个任务。
+  类似上面的 se_list 过程
     @returns 1 if the type is a Event type, 0 otherwise
 */
 #define se_event(type) se_type_is_a (type, SE_Event)
@@ -192,16 +257,16 @@ int compare_binary (uint8_t *a, uint8_t *b, int n) {
 #define compare_uint(a, b, type) \
   (*(type)a < *(type)b)? -1 : (*(type)a - *(type)b)
 
-//
+//a/b是两个指向数据的地址指针
 int compare_key (void *a, void *b, Key *key) {
   int type, n;
-  if (key->type < 0) {
+  if (key->type < 0) {  //表示负数？
     void *t = a;
     a = b;
     b = t;
     type = -key->type;
   } else type = key->type;
-  n = type >> 4;
+  n = type >> 4;  //字节数
   type &= 0xf;
   a += key->offset;
   b += key->offset;
@@ -261,6 +326,8 @@ void se_output_init (Output *o, char *buffer, int size, int xml) {
   else exi_output_init (o, &se_schema, buffer, size);
 }
 
+
+//将对象内容以文本方式打印出来
 void print_se_object (void *obj, int type) {
   Output o;
   char buffer[1024];

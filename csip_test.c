@@ -15,7 +15,7 @@ void dcap (Stub *r) {
 void edev (Stub *d) {
   Stub *r;
   SE_EndDevice_t *edev = resource_data (d);
-  d->completion = schedule_der;
+  d->completion = schedule_der; //a user defined completion routine
   get_list_dep (d, edev, DERList);
   if (r = get_list_dep (d, edev, FunctionSetAssignmentsList)) {
     r->poll_rate = 10;
@@ -35,21 +35,23 @@ void fsa (Stub *d) {
   get_list_dep (d, fsa, DERProgramList);
 }
 
-/*`csip_dep` takes a pointer to a `Stub` (the local representation of a resource)
-and calls an appropriate function based on type of resource. */
+/*
+`csip_dep` takes a pointer to a `Stub` (the local representation of a resource)
+and calls an appropriate function based on type of resource. 
+*/
 void csip_dep (Stub *r) {
   switch (resource_type (r)) {
   case SE_Time:
-    set_time (resource_data (r));
+    set_time (resource_data (r)); //如果是一个表示时间的数据的回复，则处理该数据，即设定本地时间。
     break;
   case SE_DERProgram:
-    der_program (r);
+    der_program (r);  //如果是一个DERProgram的数据回复了，则（可能）填充相关的Stub。
     break;
-  case SE_DeviceCapability:
+  case SE_DeviceCapability: //
     dcap (r);
     break;
   case SE_EndDevice:
-    edev (r);
+    edev (r); //执行edev相关的操作
     break;
   case SE_FunctionSetAssignments:
     fsa (r);
@@ -86,20 +88,20 @@ int main (int argc, char **argv) {
     case SERVICE_FOUND:
       s = any;
       print_service (s);
-      get_dcap (s, 1);
+      get_dcap (s, 1);  //通过DNSSD服务发现了一个服务，然后去获取它
       break;
     case TCP_PORT:  //异步处理HTTP的回复。
       if (conn_session (any))
-        process_http (any, csip_dep);
+        process_http (any, csip_dep); //跟服务器数据相关的一些操作，主要是在这里进行的。
       break;
     case DEVICE_SCHEDULE:
       print_event_schedule (any);
       break;
     case EVENT_START:
-      print_event_start (any);
+      print_event_start (any);  //打印一个事件现在开始执行了。
       break;
     case EVENT_END:
-      print_event_end (any);
+      print_event_end (any);    //打印一个事件现在已经结束了。
       break;
     }
   }

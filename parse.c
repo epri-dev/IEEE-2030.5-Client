@@ -120,7 +120,7 @@ struct _XmlParser;  //这样的声明方法是什么意思。
 struct _ParserDriver;
 
 typedef struct _Parser {
-  void *obj;  //用于存放这个数据对象的存储空间地址？？
+  void *obj;  //用于存放这个数据对象的存储空间地址？？应该是解析后的对象。
   int type;   // completed object and type 完成解析后的数据对象和类型
   struct _XmlParser *xml;
   ElementStack stack;

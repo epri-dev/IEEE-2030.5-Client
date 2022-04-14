@@ -8,7 +8,9 @@
 */
 
 /*
+
 详见 der_client.md，选取部分章节
+
 Included with `der_client.c` is the module `der.c` that provides:
 
 -   a DerDevice structure that stores information associated with a DER EndDevice
@@ -33,14 +35,14 @@ Included with `der_client.c` is the module `der.c` that provides:
 typedef struct {
   uint64_t sfdi; ///< is the SFDI of the EndDevice
   uint8_t lfdi[20]; ///< is the LFDI of the EndDevice
-  int metering_rate; ///< is the post rate for meter readings 上传数据的是时间周期？
+  int metering_rate; ///< is the post rate for meter readings 上传数据的是时间周期
   Stub *mup; ///< is a pointer to the MirrorUsagePoint for this EndDevice
   List *readings; ///< is a list of MirrorMeterReadings
-  List *derpl; ///< is a list of DER programs
+  List *derpl; ///< is a list of DER programs DER program List
   SE_DERControlBase_t base; //基本设定值？
   SE_DefaultDERControl_t *dderc; ///< is the default DER control
-  Schedule schedule; ///< is the DER schedule for this device 
-  Settings settings; ///< is the DER device settings
+  Schedule schedule; ///< is the DER schedule for this device 需要执行的一系列事件
+  Settings settings; ///< is the DER device settings 设定值
 } DerDevice;  //一个DER设备的对象表示，最终需要操作的就是这个对象
 
 /** @brief Get a DerDevice with the matching SFDI.
@@ -186,17 +188,17 @@ void schedule_der (Stub *edev) {
   List *l, *m, *derpl = NULL;
   SE_DefaultDERControl_t *dderc = NULL;
   printf ("schedule_der\n");
-  if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) return;
+  if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) return; //获取这个edev下面的FSA数据
   // add the lFDI if not provided by the server
   if (!se_exists (e, lFDI)) {
     se_set (e, lFDI);
     memcpy (e->lFDI, device->lfdi, 20);
   }
-  // collect all DERPrograms for the device (sorted by primacy)
+  // collect all DERPrograms for the device (sorted by primacy) 收集所有的 DERPrograms 并且排序
   foreach (l, fsa->reqs)
-  if (s = get_subordinate (l->data, SE_DERProgramList))
+  if (s = get_subordinate (l->data, SE_DERProgramList)) //收集所有的 SE_DERProgramList
     foreach (m, s->reqs)
-    derpl = insert_stub (derpl, m->data, s->base.info);
+    derpl = insert_stub (derpl, m->data, s->base.info); //derpl 
   // handle program removal
   remove_programs (schedule, list_subtract (device->derpl, derpl));
   /* event block schedule might change as a result of program removal and

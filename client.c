@@ -10,9 +10,12 @@
 #define SERVICE_FOUND (EVENT_NEW+1) // EVENT_NEW 值属于 EventType
 
 /** @brief Perform polling on the behalf of a client(在……一方（on behalf of）).
-
+    
     Returns SERVICE_FOUND with a pointer to a Service as the event object when
     a the service discovery returns a discovers a new service.
+
+    回复一个SERVICE_FOUND Event，和一个指向一个Service的指针，当一个服务发现过程发现了一个新的服务。
+    
     @param any receives the event object pointer.
     @param timeout is the polling timeout in milliseconds, or -1 to indicate
     an infitie timeout.
@@ -36,7 +39,7 @@ int client_poll (void **any, int timeout) {
   int event;
   static Service *s = NULL;
 top:
-  if (s = service_next (s)) {
+  if (s = service_next (s)) { //看起来像是在已经获取到的一堆数据中，检索下一个有用的 Service 。
     *any = s; //Returns SERVICE_FOUND with a pointer to a Service as the event object
     return SERVICE_FOUND; //发现了一个新服务
   }

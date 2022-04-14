@@ -83,7 +83,7 @@ int der_poll (void **any, int timeout) {
   int event;
   while (event = next_event (any)) {  // 查询下一个event是否已经到来
     switch (event) {
-    case SCHEDULE_UPDATE:
+    case SCHEDULE_UPDATE: //调度器中设定的调度时刻到了，将调用update_schedule函数（这个函数中又会自己设置下次启动事件），就这样持续循环。
       s = *any;
       update_schedule (s);
       if (!s->active) {
@@ -91,16 +91,19 @@ int der_poll (void **any, int timeout) {
         if (d->dderc) insert_event (d, DEFAULT_CONTROL, 0);
       }
       break;
-    case RESOURCE_POLL:
+    
+    //注意下面两个case是连贯执行的。所以在处理完毕 RESOURCE_POLL 系统消息之后，就立即开始着手处理下面的UPDATE，涉及到网络通信。
+    case RESOURCE_POLL: //在函数 poll_resource 中执行一次 insert_event (s, RESOURCE_POLL, next);，然后这边就检测到了。
       poll_resource (*any);
-    case RESOURCE_UPDATE:
-      update_resource (*any);
+    case RESOURCE_UPDATE: //在函数 event_update 中执行了一次 insert_event (event, RESOURCE_UPDATE, now + 1) 操作，然后就会执行到这里。
+      update_resource (*any); //访问网络，获取数据。
       break;
+
     case RESOURCE_REMOVE:
-      if (se_event (resource_type (*any)))
-        delete_blocks (*any);
+      if (se_event (resource_type (*any)))  //如果是一个event类型的资源
+        delete_blocks (*any); //
     case RETRIEVE_FAIL:
-      remove_stub (*any);
+      remove_stub (*any); //访问该数据失败，则意味着可能服务器已经删除掉了该资源，所以将本地的数据删除？？
       break;
     default:
       return event;
@@ -111,7 +114,7 @@ int der_poll (void **any, int timeout) {
 
 
 void der_init () {
-  device_init ();   // 初始化 设备哈希表
-  resource_init (); //同样的，构建resource哈希表资源
+  device_init ();   //  初始化 设备哈希表
+  resource_init (); //  同样的，构建resource哈希表资源
   event_init ();
 }

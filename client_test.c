@@ -234,7 +234,7 @@ void options (int argc, char **argv) {
       break;
     case 10: // metering
       test |= GET_ALL | REGISTER_TEST | INCLUDE_READINGS | PUT_SETTINGS;
-      device_settings (device_sfdi, "settings");
+      device_settings (device_sfdi, "settings");  //导入配置文件
     case 11: // meter
       test |= GET_EDEV | METER_TEST;
       break;

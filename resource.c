@@ -11,9 +11,9 @@
 /** @brief Resource structure */
 typedef struct _Resource {
   struct _Resource *next; //< pointer to the next resource with the same name
-  char *name; //< name of Resource (the path component of the href) 每一个链接表示了一个资源
-  void *data; //< pointer to a 2030.5 object    表示了一个资源？？
-  int type; //< the schema type for the object  这个是什么意思？？
+  char *name; //< name of Resource (the path component of the href) 链接命（href值），每一个链接表示了一个资源
+  void *data; //< pointer to a 2030.5 object    表示了一个资源？？表示了一个资源在内存中的地址。
+  int type; //< the schema type for the object  应该是在这个工程中定义的一个全局资源唯一标志符号，在se_types.h中定义。
   ListInfo *info; //< pointer to the ListInfo for 2030.5 List objects 一个指向了 se_list_info 中的某一个位置的指针。
   int64_t time; //< the time the resource was created or last updated 创建或者更新该资源的最后时间，可以辅助判断什么时候去更新该资源。
 } Resource;
@@ -21,7 +21,9 @@ typedef struct _Resource {
 // pointer to the list field of a list type resource
 // ListInfo must be valid
 
-//Stub结构体的第一个成员恰好是Resource类型，所以很多地方在用resource_type的时候，是对Stub类型操作的，因为首地址重合所以刚好能够适用。
+/*Stub结构体的第一个成员恰好是Resource类型，所以很多地方在用resource_type的时候，是对Stub类型操作的，因为首地址重合所以刚好能够适用。
+所以，在本工程语境下，Stub和Resource两者意思等同。
+*/
 
 #define list_field(r) se_list_field (((Resource *)r)->data, \
 				     ((Resource *)r)->info)

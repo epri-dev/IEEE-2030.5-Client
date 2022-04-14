@@ -17,27 +17,29 @@ enum XsType { XS_NULL, XS_STRING, XS_BOOLEAN, XS_HEX_BINARY, XS_ANY_URI,
 
 typedef struct {
   union {
-    unsigned short offset;
+    unsigned short offset;    //可能是这个SchemaElement在上一级对象中内存偏移地址。
     unsigned short size;      //这个对象的占用空间大小
   };
   union {
-    unsigned short xs_type;
-    unsigned short index;
+    unsigned short xs_type;   //这个应该是基础类型
+    unsigned short index;     //这个应该是复杂类型，比如se_types.h中定义的值。
   };
-  unsigned char min, max, n;
-  unsigned int bit : 5;
-  unsigned int attribute : 1; //表示是否含有属性成员
-  unsigned int simple : 1;    //是否是简单类型，比如整形类型或者指针类型
-  unsigned int unbounded : 1;
+  unsigned char min, max, n;  //在整个文档中，max最大值只有1。有可能是0。min只有0或者1。
+  unsigned int bit : 5;       //其值表示自己在在其所在的结构体中的_flags这个变量中占据的是第几个bit。这个flag表示某个元素是否在服务器返回的数据中是否存在。
+  //在se_types.h这个文件中，任何一个结构体变量都会在前面注释这个flag相关的信息。
+  
+  unsigned int attribute : 1; //表示自己是否是一个属性成员
+  unsigned int simple : 1;    //是否自己是否是简单类型，比如整形类型或者指针类型
+  unsigned int unbounded : 1; //看起来跟是否是 List 类型有关。先参考一下free_elements函数的内部实现。
 } SchemaElement;
 
 typedef struct _Schema {
-  const char *namespace;
-  const char *schemaId;
-  const int length;     /*下面的schema->elements的数组单元个数*/
-  const SchemaElement *elements;        /*一个数组，是SchemaElement元素的集合*/
-  const char *const *names;
-  const uint16_t *ids;
+  const char *namespace;  /* "http://ieee.org/2030.5" */
+  const char *schemaId;   /* "S1" */
+  const int length;     /* 下面的 schema->elements 数组中，在se_types.h中定义的基本类型type的个数，而不是下面的elements长度。*/
+  const SchemaElement *elements;        /* 一个数组，是SchemaElement元素的集合。其中前面的length部分，跟后面的部分内容不一样。 */
+  const char *const *names; /* 名字列表 */
+  const uint16_t *ids;  /* id列表 */
 } Schema;
 
 int se_is_a (const SchemaElement *se, int base, const Schema *schema);
@@ -103,10 +105,62 @@ int is_pointer (int type) {
   return 0;
 }
 
+/*举一个实例：
+Step1:  
+{.min = 1, .max = 1, .index = 1828}, // AbstractDevice
+接下去找到这数组中1828行，可以直接搜索 1828
+
+
+Step2:
+
+se_schema.c这个文件是自动生成的，这里自动写好了注释，括号中的值就是所在的数组行号（索引）。
+// AbstractDevice (1828)
+{.size = sizeof(SE_AbstractDevice_t), .index = 496},  //offset =0 
+{.offset = offsetof(SE_AbstractDevice_t, href), .min = 0, .max = 1, .attribute = 1, .xs_type = XS_ANY_URI, .n = 14},  //index = 0
+{.offset = offsetof(SE_AbstractDevice_t, subscribable), .min = 0, .max = 1, .attribute = 1, .bit = 1, .xs_type = XS_UBYTE, .n = 13},
+{.offset = offsetof(SE_AbstractDevice_t, ConfigurationLink), .min = 0, .max = 1, .bit = 14, .index = 1826, .n = 12},
+{.offset = offsetof(SE_AbstractDevice_t, DERListLink), .min = 0, .max = 1, .bit = 13, .index = 1823, .n = 11},
+{.offset = offsetof(SE_AbstractDevice_t, DeviceInformationLink), .min = 0, .max = 1, .bit = 12, .index = 1821, .n = 10},
+{.offset = offsetof(SE_AbstractDevice_t, DeviceStatusLink), .min = 0, .max = 1, .bit = 11, .index = 1819, .n = 9},
+{.offset = offsetof(SE_AbstractDevice_t, FileStatusLink), .min = 0, .max = 1, .bit = 10, .index = 1817, .n = 8},
+{.offset = offsetof(SE_AbstractDevice_t, IPInterfaceListLink), .min = 0, .max = 1, .bit = 9, .index = 1814, .n = 7},
+{.offset = offsetof(SE_AbstractDevice_t, lFDI), .min = 0, .max = 1, .bit = 3, .simple = 1, .xs_type = xs_type(XS_HEX_BINARY, 20), .n = 6},
+{.offset = offsetof(SE_AbstractDevice_t, LoadShedAvailabilityListLink), .min = 0, .max = 1, .bit = 8, .index = 1811, .n = 5},
+{.offset = offsetof(SE_AbstractDevice_t, loadShedDeviceCategory), .min = 0, .max = 1, .bit = 7, .simple = 1, .xs_type = xs_type(XS_HEX_BINARY, 4), .n = 4},
+{.offset = offsetof(SE_AbstractDevice_t, LogEventListLink), .min = 0, .max = 1, .bit = 6, .index = 1808, .n = 3},
+{.offset = offsetof(SE_AbstractDevice_t, PowerStatusLink), .min = 0, .max = 1, .bit = 5, .index = 1806, .n = 2},
+{.offset = offsetof(SE_AbstractDevice_t, sFDI), .min = 1, .max = 1, .simple = 1, .xs_type = XS_ULONG, .n = 1},
+
+继续找496
+
+Step3:
+
+// SubscribableResource (496)
+{.size = sizeof(SE_SubscribableResource_t), .index = 325},  //offset = 0 
+{.offset = offsetof(SE_SubscribableResource_t, href), .min = 0, .max = 1, .attribute = 1, .xs_type = XS_ANY_URI, .n = 3},
+{.offset = offsetof(SE_SubscribableResource_t, subscribable), .min = 0, .max = 1, .attribute = 1, .bit = 1, .xs_type = XS_UBYTE, .n = 2},
+继续搜索325
+
+Step4:
+// Resource (325)
+{.size = sizeof(SE_Resource_t), .index = 0},
+{.offset = offsetof(SE_Resource_t, href), .min = 0, .max = 1, .attribute = 1, .xs_type = XS_ANY_URI, .n = 2},
+这里，index的值为0，搜索停止。
+
+
+*/
+/* base：就是在 se_types.h 中定义的元素的类型名，比如 SE_AbstractDevice 的值是0 */
 int se_is_a (const SchemaElement *se, int base, const Schema *schema) {
   //注意这里的base值变化了。
-  base = schema->elements[base].index;  //每一个派生的类型，都由index变量来指定自己的基类在什么位置 -- 数组中的index
+  //每一个派生的类型，都由index变量来指定自己的基类在什么位置 -- 数组中的index
+  base = schema->elements[base].index;  //获得base的值
   if (se->simple || se->attribute) return 0;  //如果是一个简单类型比如整形数字之类的
+  /*举一个例子：
+  // SubscribableResource (496)
+  {.size = sizeof(SE_SubscribableResource_t), .index = 325},  //注意这里的第一行offset = 0而index不等于0，后面的相反。 
+  {.offset = offsetof(SE_SubscribableResource_t, href), .min = 0, .max = 1, .attribute = 1, .xs_type = XS_ANY_URI, .n = 3},
+  {.offset = offsetof(SE_SubscribableResource_t, subscribable), .min = 0, .max = 1, .attribute = 1, .bit = 1, .xs_type = XS_UBYTE, .n = 2},
+  */
   while (se->index) { //有的index是0，也就是说碰到了index是0的数组的行，那么就不再继续往下搜索了，也就是得到了基类。
     if (se->index == base) return 1;
     se = &schema->elements[se->index];  //看起来是一个可以循环跳转的表
@@ -116,7 +170,7 @@ int se_is_a (const SchemaElement *se, int base, const Schema *schema) {
 
 //判定一个类型是否派生自某个基类
 int type_is_a (int type, int base, const Schema *schema) {
-  if (type >= schema->length) return 0;
+  if (type >= schema->length) return 0; //之前跟length规定的长度的之前的元素是有效的。只搜索length前面的部分。
   return se_is_a (&schema->elements[type], base, schema);
 }
 
@@ -189,45 +243,63 @@ int object_element_size (const SchemaElement *se, const Schema *schema) {
   return 0;
 }
 
+
+/*释放一个完整的对象的占用的内存空间
+参数描述：
+void *obj：是一个内存地址，包含了一个具体的SE对象
+const SchemaElement *se：上述的obj数据的相应的描述信息
+const Schema *schema：全局用到的 se_schema 数组。
+*/
 void free_elements (void *obj, const SchemaElement *se, const Schema *schema) {
   while (1) {
     int i;
-    void *element = obj + se->offset;
+    void *element = obj + se->offset; //获取到自己在上级object（对象）中的数据存储空间的内存偏移量地址 ??? 
     if (se->attribute || se->simple) {
-      if (is_pointer (se->xs_type)) {
+      if (is_pointer (se->xs_type)) { //是否是一个指针类型的，比如表示URL的变量 *href。
         void **value = (void **)element;
         i = 0;
-        while (i < se->max && *value) {
+        while (i < se->max && *value) { //这个指针值不是空
           void *t = *value;
           free (t);
-          value++;
+          value++;  //向后移动一个单元
           i++;
         }
       }
-    } else if (se->n) {
-      const SchemaElement *first = &schema->elements[se->index];
-      if (se->unbounded) {
+    /*举例：
+    {.offset = offsetof(SE_MirrorReadingSet_t, Reading), .min = 0, .unbounded = 1, .index = 356, .n = 2},
+    其指向的index=356，内容为：
+      // Reading (356)
+      {.size = sizeof(SE_Reading_t), .index = 349},
+      {.offset = offsetof(SE_Reading_t, href), .min = 0, .max = 1, .attribute = 1, .xs_type = XS_ANY_URI, .n = 9},
+    即下面的first指向的是{.size = sizeof(SE_Reading_t), .index = 349},
+    所以，在后面的迭代调用 free_elements 的调用中，第二项参数是 first + 1，即从下面一行开始执行释放。
+    
+      */
+    } else if (se->n) { //只有一个结构体中的“成员”，其n值总是大于0。
+      const SchemaElement *first = &schema->elements[se->index];  //指向了该List成员的具体结构描述位置。当前位置仅仅是一个指针。
+      if (se->unbounded) {  //通常只有List类型的成员，其unbounded值总是大于0。其他成员，总是等于0。即表明这个是List类型。
         List *t, *l = *(List **)(element);
         while (l) {
           t = l;
           l = l->next;
-          free_elements (t->data, first + 1, schema);
-          if (t->data) free (t->data);
+          free_elements (t->data, first + 1, schema); //这里迭代释放了。但是first + 1指向的是下一个同类型单元？
+          if (t->data) free (t->data);  //以数据指针的值是否为空来判断是否有值。
           free (t);
         }
-      } else {
-        for (i = 0; i < se->max; i++) {
-          free_elements (element, first + 1, schema);
+      } else {  //看起来像是一个“固定”的意思。即如果遇到的是一个固定长度
+        for (i = 0; i < se->max; i++) { //通常，max最大值只有1。
+          free_elements (element, first + 1, schema); //这里的first + 1是什么意思？？
           element += first->size;
         }
       }
-    } else return;
+    } else return;  //遇到都不符合上述两个if中的条件，就退出。从se_schema.c中可以看出，相当于是完成了一个对象的全部成员的释放，然后到了下一个对象的首行。
     se++;
   }
 }
 
+
 void free_object_elements (void *obj, int type, const Schema *schema) {
-  const SchemaElement *se = &schema->elements[type];
+  const SchemaElement *se = &schema->elements[type];  //只要给出type值（ 在se_types.h文件中的最后一段宏定义中给出 ）就行了。
   se = &schema->elements[se->index + 1];
   free_elements (obj, se, schema);
 }

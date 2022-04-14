@@ -71,6 +71,7 @@ static char *qvalue (int *q, char *data) {
   return data;
 }
 
+//移动字符串指针，跳过那些空格或者tab
 static char *ows (char *data) {
   int c;
   if (!data) return NULL;
@@ -200,9 +201,9 @@ static char *token_sp (char **token, char *data) {
   int c;
   *token = data;
   while ((c = *data)) {
-    if (hws (c)) {
+    if (hws (c)) {  //如果遇到了空格符或者tab符号
       *data = '\0';
-      return ows (data + 1);
+      return ows (data + 1);  //跳过空格，到下一个不是空格的字符并且返回该数据指针
     }
     data++;
   }

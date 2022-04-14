@@ -3,12 +3,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define se_flags(x) (*(uint32_t *)x)
-#define se_exists(x, f) (se_flags (x) & SE_##f##_exists)
-#define se_clear(x, f) (se_flags (x) &= ~SE_##f##_exists)
-#define se_set(x, f) (se_flags (x) |= SE_##f##_exists)
-#define se_true(x, f) (se_flags (x) & SE_##f##_true)
-#define se_set_true(x, f) (se_flags (x) |= SE_##f##_true)
+//取得这个结构体变量的首个值，也就是_flags变量的值。传入的是这个结构体的地址。
+#define se_flags(x) (*(uint32_t *)x)  //每一个在se_types.h中定义了的SE类型的结构体，都将_flags作为了首个元素。结构体的地址，就是这个flags变量的地址。
+#define se_exists(x, f) (se_flags (x) & SE_##f##_exists)  //判断代表了结构体中某个成员是否已经从服务器中获取到了（即填充到了本地变量中）
+#define se_clear(x, f) (se_flags (x) &= ~SE_##f##_exists) //执行清除某个本地变量 "是否存在" flag的操作。
+#define se_set(x, f) (se_flags (x) |= SE_##f##_exists)    //设置某个本地变量“是否存在”flag的值为1
+#define se_true(x, f) (se_flags (x) & SE_##f##_true)      //
+#define se_set_true(x, f) (se_flags (x) |= SE_##f##_true) 
 #define se_set_false(x, f) (se_flags (x) &= ~SE_##f##_true)
 
 // global flags
@@ -3169,6 +3170,8 @@ typedef struct {
   SE_SelfDeviceLink_t SelfDeviceLink;
 } SE_DeviceCapability_t;
 
+
+//看起来是按照字典顺序排列的。
 #define SE_AbstractDevice 0
 #define SE_AccountBalance 1
 #define SE_AccountBalanceLink 2

@@ -25,6 +25,7 @@ enum ResponseType {EventReceived = 1, EventStarted, EventCompleted,
 typedef struct _SeConnection SeConnection;
 enum SeMediaType {SE_EXI, SE_XML, APPLICATION_XML};
 
+//向服务器发送各种HTTP格式数据
 #define se_post(conn, data, type, href)		\
   se_send (conn, data, type, href, HTTP_POST)
 #define se_put(conn, data, type, href)		\
@@ -219,6 +220,8 @@ void free_se_body (void *conn) {
   }
 }
 
+
+//取出se回复的数据中的body部分。
 void *se_body (void *conn, int *type) {
   SeConnection *s = conn;
   void *body;
@@ -259,7 +262,7 @@ int se_receive (void *conn) {
           goto error;
         }
       } else return method;
-    case SE_DATA:
+    case SE_DATA: //在收到数据之后，将XML文档解析成一个数据对象。
       while (data = http_data (h, &length)) {
         parser_rebuffer (p, data, length);
         //if (parse_doc (p, &type)) { //parse_doc_p
@@ -357,6 +360,8 @@ void *se_send (void *conn, void *data, int type,
   return conn;
 }
 
+
+//构建回复给服务器的数据
 void se_response (void *resp, SE_Event_t *ev, char *lfdi, int status) {
   SE_Response_t *r = resp;
   r->_flags = SE_createdDateTime_exists | SE_status_exists;

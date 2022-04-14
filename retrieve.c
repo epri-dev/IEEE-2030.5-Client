@@ -5,10 +5,13 @@
 
     The retrieve module provides high level methods to retrieve resources from
     IEEE 2030.5 servers. These methods use a placeholder called a Stub to track
-    the state of retrieval and provide local storage for a resource. The Stubs
-    can be linked together to create and manage hierarchies of both dependent
-    and required resources.
+    the state of retrieval and provide local storage for a resource.
+    这些方法用一个 叫做“Stub”的“占位符placeholder”来跟踪“检索retrieval”的状态和提供一个本地的对一个资源的存储。
+    The Stubs can be linked together to create and manage hierarchies of both dependent
+    and required resources. 这些Stubs能够相互连接到一起，用以构建和管理各个依赖和需求的资源的层级关系。
 
+    当一个资源和它全部的子层级资源都被全面和成功检索到了之后，然后这些资源将被视作“完整的”，这个状态被这个检索模块监控并且
+    可以可选的通知用户提供的程序，以这个资源作为一个参数。
     When a resource and all of its subordinates are fully and successfully
     retrieved then the resource is considered complete, this condition is
     monitored by the retrieval algorithm and can optionally signal a user
@@ -35,26 +38,34 @@ typedef  long  time_t;
 为了能够表示更久远的时间，可用64位或更长的整形数来保存日历时间，这里不作详述。
 */
 
-/** A Resource Stub. */
+/** A Resource Stub. 
+这个Stub数据是在本次表示的对象数据。是这个应用的核心数据。
+这个数据包含了：
+1）本身的数据信息。
+2）他所“依赖”的子级数据（Stub），放在List *deps 中 
+3）他所需求的父级Stub数据，放在List *reqs 中
+*/
 typedef struct _Stub {  /* ... the local representation of a resource（在der_client.md文档中定义） */
   Resource base; ///< is a container for the resource  这个Stub所要代表的数据本身，一个数据容器
   void *conn; ///< is a pointer to an SeConnection 这个Stub的关联的连接
   int status; ///< is the HTTP status, 0 for a new Stub, -1 for an update
-  time_t poll_next; ///< is the next time to poll the resource
+  time_t poll_next; ///< is the next time to poll the resource 下次需要检索的数据的时间
   int16_t poll_rate; ///< is the poll rate for the resource 这个资源应当执行的查询频率
-  unsigned complete : 1; ///< marks the Stub as complete  表示这个stub已近查询( retrieve ) 或者填充完毕了。
+  unsigned complete : 1; ///< marks the Stub as complete  表示这个stub已近查询( retrieve ) 或者填充完毕了。包含子级的Stub数据。
   unsigned subscribed : 1;
-  uint32_t flag; ///< is the marker for this resource in its dependents
-  uint32_t flags; ///< is a bitwise requirements checklist
-  uint32_t offset; ///< is the offset used for list paging
-  uint32_t all; ///< is the total number of list items
+  //下面两个flag数据的用法，详见 new_dep 这个函数 
+  uint32_t flag; ///< is the marker for this resource in its dependents 对于一个子级资源（Stub）来说，这个flag表示的是自己的一个特定标志。
+  uint32_t flags; ///< is a bitwise requirements checklist 一个bit位表示的对下级资源的“需求”表示，置位则表示有需求。
+  uint32_t offset; ///< is the offset used for list paging 对于List类型的数据元素来说，offset表示本Stub在整个List中的序号
+  uint32_t all; ///< is the total number of list items  List的总量
   struct _Stub *moved; ///< is a pointer to the new resource
   List *list; ///< is a list of old requirements for updates
   List *deps; ///< is a list of dependencies 依赖？存储的是一个个Stub内容单元，表示的是以本Stub为依赖对象的子层级的Stub。
   List *reqs; ///< is a list of requirements 要求？
   union {
     void *context; ///< is a user defined completion context
-    List *schedules; //< is a list of schedules for event resources
+    List *schedules; //< is a list of schedules for event resources 
+    //由于这个Stub结构体兼做程序内部的EventBlock对象，所以包含了一个schedules数据。跟前面的一些数据之前没有紧密关联。
   };
   void (*completion) (struct _Stub *); ///< is a user defined completion routine
 } Stub;
@@ -62,7 +73,7 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
 
 /** @brief Get an IEEE 2030.5 resource.
     @param conn is a pointer to an SeConnection
-    @param type is an IEEE 2030.5 schema type
+    @param type is an IEEE 2030.5 schema type  在se_types.h这个文件中定义好了的一个值，见文件最后的一系列宏定义。
     @param href is URI string, the location of the resource
     @param count is the number of items to get for %List resources, should be 0
     for non-List resources
@@ -72,21 +83,31 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 
 /** @brief Get a subordinate（n. 部属，下级；从属，次要） resource given a parent object.
 
+    子级资源通过在父级对象中的链接来检索到。
     Subordinate resources are retrieved from links in the parent object.
+    
     Links follow a naming convention（名称规范）, they are named after the type of the
     subordinate resource with the string "Link" appended. This macro
     provides a convienent way to retrieve a subordinate resource, taking
     advantage of the naming pattern used to link subordinate resources from
     their parent object.
+    这个宏定义提供了一个很方便的方法来检索到一个子级资源，利用了在链接子层资源中的“naming pattern”优势。
+    
     @param conn is a pointer to an SeConnection
     @param obj is a pointer to an IEEE 2030.5 object
-    @param type is the type name of the subordinate resource
+    @param type is the type name of the subordinate resource 统一定义的一个值
     @returns a pointer to the Stub for the resource if the link exists,
     NULL otherwise
+
+    SE_##type 最后构成了一个宏定义。在se_types.h这个文件中定义了全部相关的资源的名称。
+    比如SE_Reading。
+
+    这个宏定义名称get_root的意思就是获取到这个资源的的原始数据??
 */
 #define get_root(conn, obj, type)				\
   (se_exists (obj, type##Link)?					\
    get_resource (conn, SE_##type, (obj)->type##Link.href, 0) : NULL)
+
 
 /** @brief Get a subordinate %List resource given a parent object.
 
@@ -96,6 +117,8 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
     %List resources include the "all" parameter, this indicates the number of
     items contained in the %List resource and is used as a query parameter in
     the HTTP GET request.
+    
+    通过提供在GET请求中的all参数，可以获取到一个list中的全部资源。
     @param conn is a pointer to an SeConnection
     @param obj is a pointer to an IEEE 2030.5 object
     @param type is the type name of the subordinate resource
@@ -112,16 +135,23 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
     Get a subordinate resource Stub and make the parent resource a dependent（n. 受供养者）.
     父层resource将构建一个bit位表示法来代表对于下层资源的需求，如果这些资源被满足，
     那么就将这些bit位清零。
-    
+
+    创建一个双路的链接，连接父级和子级资源。
+    父级资源存储了一个bit位表示的“需求”，代表了对子级资源的需求。如果对某一个子级存在需求，则将
+    该bit位置位。当该子级资源被获取到之后，则将该bit位清零。
     Creates a two way link between the subordinate and parent resources, the
     parent stores a bit representing the requirement for the subordinate
     resource and the subordinate resource clears this bit once all of its
     requirements are met (full retrieval of itself and all of its
     subordinates).
-    @param r is a pointer to a Stub, the parent resource
+    @param r is a pointer to a Stub, the parent resource r指向一个Stub，是一个父级资源。
     @param obj is a pointer to an IEEE 2030.5 object
     @param type is the type name of the subordinate resource
     @returns a pointer to the subordinate resource Stub
+
+
+    用SE_##type##Link_exists这个构建一个flag，表示该资源存在。
+    
 */
 #define get_dep(r, obj, type)					\
   new_dep (r, get_root ((r)->conn, obj, type), SE_##type##Link_exists)
@@ -129,7 +159,12 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 /** @brief Get a subordinate %List resource Stub and make the parent resource a
     dependent.
 
+    获取一个子级的“List”资源Stub并且将父级资源设置成为一个 “依赖” 。
+    
     Performs the same function as @ref get_dep except for %List resources.
+
+    跟前面的get_list_root这个函数功能接近，除了获取的内容是一个“List”内容（前面的那个获取的不是List，而是一个单个资源）。
+    
     @param r is a pointer to a Stub, the parent resource
     @param obj is a pointer to an IEEE 2030.5 object
     @param type is the type name of the subordinate resource
@@ -138,7 +173,9 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 #define get_list_dep(r, obj, type)				\
   new_dep (r, get_list_root ((r)->conn, obj, type), SE_##type##Link_exists)
 
-/** @brief Dependency function */
+
+/** @brief Dependency function  依赖函数？？ 这个就是前面说明中讲到的“在完成了数据获取之后讲执行一个依赖函数，以Stub作为参数”。*/
+
 typedef void (*DepFunc) (Stub *s);
 
 /** @brief Process HTTP data from an SeConnection.
@@ -154,35 +191,43 @@ int process_http (void *conn, DepFunc dep);
 
 /** @} */
 
-//看起来像是要获取一个资源
+/* 看起来像是要获取一个 List 资源中的部分或者全部。
+count表示了需要获取的数量
+*/ 
 void get_seq (Stub *s, int offset, int count) {
   char *name = resource_name (s);
-  if (count) {
+  if (count) {  //如果count大于0，通常是一个List。
     char uri[64];
     if (count > 255) count = 255;
     if (offset) sprintf (uri, "%s?s=%d&l=%d", name, offset, count);
-    else sprintf (uri, "%s?l=%d", name, count); //加上了查询数量
+    else sprintf (uri, "%s?l=%d", name, count); // 在GET请求中，加入了查询数量
     http_get (s->conn, uri);
   } else http_get (s->conn, name);
-  set_request_context (s->conn, s);
+  set_request_context (s->conn, s); 
+  /*看起来是这么一回事情：在发送请求的时候，设置好了这个 Context，
+  而由于在这个应用用，HTTP的发送和接收是过程是异步处理的，所以在后面接收到了这个HTTP回复的数据之后，可以通过这个context来知道该怎么处理。*/
 }
 
 
 //增加一个依赖关系。Stub *r是父层级资源，Stub *d是下一层级资源。
-
 void add_dep (Stub *r, Stub *d) {
-  d->deps = insert_unique (d->deps, r); //对d->deps作了更新，保证r资源被插入。
-  d->poll_rate = min (d->poll_rate, r->poll_rate);
-  r->complete = 0;  //一个新加入的Stub由于目前还未被轮训过，所以此时complete的值表示“未完成”。
+  d->deps = insert_unique (d->deps, r); //对d->deps作了更新，保证r资源被插入。通过deps这个表，能够找到每一个子级Stub。
+  d->poll_rate = min (d->poll_rate, r->poll_rate);  //设定好更新频率
+  r->complete = 0;  //一个新加入的Stub由于目前还未被查询过，所以此时complete的值表示“未完成”。
 }
 
 
-//新建一个 dependency。Stub *r是父层级资源，Stub *d是下一层级资源。flag用来标志代表d自己的唯一标识。
+/*
+新建一个 dependency。Stub *r是父层级资源，Stub *d是下一层级资源。flag用来标志代表d自己的唯一标识。
+flag 通常是 SE_##type##Link_exists 形式的。
+这个函数主要作用是在父级Stub中的flag上做一个标记--将某一个bit置位，来表示父级Stub需要某一个特定的子级Stub来填充，
+以便后面通过请求该资源来填充到该资源。
+*/
 Stub *new_dep (Stub *r, Stub *d, int flag) {
   if (d) {
     add_dep (r, d);
-    d->flag = flag;
-    r->flags |= flag;
+    d->flag = flag; //标记本Stub数据，是一个唯一标记。
+    r->flags |= flag; //在父级Stub中标记上，表明父级Stub要用到本Stub资源。后续将通过网络请求来获取到这项数据。目前仅仅是标记了一下。
   }
   return d;
 }
@@ -190,7 +235,7 @@ Stub *new_dep (Stub *r, Stub *d, int flag) {
 //移除 requirements?
 void remove_req (Stub *s, Stub *r) {
   r->deps = list_delete (r->deps, s);
-  if (!r->deps) insert_event (r, RESOURCE_REMOVE, 0);
+  if (!r->deps) insert_event (r, RESOURCE_REMOVE, 0); //异步调用
 }
 
 void remove_reqs (Stub *s, List *reqs) {
@@ -211,9 +256,9 @@ void remove_deps (Stub *s, List *deps) {
 }
 
 
-//从数据库中找回之前存储的某一个数据
+//从数据库中找回之前存储的某一个数据。这里的name参数应该是某个资源的URL。
 void *find_stub (Stub **head, char *name, void *conn) {
-  if (*head = find_resource (name)) {
+  if (*head = find_resource (name)) {   //通过哈希表来寻找到这个资源。相当于说资源和URL是一一对应的关系。
     Stub *s;
     foreach (s, *head) if (s->conn == conn) return s;
   }
@@ -221,7 +266,7 @@ void *find_stub (Stub **head, char *name, void *conn) {
 }
 
 
-//将已经存储了的数据取出来，如果之前没有存储，那么就新建一个，并且存储到数据库中（hash表）
+//将已经存储了的数据取出来，如果之前没有存储，那么就新建一个，并且存储到数据库中（hash表）。后续可以从服务器侧去获取。
 void *get_stub (char *name, int type, void *conn) {
   /*首先在哈希表中寻找*/
   Stub *head, *s = find_stub (&head, name, conn); //*head原本是一个空的指针，在调用了find_stub之后，就有了特定含义。
@@ -241,14 +286,15 @@ void delete_reqs (Stub *s) {
   s->reqs = s->list = NULL;
 }
 
+/*建之前存储在数据库中的Stub资源删除掉？？*/
 void remove_stub (Stub *s) {
   Stub *head = find_resource (s->base.name),
-        *t = list_remove (head, s);
+        *t = list_remove (head, s); //返回删除了s之后的list。
   if (t) {
-    if (t != head) insert_resource (t);
+    if (t != head) insert_resource (t); //这个是什么意思？？
   } else delete_resource (head);
   if (s->moved) remove_req (s, s->moved);
-  else delete_reqs (s);
+  else delete_reqs (s);//删除掉相关的“依赖”和“需求”
   remove_deps (s, s->deps);
   remove_event (s);
   free_resource (s);
@@ -257,7 +303,7 @@ void remove_stub (Stub *s) {
 void *insert_stub (List *list, Stub *s, ListInfo *info) {
   List *prev = NULL, *l = list, *n;
   void *data = resource_data (s);
-  if (find_by_data (list, s)) return list;
+  if (find_by_data (list, s)) return list;  //如果这个list已经存在了，那么就不用插入了。
   while (l) {
     Resource *r = l->data;
     if (compare_keys (data, r->data, info) < 0) break;
@@ -269,11 +315,14 @@ void *insert_stub (List *list, Stub *s, ListInfo *info) {
   return list;
 }
 
+
+/*发送消息到服务器，要求删除该资源*/
 void delete_stub (Stub *s) {
   http_delete (s->conn, resource_name (s));
   set_request_context (s->conn, s);
 }
 
+/**/
 void dep_complete (Stub *s) {
   List *l;
   if (s->completion && !s->complete)
@@ -312,6 +361,7 @@ void dep_reset (Stub *s) {
   }
 }
 
+/*通过网络访问来更新某一个资源*/
 void update_resource (Stub *s) {
   if (s->status >= 0) { //is the HTTP status, 0 for a new Stub, -1 for an update
     if (s->all) s->offset = 0;
@@ -321,10 +371,12 @@ void update_resource (Stub *s) {
       dep_reset (s);
     else s->complete = 0;
     s->status = -1;
-    get_seq (s, 0, s->all);
+    get_seq (s, 0, s->all); //发生网络访问
   }
 }
 
+
+/* 获取到某一个type类型的 Stub */
 void *get_subordinate (Stub *s, int type) {
   List *l;
   foreach (l, s->reqs) {
@@ -352,14 +404,14 @@ Stub *get_resource (void *conn, int type, const char *href, int count) {
 }
 
 /*
-之类的poll资源，主要是针对 SE_Event_t 数据 。但是看起来他并没有去做向服务器Poll的动作？？
+poll资源，主要是针对 SE_Event_t 数据 。但是看起来他并没有去做向服务器Poll的动作？？
 */
 
 void poll_resource (Stub *s) {
   time_t now = se_time ();
   time_t next = now + s->poll_rate;
-  if (se_event (resource_type (s))) {
-    SE_Event_t *ev = resource_data (s);
+  if (se_event (resource_type (s))) { //如果是event类型的数据，则需要定时的查询一下。
+    SE_Event_t *ev = resource_data (s); 
     time_t end = ev->interval.start + ev->interval.duration;
     if (s->poll_rate >= (end - now)) return;
   }
@@ -368,15 +420,17 @@ void poll_resource (Stub *s) {
   if (s->poll_next <= now) {
     s->poll_next = next;
     //这里的类型RESOURCE_POLL，跟在der_poll中调用这个函数的时候的case值严格一致了。
-    insert_event (s, RESOURCE_POLL, next);
+    insert_event (s, RESOURCE_POLL, next);  //添加一个异步事件，在主程序中被响应并且执行后续的数据获取动作。
   }
 }
 
+/*获取dcap资源*/
 Stub *get_dcap (Service *s, int secure) {
   void *conn = service_connect (s, secure);
   return get_resource (conn, SE_DeviceCapability, service_dcap (s), 0);
 }
 
+/*获取到路径*/
 Stub *get_path (Service *s, int secure) {
   void *conn;
   int type, count;
@@ -459,8 +513,9 @@ Stub *find_target (void *conn) {
   return find_stub (&head, http_path (conn), conn);
 }
 
+
 Stub *match_request (void *conn, void *data, int type) {
-  Stub *s = http_context (conn);
+  Stub *s = http_context (conn);  //找出前面发送的那个Stub。
   Uri128 buf;
   char *path = object_path (&buf, conn, data);
   if (path && streq (resource_name (s), path)) {
@@ -527,7 +582,7 @@ void process_redirect (void *conn, int status) {
   free_se_body (conn);
 }
 
-//处理HTTP回复的数据
+//处理HTTP回复的数据（看起来像是面向服务器端写的程序）
 int process_http (void *conn, DepFunc dep) {
   int status;
   Stub *s;
@@ -537,13 +592,13 @@ int process_http (void *conn, DepFunc dep) {
     case 200:
     case 201:
     case 204:
-      process_response (conn, status, dep);
+      process_response (conn, status, dep); //如果成功回复，则将执行dep函数
       return status;
     case 300:
     case 301:
       process_redirect (conn, status);
       break;
-    default:
+    default:  // 如果是访问资源但是回复的数据不是上述表示成功的情况，则表示该资源（看起来）已经被删除了，所以要再本地也同样的删除掉。
       if (http_method (conn) == HTTP_GET
           && (s = find_target (conn))) {
         s->status = status;
