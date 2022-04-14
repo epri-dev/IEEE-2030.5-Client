@@ -27,7 +27,7 @@ enum HttpMethod {HTTP_GET, HTTP_PUT, HTTP_POST, HTTP_DELETE, HTTP_HEAD,
 /** @brief An HTTP request */
 typedef struct _HttpRequest {
   struct _HttpRequest *next;
-  void *context;  //Stub对象
+  void *context;  //在发送数据之前就先存储下来的Stub对象（可能从这个对象数据中找到接收服务器回复的时候应该做的事情）
   uint8_t method;
   char uri[];
 } HttpRequest;
@@ -321,13 +321,13 @@ typedef struct _HttpConnection {
   int length; // the amount of data in buffer
   int content_length; // from the Content-Length header
   uint8_t state, method, request_method;  //request_method：请求的方法，比如是GET还是POST
-  unsigned body : 1; // response or request has a body
-  unsigned close : 1; // close signaled in last request/response
-  unsigned client : 1; // true for client connection
-  unsigned debug : 1;
+  unsigned body : 1;    // response or request has a body
+  unsigned close : 1;   // close signaled in last request/response
+  unsigned client : 1;  // true for client connection
+  unsigned debug : 1;   //设置是否打印调试信息
   int status, error, header;
   void *context; // request context
-  Queue send, request;  //数据发送Queue，和请求Queue??
+  Queue send, request;  //数据发送Queue，和请求Queue??发出一个请求，就往这个队列里面加入这个请求实体。
   char target[256];
   Uri uri; // request target
   char buffer[BUFFER_SIZE];
@@ -369,6 +369,8 @@ char *http_location (void *conn) {
 void http_debug (void *conn, int enable) {
   http_field (conn, debug) = enable;
 }
+
+//context的意思主要是在前面发送请求的时候，存储一个Stub，那么后面返回的内容，应当跟这个Stub对应上。
 void *http_context (void *conn) {
   return http_field (conn, context);
 }
@@ -652,6 +654,7 @@ top:
 #define HTTP_CONNECTION 16
 #define HTTP_LOCATION 32
 
+//HTTP数据接收的各个状态。enum HttpState {HTTP_START, HTTP_HEADER, HTTP_DATA, HTTP_COMPLETE, HTTP_CLOSED};
 // receive an HTTP message 接收HTTP数据。由于接收的数据中包含了基本的数据的信息，所以可以反推出来这项数据该怎么保存？？
 int http_receive (void *conn) {
   HttpConnection *c = conn;
@@ -667,7 +670,7 @@ int http_receive (void *conn) {
     switch (c->state) {
     case HTTP_START: // request/status line
       ok_v (next = next_line (c), HTTP_NONE);
-      data = c->data;
+      data = c->data; //当前这一行的开始地址
       if (*data == '\0') break; // allow empty lines to start
       if (c->debug) printf ("<-- conn = %p ---\n"
                               "%s\r\n", c, data);
@@ -682,7 +685,7 @@ int http_receive (void *conn) {
             && number (&c->status, text)
             && c->status <= 999
             && (r = dequeue_request (c))
-            && request_target (c, r->uri)) {
+            && request_target (c, r->uri)) {  //
           c->context = r->context;
           c->method = HTTP_RESPONSE;
           c->request_method = r->method;
