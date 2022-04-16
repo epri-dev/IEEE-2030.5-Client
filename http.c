@@ -313,24 +313,24 @@ typedef struct _HttpConnection {
   Connection tcp;
   char *query, *content_type, *media_range, *location;
   Address host; // host from the Host: header field
-  char *headers, *version;
-  const char *media; // media type for POST/PUT
-  const char *accept; // media types accepted
-  char *data; // pointer to the next header line or http content
+  char *headers, *version;  //version 就是HTTP 版本，通常是1.1
+  const char *media; // media type for POST/PUT 发送的媒体类型
+  const char *accept; // media types accepted 可以接收的数据类型
+  char *data; // pointer to the next header line or http content 指向后面一个header行或者HTTP内容
   int end;    // buffer + end = the end of the http message
-  int length; // the amount of data in buffer
-  int content_length; // from the Content-Length header
+  int length; // the amount of data in buffer 在bufer中存放的数据的总大小
+  int content_length; // from the Content-Length header 在Header中的Content-Length值。
   uint8_t state, method, request_method;  //request_method：请求的方法，比如是GET还是POST
-  unsigned body : 1;    // response or request has a body
-  unsigned close : 1;   // close signaled in last request/response
-  unsigned client : 1;  // true for client connection
+  unsigned body : 1;    // response or request has a body 是否包含一个body 
+  unsigned close : 1;   // close signaled in last request/response 
+  unsigned client : 1;  // true for client connection 如果本对象是一个客户端连接的时候用到的，则置位1
   unsigned debug : 1;   //设置是否打印调试信息
   int status, error, header;
   void *context; // request context
   Queue send, request;  //数据发送Queue，和请求Queue??发出一个请求，就往这个队列里面加入这个请求实体。
-  char target[256];
+  char target[256]; 
   Uri uri; // request target
-  char buffer[BUFFER_SIZE];
+  char buffer[BUFFER_SIZE]; //用来存放回复或者发送的数据的一个buffer。
 } HttpConnection;
 
 #define buffer_full(h) (((h)->length+1) == BUFFER_SIZE)
