@@ -7,13 +7,17 @@
     
     A Connection extends a TcpPort and provides an interface to either a TCP
     or TLS connection. Connections are established by calling either
-    @ref conn_connect or @ref conn_accept, the "secure" parameter determines
+    @ref conn_connect(这个函数面向客户端) or @ref conn_accept(这个函数面向服务器), the "secure" parameter determines
     whether to use TLS or not. After a connection has been initiated the client
     (or server) calls @ref conn_session to check the status of the connection.
     In the case of TLS, repeat calls to @ref conn_session might be required to
     fully negotiate a TLS session. After a session has been established, use
     @ref conn_read and @ref conn_write to read and write data to the connection
     stream.
+    
+    对于一个TLS连接来说，可能需要调用多次conn_session来实现。
+    当连接构建完毕后，调用conn_read和conn_write来执行数据的读写。
+
     @{
 */
 

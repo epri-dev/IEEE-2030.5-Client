@@ -29,7 +29,7 @@ struct epoll_event
    EPOLLPRI：表示对应的文件描述符有紧急的数可读；
    EPOLLERR：表示对应的文件描述符发生错误；
    EPOLLHUP：表示对应的文件描述符被挂断；
-   EPOLLET：  ET的epoll工作模式；
+   EPOLLET：  将EPOLL设为边缘触发(Edge Triggered)模式，这是相对于水平触发(Level Triggered)来说的。
 
  所涉及到的函数有：
 
@@ -174,63 +174,74 @@ int event_poll (void **any, int timeout) {
   PollEvent *pe;
   TcpPort *p;
   uint64_t value;
+
   static struct epoll_event events[MAX_EVENTS];
-  static int i = 0, n = 0;
+  static int i = 0, n = 0;  //静态变量。n是epoll_wait返回的事件个数。
+  
   int event;
-  static PollEvent *prev = NULL;
-  if (prev) {
+
+  static PollEvent *prev = NULL;  //注意这里是一个静态变量。表示的是上一次获取到的PollEvent。
+  
+  if (prev) { //如果这个事件未完结（event_done == false），则继续添加到_active队列，表示这个事件对象上将继续会有数据变动发生。
     if (!event_done (prev)) queue_add (&_active, prev); //往当前活动的_active的queue中添加prev，prev与本函数中后面的代码的执行有关。
     prev = NULL;
   }
   
 poll:
-  if (i == n) { //这个意思是在第一次调用这个函数的时候？？
-    if (pe = queue_remove (&_active)) {//返回首个元素
-      event = pe->type;
+  if (i == n) { //i==n有几种情况：1）两者都是0，则说明上次退出的时候是POLL_TIMEOUT，即没有事件发生；2）当发生了n个事件，且在多次调用本函数后处理全部处理完毕了。
+    if (pe = queue_remove (&_active)) {//返回首个元素，如果非零，则执行下面的代码。
+      event = pe->type; /* EventType 类型*/
       switch (pe->type) {
-      case TCP_ACCEPTOR:  //通过查询TCP_ACCEPTOR关键词发现，整个工程中只有 net_listen 函数应用了 TCP_ACCEPTOR 这个类型
+      case TCP_ACCEPTOR:  //通过查询TCP_ACCEPTOR关键词发现，整个工程中只有 net_listen 函数应用了 TCP_ACCEPTOR 这个类型，应该是面向服务器端的情况
         goto accept;
-      case TCP_ACCEPT:
-      case TCP_CONNECT:
-        pe->type = TCP_PORT;
-      case TCP_PORT:
+      case TCP_ACCEPT:  //只有在net_accept函数中才会返回这个值。所以估计是面向服务器的情况。
+      case TCP_CONNECT: //最底层的是在 net_connect 函数中返回，应该是刚刚连接上了一个服务器，然后
+        pe->type = TCP_PORT;  //对于服务器端或者客户端连接上了服务器，都统一以TCP_PORT论。
+      case TCP_PORT:    //
       case UDP_PORT:
-        prev = pe;
-      } *any = pe;
+        prev = pe;  //注意这里都没break，所以统一保存最后一个获得的pe到prev中。
+      } *any = pe;  //返回的值也是本次的pe。
       return event;
     }
+
+    //如果 _active 中没有获取到，则执行下面的retry。
+    
 retry:
+
     /*
       3、epoll_wait 函数
          函数声明:int epoll_wait(int epfd,struct epoll_event * events,int maxevents,int timeout)
          功能：该函数用于轮询I/O事件的发生；
-          @epfd：由epoll_create生成的epoll专用的文件描述符；
-          @epoll_event：用于回传待处理事件的数组；
-          @maxevents：每次能处理的事件数；
-          @timeout：等待I/O事件发生的超时值；
-         成功：返回发生的事件数；失败：-1
-
-      */
-    n = epoll_wait (poll_fd, events, MAX_EVENTS, timeout);  //这个函数应该是阻塞式函数，等待 timeout 事件
+         @epfd：由epoll_create生成的epoll专用的文件描述符；
+         @epoll_event：用于回传待处理事件的数组；
+         @maxevents：每次能处理最大数量的事件数；
+         @timeout：等待I/O事件发生的超时值；
+         成功：成功将返回触发I0事件的fd个数。错误将返回-1，并设定errno；时将返回0;
+    */
+    
+    //这个函数应该是阻塞式函数，等待 timeout 长的时间。fd产生事件 / 被信号处理函数打断 / 超时。
+    n = epoll_wait(poll_fd, events, MAX_EVENTS, timeout);
     
     i = 0;
     if (n < 0) goto retry;    //perror ("event_poll");  //如果没有事件发生，则循环等待
-    if (n == 0) return POLL_TIMEOUT;  //如果返回是0，则表示超时？
+    if (n == 0) return POLL_TIMEOUT;  //如果返回是0，则表示超时。即没有事件发生。
   }
+
 
   /* 如果发生了事件... */
   event = events[i].events;
-  *any = pe = events[i].data.ptr;
-  i++;  //每发生一件event，i值就增加1
+  *any = pe = events[i].data.ptr; //用户数据。
+  i++;  //每次处理一次，就加1，直到i==n，则i又从0开始。下面是处理事件的具体过程。
+  
   // printf ("event_poll %x %p %d\n", event, pe, pe->type);
   switch (pe->type) {
-  case TCP_CONNECT:
+  case TCP_CONNECT: //面向客户端连接上了服务器这个事件。
     p = *any;
-    /*EPOLLOUT：表示对应的文件描述符可以写；*/
+    /* EPOLLOUT：表示对应的文件描述符可以写；*/
     if (event & EPOLLOUT && bsd_connected (pe->socket)) {
       clear_timeout (pe);
       pe->status = Connected;
-      pe->type = TCP_PORT;  //连接上之后，type的值转换成 TCP_PORT 。相当于一个状态机中的状态发生了转换。
+      pe->type = TCP_PORT;  //连接上之后，type的值转换成 TCP_PORT 。后面的case就是针对这个TCP_PORT进行处理。
       prev = pe;
       return TCP_CONNECT;
     }
@@ -244,24 +255,24 @@ retry:
     https://blog.csdn.net/midion9/article/details/49883063
     */
     if (event & EPOLLRDHUP || event & EPOLLHUP) //EPOLLHUP : 文件被挂断。这个事件是一直监控的，即使没有明确指定
-      net_close (*any); //如果对端挂断连接，则此时本地端也要同步挂断连接
+      net_close (*any); //如果对端挂断连接，则此时本地端也要同步挂断连接。在net_close函数中可能加入了一个TCP_PORT事件。
     goto poll;
     
-  case TCP_PORT:  
+  case TCP_PORT:  //针对前面已经发生了 TCP_CONNECT 的pe，接下去就是判断是否有数据可读了。
     prev = pe;
     clear_timeout (pe);
     /*EPOLLIN：表示对应的文件描述符可以读；*/
     if (event & EPOLLIN)
       return TCP_PORT;
-    if (event & EPOLLRDHUP || event & EPOLLHUP) {
+    if (event & EPOLLRDHUP || event & EPOLLHUP) { //对应文件描述符被挂断。
       pe->status = Closed;
       prev = NULL;
       return TCP_CLOSED;
     }
     break;
     
-accept:
-  case TCP_ACCEPTOR:  // 面向于服务器程序的 ？
+accept: //暂时可以不用关注这个
+  case TCP_ACCEPTOR:  //这个状态，只有在net_listen函数中返回，所以应该是面向于服务器程序的。
     if (prev = accept_queued (pe)) {
       queue_add (&_active, pe); //放到“活动的_active”队列中
       prev->type = TCP_PORT;
@@ -270,12 +281,12 @@ accept:
     }
     goto poll;
     
-  case TIMER_EVENT: //由add timer来构建这个event。
-    if(read (pe->fd, &value, 8) <= 0){
+  case TIMER_EVENT: //由 add timer 来构建这个 event。
+    if(read (pe->fd, &value, 8) <= 0){  //应该是读取到这个时间的值。
       printf("failed to read file\n");
     } //value的长度是64bit。定时器timer的数据长度是64bit吗？
     if (pe->id == TCP_TIMEOUT)
-      *any = tcp_expired ();  //超时了，比如无法连接上，则关闭该连接
+      *any = tcp_expired ();  //超时了，比如无法连接上，则关闭该连接并且返回这个超时的socket对象？？
     return pe->id;  //除了TCP_TIMEOUT之外的情况，正常返回
   }
   return pe->type;

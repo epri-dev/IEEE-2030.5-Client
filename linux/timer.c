@@ -99,17 +99,18 @@ CLOCK_MONOTONIC:以固定的速率运行，从不进行调整和复位 , 它不�
 返回值：timerfd（文件描述符）
 */
 
+/*函数作用：增加一个timer对象。id值在这个应用中只设置过 TCP_TIMEOUT */
 Timer *add_timer (int id) {
   Timer *timer = malloc (sizeof (Timer));
   timer->pe.type = TIMER_EVENT;
-  timer->pe.id = id;
+  timer->pe.id = id;  //Timer id
   timer->pe.fd = timerfd_create (CLOCK_MONOTONIC, 0); //file handle 看起来是在系统中构建了一个独立的进程用于实现timer
   timer->pe.end = 1;
   event_add (timer->pe.fd, timer);  //将这个timer跟Event相互关联起来，通过查询Event可以判定timer是否溢出。
   return timer;
 }
 
-//创建一个定时器
+//创建一个定时器。这个函数仅仅作为一个库函数提供，在这个工程中没有用到。
 Timer *new_timer (int id, int timeout) {
   Timer *timer = add_timer (id);
   set_timer (timer, timeout);

@@ -62,7 +62,7 @@ int accepted (TcpPort *p, Acceptor *a) {
 
   //如果连接
   if (p->pe.socket == -1) {
-    a->pe.end = 1;
+    a->pe.end = 1;  //表示这个事件已经完结？
     return 0;
   }
   p->pe.status = Connected;
@@ -178,7 +178,7 @@ void net_close (void *port) {
   case TCP_PORT:
     pe->status = Closed;
     pe->type = TCP_CLOSED;
-    pe->end = 1;
+    pe->end = 1;  //表示这个事件已经“完结”？
     close (pe->socket);
     clear_timeout (pe);
     queue_add (&_active, pe);
@@ -211,7 +211,7 @@ int net_read (void *port, char *buffer, int size) {
     n = read (p->pe.socket, buffer, size);
     if (n == 0) net_close (p);
   }
-  p->pe.end = n <= 0;
+  p->pe.end = n <= 0; /*如果n，即读取到的字节个数是0或者出现错误，则表示没有更多的数据可以读取了，end置1表示事件结束。*/
   return n;
 }
 

@@ -666,7 +666,7 @@ int main (int argc, char **argv) {
         // else process_notifications (any, test_dep);
       }
       break;
-    case TCP_TIMEOUT:
+    case TCP_TIMEOUT: //连接不上对方服务器，这仅仅是清理现场并且给出一个提示。
       cleanup_http (any);
       printf ("Connection timed out\n");
       return 0;

@@ -41,10 +41,10 @@ int client_poll (void **any, int timeout) {
 top:
   if (s = service_next (s)) { //看起来像是在已经获取到的一堆数据中，检索下一个有用的 Service 。
     *any = s; //Returns SERVICE_FOUND with a pointer to a Service as the event object
-    return SERVICE_FOUND; //发现了一个新服务
+    return SERVICE_FOUND; //通过 DNSSD 发现了一个新服务
   }
 
-  /*我的注解：看起来作为client，仅仅关注下面这三种Event类型*/
+  /* 我的注解：看起来作为client，仅仅关注下面这三种Event类型 */
   switch (event = event_poll (any, timeout)) {
   case TCP_CONNECT:
     return TCP_PORT;

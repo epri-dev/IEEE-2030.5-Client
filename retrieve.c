@@ -94,15 +94,16 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
     这个宏定义提供了一个很方便的方法来检索到一个子级资源，利用了在链接子层资源中的“naming pattern”优势。
     
     @param conn is a pointer to an SeConnection
-    @param obj is a pointer to an IEEE 2030.5 object
-    @param type is the type name of the subordinate resource 统一定义的一个值
+    @param obj is a pointer to an IEEE 2030.5 object 一个IEEE对象
+    @param type is the type name of the subordinate resource 统一定义的一个值。这里指的是上面的obj对象中的其中的一个资源 (Resource) 。
     @returns a pointer to the Stub for the resource if the link exists,
     NULL otherwise
 
-    SE_##type 最后构成了一个宏定义。在se_types.h这个文件中定义了全部相关的资源的名称。
+    SE_##type 最后构成了一个宏定义。在 se_types.h 这个文件中定义了全部相关的资源的名称。
     比如SE_Reading。
 
-    这个宏定义名称get_root的意思就是获取到这个资源的的原始数据??
+    这个宏的意思是，获取到包含在 obj 对象中的type类型资源，比如 dcap 中的 Time 资源。在获取之前，将首先判断一下这个资源链接是否存在。
+    
 */
 #define get_root(conn, obj, type)				\
   (se_exists (obj, type##Link)?					\
@@ -111,7 +112,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 
 /** @brief Get a subordinate %List resource given a parent object.
 
-    在给出了一个父级的对象后，获取到一个下层的List资源。
+    在给出了一个父级的对象后，获取到一个下层的List资源。跟上面的get_root不同，这里是带有“List的资源”
     
     The same as @ref get_root but for subordinate %List resources. Links to
     %List resources include the "all" parameter, this indicates the number of
@@ -119,6 +120,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
     the HTTP GET request.
     
     通过提供在GET请求中的all参数，可以获取到一个list中的全部资源。
+    
     @param conn is a pointer to an SeConnection
     @param obj is a pointer to an IEEE 2030.5 object
     @param type is the type name of the subordinate resource
@@ -331,7 +333,7 @@ void dep_complete (Stub *s) {
   foreach (l, s->deps) {
     Stub *d = l->data;
     int complete = 0;
-    if (d->base.info) {
+    if (d->base.info) { //之前在新建这个Resource的时候，已经找过了。
       d->reqs = insert_stub (d->reqs, s, d->base.info);
       complete = list_length (d->reqs) == d->all;
     } else {

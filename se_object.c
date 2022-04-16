@@ -17,8 +17,8 @@
 void mrid_gen (uint8_t *mrid);
 
 typedef struct {
-  unsigned short offset;
-  short type;
+  unsigned short offset;  //表示从来做比较值，在Key所在的对象中的偏移量。通过这偏移量和下面的type信息，就可以知道用来比较的这个数据的真实大小，以便用来比较。
+  short type; //用来比较的值的类型，其值是 XsType 类型中定义的值
 } Key;
 
 typedef struct {
@@ -26,15 +26,15 @@ typedef struct {
   unsigned short base;  //这个什么含义不是很清楚？？
   unsigned short offset;//List元素在其所从属的上级数据结构中的地址偏移量。
   unsigned short type;  //为每一个Resource定义的一个唯一的id。在se_types.h中定义。
-  Key key[3]; //？？？ 不清楚什么意思
+  Key key[3]; //在插入到List的时候，需要排序，此时需要一个用来比较两个元素之间“大小”的依据。这个Key就是用来设定依据的，比如“开始时间”,mRID等具备可比较性的变量。
 } ListInfo;
 
-/** @brief Get the list field of a IEEE 2030.5 list type object
-    @param obj is a pointer to an IEEE 2030.5 list type object
-    @param info is a pointer to the ListInfo for the list type
-    @returns a pointer to the list field of the object
+/** @brief Get the list field of a IEEE 2030.5 list type object 获取IEEE 2030.5 “列表类型对象”的“列表”域
+    @param obj is a pointer to an IEEE 2030.5 list type object 
+    @param info is a pointer to the ListInfo for the list type    info 是一个对于list类型的指向ListInfo的指针
+    @returns a pointer to the list field of the object    返回这个对象中的list域（数据）
 */
-#define se_list_field(obj, info) (List **)((obj)+(info)->offset)
+#define se_list_field(obj, info) (List **)((obj)+(info)->offset)  //在某一个IEEE对象中的List类型数据，在这个IEEE对象中的offset值。该值
 
 /** @brief Is an IEEE 2030.5 object type derived from a base type?
 
@@ -169,9 +169,9 @@ ListInfo *find_list_info (unsigned short type);
 */
 int compare_keys (void *a, void *b, ListInfo *info);
 
-/** @brief Insert an IEEE 2030.5 object into a sorted list.
+/** @brief Insert an IEEE 2030.5 object into a sorted list. 在一个经过排序的list中插入一个IEEE 2030.5对象。
 
-    Comparison is based upon the ListInfo given.
+    Comparison is based upon the ListInfo given. 基于已经提供的ListInfo数据来比较。
     @param list is a list of objects of a uniform type given by info->type
     @param n is a pointer to the List container of the object to be inserted.
     @param info is a pointer to the ListInfo upon which the comparison is made.
@@ -240,12 +240,12 @@ cmp   比较两个元素的函数，定义比较规则。需要注意的是，�
 
 */
 
-//这个函数的作用是通过type值，就是一个Resource值来找到对应的ListInfo结构体。
+//这个函数的作用是通过type值，就是一个 Resource 值来找到对应的ListInfo结构体。
 ListInfo *find_list_info (unsigned short type) {
   return bsearch (&type, se_list_info, SE_LIST_LENGTH, sizeof (ListInfo), compare_ids);
 }
 
-/*比较两个数字中的某一个bit位大小。*/
+/*比较两个数字数组的大小，从最低字节开始比较*/
 int compare_binary (uint8_t *a, uint8_t *b, int n) {
   while (n--) {
     if (a[n] < b[n]) return -1;
@@ -257,16 +257,16 @@ int compare_binary (uint8_t *a, uint8_t *b, int n) {
 #define compare_uint(a, b, type) \
   (*(type)a < *(type)b)? -1 : (*(type)a - *(type)b)
 
-//a/b是两个指向数据的地址指针
+//a/b是两个指向数据的地址指针。这个函数被compare_keys函数所调用。以参数key作为比较的“依据”，来比较两个对象的“大小”，比如字符串的大小，二进制串的大小等情况
 int compare_key (void *a, void *b, Key *key) {
   int type, n;
-  if (key->type < 0) {  //表示负数？
+  if (key->type < 0) {  //表示负数？ 查看se_list_info这个数组，发现确实有在type前面加上了一个 “负号” 的情况。
     void *t = a;
     a = b;
-    b = t;
+    b = t;  //如果类型是负数，则要求a b互换位置。
     type = -key->type;
   } else type = key->type;
-  n = type >> 4;  //字节数
+  n = type >> 4;  //字节数？
   type &= 0xf;
   a += key->offset;
   b += key->offset;
@@ -296,18 +296,19 @@ int compare_key (void *a, void *b, Key *key) {
   return -1;
 }
 
+/* 比较两个ListInfo值。比较的时候，以事先设定好的 "Key" 参数作为比较的 "比较凭据" */
 int compare_keys (void *a, void *b, ListInfo *info) {
   Key *key = info->key;
-  int i = 0, ret;
-  while (i < 3 && key->type) {
-    if (ret = compare_key (a, b, key)) return ret;
+  int i = 0, ret; //在C中，false的值为0，而非0的值为true。非零包含小数。所以这里即使type的值有负数的情况，也能进入到下面的比较环节。
+  while (i < 3 && key->type) {//只要type的值为非0，即大于0或者小于0都能进入比较。针对se_list.c文件中的 se_list_info 数组，Key[3]部分不都是填满的。没有填充的，type的值自然是0。
+    if (ret = compare_key (a, b, key)) return ret;  //比较出来大小后就返回，比较是相等的就继续。也就是说如果Key相等则继续用下一个Key来比较，遇到不想等的则返回。
     i++;
     key++;
   }
-  return ret;
+  return ret; //也可能返回一个相等的值
 }
 
-//以排序后的顺序来插入一个新的 ListInfo 元素。
+//以排序后的顺序来插入一个新的 ListInfo 元素。这里应该是升序排列的。
 void *insert_se_object (List *list, List *n, ListInfo *info) {
   List *prev = NULL, *l = list;
   while (l && (compare_keys (n->data, l->data, info) > 0))

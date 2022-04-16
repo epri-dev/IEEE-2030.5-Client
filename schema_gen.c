@@ -12,6 +12,12 @@
 #include "schema.c"
 #include "list_util.c"
 
+
+
+/*
+说明：
+这里的代码将编译成一个工具。这个工具用来生成se_schema.c、se_types.h和se_types_doc.h这三个文件。这三个文件又是用来提供给主程序。
+*/
 typedef struct _Flag {
   struct _Flag *next;
   char *name;
@@ -27,9 +33,7 @@ typedef struct {
   int prim;
 } Field;
 
-enum ParticleType {PartElement, PartAll, PartChoice, PartSequence,
-                   PartGroup, PartAny
-                  };
+enum ParticleType {PartElement, PartAll, PartChoice, PartSequence, PartGroup, PartAny };
 
 typedef struct _Particle {
   struct _Particle *next;

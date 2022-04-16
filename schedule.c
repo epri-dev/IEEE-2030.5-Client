@@ -329,7 +329,7 @@ void insert_active (Schedule *s, EventBlock *eb) {
 /*通过mRID来获取到某一个 EventBlock */
 EventBlock *get_block (Schedule *s, void *event) {
   SE_Event_t *ev = resource_data (event);
-  return hash_get (s->blocks, ev->mRID);
+  return hash_get (s->blocks, ev->mRID); //根据Event的mRID值来获取到这个 event 的数据。
 }
 
 /*
@@ -367,6 +367,7 @@ void remove_block (Schedule *s, EventBlock *eb) {
   }
 }
 
+//移除一个 EventBlock
 void remove_blocks (Stub *event, int response) {
   List *l;
   int status = event_status (event);

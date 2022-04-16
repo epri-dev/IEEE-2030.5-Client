@@ -10,23 +10,23 @@
 
 /** Parsed URI representation */
 typedef struct {
-  char *scheme; ///< is the URI scheme:HTTP or HTTPS
-  char *name; ///< is the host name (if any)
-  char *end; ///< is a pointer to the end of the host name
-  char *path; ///< is the URI path
-  char *query; ///< is the URI query
-  Address *host; ///< is pointer to the URI host
-  int port; ///< is the URI port
+  char *scheme; ///< is the URI scheme:HTTP or HTTPS  HTTP方案，是HTTP或者是HTTPS。
+  char *name; ///< is the host name (if any)  主机名
+  char *end; ///< is a pointer to the end of the host name 主机名的结尾
+  char *path; ///< is the URI path  文件路径
+  char *query; ///< is the URI query 查询字符
+  Address *host; ///< is pointer to the URI host 主机的端口和地址的数字形式
+  int port; ///< is the URI port    服务器端口
 } Uri;
 
-/** A buffered URI (abstract type) 这里未定义后面的buffer数组长度*/
+/** A buffered URI (abstract type 抽象类型) 这里未定义后面的buffer数组长度*/
 typedef struct {
   Uri uri;
   Address host;
-  char buffer[];
+  char buffer[];  //这里的buffer不占用空间。这个是个柔性数组。可参考 https://www.zhihu.com/question/51784236 。
 } UriBuffered;
 
-/** A buffered URI instance type 定义了实际的数据长度，跟上面的UriBuffered实体 */
+/** A buffered URI instance type 定义了实际的数据长度 ， 跟上面的 UriBuffered 实体 */
 typedef struct {
   Uri uri;
   Address host;

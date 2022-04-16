@@ -102,7 +102,7 @@ int main () {
       break;
     case 5:
       switch (event) {
-      case TCP_TIMEOUT:
+      case TCP_TIMEOUT: //无法连接到对方服务器
         printf ("  TCP_TIMEOUT: connect timed out\n");
         net_close (client);
         printf ("\ntest 5 - client connect blocked\n");

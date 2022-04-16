@@ -26,12 +26,14 @@ int64_t se_time ();
 
 int se_time_offset = 0;
 
+//设定SE指定的本地时间，跟系统本地时间区分开来。
 void set_time (SE_Time_t *tm) {
   se_time_offset = tm->currentTime - time (NULL);
   set_timezone (tm->tzOffset, tm->dstOffset,
                 tm->dstStartTime, tm->dstEndTime);
 }
 
+/*返回当前的SE时间*/
 int64_t se_time () {
   return time (NULL) + se_time_offset;
 }

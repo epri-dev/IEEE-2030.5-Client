@@ -1,10 +1,10 @@
 // Copyright (c) 2018 Electric Power Research Institute, Inc.
 // author: Mark Slicker <mark.slicker@gmail.com>
 
-/** @defgroup se_discover IEEE 2030.5 Service Discovery
+/** @defgroup se_discover IEEE 2030.5 Service Discovery         IEEE 2030.5 服务发现
     @ingroup dnssd_client
 
-    Provides an implementation of IEEE 2030.5 Service Discovery.
+    Provides an implementation of IEEE 2030.5 Service Discovery. 提供了IEEE 2030.5
     @{
 */
 
@@ -30,11 +30,11 @@ enum SeServerFlag {
     "msg", "ppy", "rsps", "tp", "tm", "upt", "edev", "mup", "sdev", or
     "smartenergy"
     @returns one of the values of SeServerFlag corresponding with the subquery
-    name.
+    name. 返回SeServerFlag的其中一个，对应着subquery名字。
 */
 int se_subquery (char *name);
 
-/** @brief Send a DNS-SD query for the indicated servers.
+/** @brief Send a DNS-SD query for the indicated servers. 
     @param server is a an bitwise OR (|) list of SeServerFlag values.
     @param qu is the value of the QU bit, 1 requests that the server send a
     unicast response, 0 requests that a server send a multicast response

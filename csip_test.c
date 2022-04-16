@@ -7,9 +7,9 @@
 void dcap (Stub *r) {
   SE_DeviceCapability_t *dcap = resource_data (r);
   if (!se_exists (dcap, EndDeviceListLink)) return;
-  get_root (r->conn, dcap, Time);
-  get_list_root (r->conn, dcap, EndDeviceList);
-  get_list_root (r->conn, dcap, MirrorUsagePointList);
+  get_root (r->conn, dcap, Time); //获取到 dcap 中的 Time 资源
+  get_list_root (r->conn, dcap, EndDeviceList); //获取到 dcap 中的 EndDeviceList 资源。
+  get_list_root (r->conn, dcap, MirrorUsagePointList);  //获取到 dcap 中的 MirrorUsagePointList
 }
 
 void edev (Stub *d) {

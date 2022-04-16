@@ -31,7 +31,7 @@ enum EventType {
   SYSTEM_EVENT, //< A place holder for system events  
   UDP_PORT = 16, ///< A UdpPort with data to be read. 一个可以有数据读取的UDP端口
   TCP_PORT, ///< A TcpPort with data to be read. 一个还有数据可以读取的端口（针对客户端），或者说在这个端口上有数据可以读取
-  TCP_CONNECT, ///< A newly connected TcpPort 一个新的连接上了的端口（针对客户端）
+  TCP_CONNECT, ///< A newly connected TcpPort 一个新的连接建立（针对客户端）
   TCP_ACCEPT, ///< A newly accepted TcpPort 一个新的被ACCEPT的TCP端口（这个好像针对服务器来说的）
   TCP_CLOSED, ///< A TcpPort that was closed.
   TCP_TIMEOUT, ///< A TcpPort that timed out  

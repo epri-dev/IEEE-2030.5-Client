@@ -7,7 +7,8 @@ typedef struct {
   unsigned short base;  //这个什么含义不是很清楚？？
   unsigned short offset;//List元素在其所从属的上级数据结构中的地址偏移量。
   unsigned short type;  //为每一个Resource定义的一个唯一的id。在se_types.h中定义。
-  Key key[3]; //？？？ 不清楚什么意思
+  Key key[3];           //在插入到List的时候，需要排序，此时需要一个用来比较两个元素之间“大小”的依据。
+  //这个Key就是用来设定依据的，比如“开始时间”,mRID等具备可比较性的变量。
 } ListInfo;
 
 

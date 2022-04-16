@@ -140,7 +140,7 @@ int bsd_listen (Address *address) {
 }
 
 
-//判断socket连接是否有问题？？
+//判断socket是否连接上了？
 int bsd_connected (int socket) {
   int error;
   socklen_t n = sizeof (int);
