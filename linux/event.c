@@ -170,6 +170,8 @@ int main()
 }
 */
 
+
+/*主要轮询网络中是否有新的数据，以及Timer定时是否到了。*/
 int event_poll (void **any, int timeout) {
   PollEvent *pe;
   TcpPort *p;
@@ -180,7 +182,7 @@ int event_poll (void **any, int timeout) {
   
   int event;
 
-  static PollEvent *prev = NULL;  //注意这里是一个静态变量。表示的是上一次获取到的PollEvent。
+  static PollEvent *prev = NULL;  //注意这里是一个静态变量。表示的是上一次获取到的 PollEvent 。
   
   if (prev) { //如果这个事件未完结（event_done == false），则继续添加到_active队列，表示这个事件对象上将继续会有数据变动发生。
     if (!event_done (prev)) queue_add (&_active, prev); //往当前活动的_active的queue中添加prev，prev与本函数中后面的代码的执行有关。
@@ -195,8 +197,8 @@ poll:
       case TCP_ACCEPTOR:  //通过查询TCP_ACCEPTOR关键词发现，整个工程中只有 net_listen 函数应用了 TCP_ACCEPTOR 这个类型，应该是面向服务器端的情况
         goto accept;
       case TCP_ACCEPT:  //只有在net_accept函数中才会返回这个值。所以估计是面向服务器的情况。
-      case TCP_CONNECT: //最底层的是在 net_connect 函数中返回，应该是刚刚连接上了一个服务器，然后
-        pe->type = TCP_PORT;  //对于服务器端或者客户端连接上了服务器，都统一以TCP_PORT论。
+      case TCP_CONNECT: //最底层的是在 net_connect 函数中返回，应该是刚刚连接上了一个服务器，然后event type就转换成了TCP_PORT，这样一旦这个端口上有数据活动，则将触发事件。
+        pe->type = TCP_PORT;  //对于服务器端或者客户端连接上了服务器，都统一以TCP_PORT论。且下次在调用这个函数的时候，prev 将被加入到 _active 中去。
       case TCP_PORT:    //
       case UDP_PORT:
         prev = pe;  //注意这里都没break，所以统一保存最后一个获得的pe到prev中。
@@ -223,25 +225,26 @@ retry:
     n = epoll_wait(poll_fd, events, MAX_EVENTS, timeout);
     
     i = 0;
-    if (n < 0) goto retry;    //perror ("event_poll");  //如果没有事件发生，则循环等待
+    if (n < 0) goto retry;    //perror ("event_poll");  //如果发生了错误，则继续等待。由于epoll_wait是阻塞模式运行所以不造成线程过于繁忙。
     if (n == 0) return POLL_TIMEOUT;  //如果返回是0，则表示超时。即没有事件发生。
   }
 
 
-  /* 如果发生了事件... */
+  /* 如果发生了事件，则依次处理该事件。每次处理一个事件，直到全部处理完毕。 */
   event = events[i].events;
-  *any = pe = events[i].data.ptr; //用户数据。
-  i++;  //每次处理一次，就加1，直到i==n，则i又从0开始。下面是处理事件的具体过程。
+  *any = pe = events[i].data.ptr; //events[i].data.ptr保存的是之前添加事件的时候的 “用户数据” 。
+  i++;  //每次处理一次，就加1，直到i==n，则i又从0开始。 下面是处理事件的具体过程。
   
   // printf ("event_poll %x %p %d\n", event, pe, pe->type);
   switch (pe->type) {
-  case TCP_CONNECT: //面向客户端连接上了服务器这个事件。
+  case TCP_CONNECT: // 面向客户端连接上了服务器这个事件。
     p = *any;
     /* EPOLLOUT：表示对应的文件描述符可以写；*/
     if (event & EPOLLOUT && bsd_connected (pe->socket)) {
       clear_timeout (pe);
       pe->status = Connected;
-      pe->type = TCP_PORT;  //连接上之后，type的值转换成 TCP_PORT 。后面的case就是针对这个TCP_PORT进行处理。
+      //后面的case就是针对这个TCP_PORT进行处理。对于一次HTTP传输事务，可能TCP_PORT的事件会发生多次，直到pe中的end元素的值变成1才停止。
+      pe->type = TCP_PORT;  //连接上之后，type的值转换成 TCP_PORT 。
       prev = pe;
       return TCP_CONNECT;
     }
@@ -274,7 +277,7 @@ retry:
 accept: //暂时可以不用关注这个
   case TCP_ACCEPTOR:  //这个状态，只有在net_listen函数中返回，所以应该是面向于服务器程序的。
     if (prev = accept_queued (pe)) {
-      queue_add (&_active, pe); //放到“活动的_active”队列中
+      queue_add (&_active, pe);   //放到“活动的_active”队列中
       prev->type = TCP_PORT;
       *any = prev;
       return TCP_ACCEPT;

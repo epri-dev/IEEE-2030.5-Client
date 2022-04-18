@@ -178,7 +178,7 @@ void net_close (void *port) {
   case TCP_PORT:
     pe->status = Closed;
     pe->type = TCP_CLOSED;
-    pe->end = 1;  //表示这个事件已经“完结”？
+    pe->end = 1;  //网络断开，设置成1表示该事件不会有后续的再发生的可能了。对于HTTP传输来说，就是不会再有新的数据了。
     close (pe->socket);
     clear_timeout (pe);
     queue_add (&_active, pe);

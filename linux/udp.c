@@ -12,7 +12,7 @@ char *net_receive (UdpPort *p, int *length) {
   p->source.length = sizeof (Address);
   *length = recvfrom (p->pe.socket, p->buffer, p->size, 0,
                       (struct sockaddr *)&p->source, &p->source.length);
-  p->pe.end = *length < 0;  //表示不会再有输入？
+  p->pe.end = *length < 0;  //如果recvfrom返回的值小于0，则end将设置成1，表示不会再有数据输入了。
   // printf ("udp_read %d\n", n); fflush (stdout);
   return *length < 0 ? NULL : p->buffer;
 }

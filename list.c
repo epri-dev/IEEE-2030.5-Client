@@ -4,6 +4,9 @@
 /** @defgroup list List
 
     Provides a linked List structure with associated functions.
+
+    相比于本代码例子中的Queue组件，List的特征是提供了更加灵活的操作，比如插入、删除指定的任意节点等功能。
+    
     @{
 */
 
@@ -156,7 +159,7 @@ List *list_delete (List *l, void *data) {
     else l = d->next;
     free (d);
   }
-  return l;
+  return l; //移除特定节点之后，返回修改之后的 List 对象
 }
 
 //减去重复的节点

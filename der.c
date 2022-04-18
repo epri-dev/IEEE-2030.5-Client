@@ -25,8 +25,8 @@ Included with `der_client.c` is the module `der.c` that provides:
 */
 
 #define DEVICE_SCHEDULE (EVENT_NEW+11)
-#define DEVICE_METERING (EVENT_NEW+12)
-#define DEFAULT_CONTROL (EVENT_NEW+13)
+#define DEVICE_METERING (EVENT_NEW+12)  //读取设备数据并且上传
+#define DEFAULT_CONTROL (EVENT_NEW+13)  //
 
 #include "settings.c"
 
@@ -85,7 +85,7 @@ void *device_key (void *data) {
 //以64bit的sfdi作为key的哈希表中的寻找响应的资源
 global_hash (device, int64, 64) 
 
-//通过对 sfdi 作哈希运算快速的得到设备数据指针
+//通过对 sfdi 作哈希运算快速的得到设备数据指针。如果这个设备不存在，那么就新建一个。
 DerDevice *get_device (uint64_t sfdi) {
   DerDevice *d = find_device (&sfdi);
   if (!d) {

@@ -99,7 +99,7 @@ int der_poll (void **any, int timeout) {
       update_resource (*any); //访问网络，获取数据。
       break;
 
-    case RESOURCE_REMOVE:
+    case RESOURCE_REMOVE: //  异步调用该功能：在服务器上移除一个资源。
       if (se_event (resource_type (*any)))  //如果是一个event类型的资源
         delete_blocks (*any); //
     case RETRIEVE_FAIL:
@@ -109,12 +109,12 @@ int der_poll (void **any, int timeout) {
       return event;
     }
   }
-  return client_poll (any, timeout);  //定时器查询、dnssd查阅、网络层面数据活动查阅
+  return client_poll (any, timeout);  //定时器查询、dnssd查阅、网络层面数据活动查阅。这个client意思是dnssd的client。
 }
 
 
 void der_init () {
   device_init ();   //  初始化 设备哈希表
   resource_init (); //  同样的，构建resource哈希表资源
-  event_init ();
+  event_init ();  //初始化Event Timer，这Event指的是SE中的Event资源。
 }

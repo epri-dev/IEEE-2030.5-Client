@@ -54,14 +54,14 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   unsigned complete : 1; ///< marks the Stub as complete  表示这个stub已近查询( retrieve ) 或者填充完毕了。包含子级的Stub数据。
   unsigned subscribed : 1;
   //下面两个flag数据的用法，详见 new_dep 这个函数 
-  uint32_t flag; ///< is the marker for this resource in its dependents 对于一个子级资源（Stub）来说，这个flag表示的是自己的一个特定标志。
+  uint32_t flag; ///< is the marker for this resource in its dependents 对于一个子级资源（Stub）来说，这个flag表示的是自己是否存在的一个特定标志。
   uint32_t flags; ///< is a bitwise requirements checklist 一个bit位表示的对下级资源的“需求”表示，置位则表示有需求。
   uint32_t offset; ///< is the offset used for list paging 对于List类型的数据元素来说，offset表示本Stub在整个List中的序号
   uint32_t all; ///< is the total number of list items  List的总量
-  struct _Stub *moved; ///< is a pointer to the new resource
+  struct _Stub *moved; ///< is a pointer to the new resource 这个moved是什么意思？？
   List *list; ///< is a list of old requirements for updates
-  List *deps; ///< is a list of dependencies 依赖？存储的是一个个Stub内容单元，表示的是以本Stub为依赖对象的子层级的Stub。
-  List *reqs; ///< is a list of requirements 要求？
+  List *deps; ///< is a list of dependencies 依赖？存储的是一个个Stub内容单元，表示的是以本Stub为依赖对象的子层级的Stub。应该是父级对象。
+  List *reqs; ///< is a list of requirements 需求：就是子级对象
   union {
     void *context; ///< is a user defined completion context
     List *schedules; //< is a list of schedules for event resources 
@@ -246,12 +246,13 @@ void remove_reqs (Stub *s, List *reqs) {
   free_list (reqs);
 }
 
+//这个不知道什么意思
 void remove_deps (Stub *s, List *deps) {
   List *l;
   foreach (l, deps) {
     Stub *t = l->data;
     if (t->status < 0)
-      t->list = list_delete (t->list, s);
+      t->list = list_delete (t->list, s); //  移除掉这个 Stub
     else t->reqs = list_delete (t->reqs, s);
   }
   free_list (deps);
@@ -282,6 +283,8 @@ void *get_stub (char *name, int type, void *conn) {
   return s; //无论在哈希表中找到没有，都返回找个对象
 }
 
+
+//将一个Stub下面的所有的Request全部移除掉
 void delete_reqs (Stub *s) {
   remove_reqs (s, s->reqs);
   remove_reqs (s, s->list);
@@ -324,22 +327,22 @@ void delete_stub (Stub *s) {
   set_request_context (s->conn, s);
 }
 
-/**/
+/* 看起来是将一个Stub填充到其父级中去？？ */
 void dep_complete (Stub *s) {
   List *l;
   if (s->completion && !s->complete)
     s->completion (s);
   s->complete = 1;
   foreach (l, s->deps) {
-    Stub *d = l->data;
-    int complete = 0;
-    if (d->base.info) { //之前在新建这个Resource的时候，已经找过了。
-      d->reqs = insert_stub (d->reqs, s, d->base.info);
+    Stub *d = l->data;  //d这里是父级，s这里是子级。
+    int complete = 0; //0表示未完成。
+    if (d->base.info) { //如果这个父级含有List类型的数据
+      d->reqs = insert_stub (d->reqs, s, d->base.info); //将
       complete = list_length (d->reqs) == d->all;
-    } else {
+    } else {  //如果仅仅是一个单一的类型的数据
       d->reqs = insert_unique (d->reqs, s);
-      d->flags &= ~s->flag;
-      complete = !d->flags;
+      d->flags &= ~s->flag; //将父级的表示 “dep”的flags中的，用来表示“自己是否存在”的标志位清零。
+      complete = !d->flags; //如果父级中的flags有任何一个bit置位了，则 complete =0，即表示没有完成。
     }
     if (complete) {
       if (d->list) {
@@ -378,7 +381,7 @@ void update_resource (Stub *s) {
 }
 
 
-/* 获取到某一个type类型的 Stub */
+/* 查询某个 Stub 下面的子层设备的某一个type的数据 */
 void *get_subordinate (Stub *s, int type) {
   List *l;
   foreach (l, s->reqs) {
@@ -406,7 +409,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count) {
 }
 
 /*
-poll资源，主要是针对 SE_Event_t 数据 。但是看起来他并没有去做向服务器Poll的动作？？
+poll资源，主要是针对 SE_Event_t 数据 。但是看起来他并没有去做向服务器Poll的动作。这里仅仅是添加了一个事件，且建在该资源设定时间点上去查询。
 */
 
 void poll_resource (Stub *s) {
@@ -426,13 +429,14 @@ void poll_resource (Stub *s) {
   }
 }
 
+
 /*获取dcap资源*/
 Stub *get_dcap (Service *s, int secure) {
   void *conn = service_connect (s, secure);
   return get_resource (conn, SE_DeviceCapability, service_dcap (s), 0);
 }
 
-/*获取到路径*/
+/*通过之前dnsmd查询到的数据，来获取到路径*/
 Stub *get_path (Service *s, int secure) {
   void *conn;
   int type, count;
@@ -443,6 +447,7 @@ Stub *get_path (Service *s, int secure) {
   count = se_list (type) ? 255 : 0;
   return get_resource (conn, type, path, count);
 }
+
 
 void update_existing (Stub *s, void *obj, DepFunc dep) {
   Resource *r = &s->base;

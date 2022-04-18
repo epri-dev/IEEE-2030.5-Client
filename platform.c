@@ -125,6 +125,7 @@ Timer *add_timer (int type);
     @param type is the event type to be returned by event_poll
     @param timeout is the timeout in seconds
     @returns the new armed timer
+    创建一个定时器。这个函数仅仅作为一个库函数提供。在这个工程中没有用到。
 */
 Timer *new_timer (int type, int timeout);
 

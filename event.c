@@ -14,7 +14,7 @@
 
 /** @brief Insert an event into the queue.  //将一个Event放到队列中
     @param data is a pointer to the event data  //该Event数据
-    @param type is the type of the event  Event类型，由本程序自己定义
+    @param type is the type of the event  Event类型，由本程序自己定义（EVENT_NEW值之后的值）
     @param time is the time at which the event becomes active 该事件（应当，预计）发生的时间
 */
 void insert_event (void *data, int type, int64_t time);
@@ -44,8 +44,8 @@ typedef struct _Event {
   int64_t time; //（发生的？）时刻？
 } Event;
 
-Event *cur_event = NULL;  //
-Queue im_event = {0};     //（立即）Event queue
+Event *cur_event = NULL;  // 表示当前已近记录了的event，但是还没到执行时间。
+Queue im_event = {0};     //（立即）要执行的Event的Queue。
 
 //比较两个event的时间差。
 int event_compare (void *a, void *b) {
@@ -63,6 +63,9 @@ void print_events () {
   printf ("\n");
 }
 
+/* 这里的type值，取的是本代码自定义的类型，是大于 EVENT_NEW 的值，比如 SCHEDULE_UPDATE 
+这个的参数“void *data”的数据类型是不确定的（也正是这里设计成void *类型的原因），经过查看全局代码，发现可以是der类型，也可以是Stub等。
+最终通过type来确定前面的data是什么类型*/
 void insert_event (void *data, int type, int64_t time) {
   Event *e = type_alloc (Event);
   e->data = data;
@@ -94,19 +97,23 @@ void remove_event (void *data) {
 }
 
 //
-Timer *ev_timer;
+Timer *ev_timer;  //这个Timer是这个系统中除了前面_tcp_timer之外第二个Timer。用于处理 event 执行调度。
 
 
+//先查询    im_event 看看是否需要立即执行的任务，后查询cur_event，看看下一个开始时间是什么时候
 int next_event (void **any) {
   Event *e;
   int event;
   
-  //如果im_event存在哪怕一个元素，则移出，返回该事件。
+  /*
+  如果im_event存在哪怕一个元素，则移出，返回该事件。每次进入到这个函数的时候，首先执行这个 Queue 中的event。
+  等全部执行完毕了，则执行下面的cur_event。
+  */
   if (queue_peek (&im_event)) { //peek一下im_event中的首个元素，看是否存在首个元素
     e = queue_remove (&im_event); 
     event = e->type;
     *any = e->data; //取出实际有用的数据，
-    free (e); //而用于队列大event则此时无用，可以删除。
+    free (e); //而用于队列载具的event则此时无用，可以删除。
     return event;
   }
 
@@ -127,7 +134,7 @@ int next_event (void **any) {
   return EVENT_NONE;
 }
 
-
+//创建 event timer
 void event_init () {
   ev_timer = add_timer (EVENT_TIMER);
 }

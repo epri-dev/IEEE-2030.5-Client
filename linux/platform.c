@@ -22,18 +22,19 @@ typedef struct _PollEvent {
   struct _PollEvent *next;
   char type, id;        //enum EventType event的类型，由本应用程序自己定义，见EventType。id仅仅用于TIMER。
   unsigned end : 1;     //end of input 好像是表示事件已经完结，不会再有新的输入。
+  //在本代码中，end值设置成1，存在几种情况：1）HTTP连接断开。2）网络发生错误，网络关闭。3）对于Timer来说是单次发生的，所以总是1。
   unsigned status : 2;  //connection status 网络连接状态。由TcpStatus这个类型给出值。
   unsigned wait : 1;    //置1表示在等待网络中某个事件的发生。置0表示已经完成了或者超时了，已经没有再等待了。
   union {         //这个PollEvent复用于网络和Timer
-    int socket;   //socket
-    int fd;       //系统 Timer 的 file handle，不是别的file
+    int socket;   //在往系统中注册该PollEvent的时候，所关联到的网络socket
+    int fd;       //同上，系统 Timer 的 file handle，不是别的file
   };    /* 这里把socket和文件当做同一类事情 */
 } PollEvent;
 
 #define MAX_EVENTS 10 //event对象的最大 handle 值（像是一次能够返回的最大的event数量）
 #define TCP_ACCEPTOR SYSTEM_EVENT //这个事件看起来像是应用于服务器程序的
 
-int poll_fd;        //整个系统中，所有的事件 ( event ) 都用到了这个handle。
+int poll_fd;        //整个系统中，所有的事务 ( 主要是网络层的数据和定时器的数据 ) 都用到了这个handle。
 Timer *_tcp_timer;  //一个专门用于处理TCP上的超时时间的handle，仅仅包含了一个专用的Timer。每次需要设定一个定时时间的时候，都要对这个 handle 作处理。
 
 
@@ -58,8 +59,8 @@ void platform_init () {
   为了避免进程退出, 可以捕获SIGPIPE信号, 或者忽略它, 给它设置SIG_IGN信号处理函数:  
   signal(SIGPIPE, SIG_IGN);  
   这样, 第二次调用write方法时, 会返回-1, 同时errno置为SIGPIPE. 程序便能知道对端已经关闭。
-
   原文链接：https://blog.csdn.net/u013286409/article/details/45366075 */
+
   signal (SIGPIPE, SIG_IGN);
 }
 

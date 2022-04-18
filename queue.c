@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Electric Power Research Institute, Inc.
 // author: Mark Slicker <mark.slicker@gmail.com>
 
-/** @defgroup queue Queue
+/** @defgroup queue Queue 相比于本代码中的list组件，queue的特征是“先进先出”，没有“插入”操作。
     @{
 */
 
@@ -68,6 +68,8 @@ void _queue_insert (Queue *q, void *item, void *prev,
   } else q->last = q->first;
 }
 
+
+/* 这个函数在本Demo代码中从来没有用过 */
 void queue_insert (Queue *q, void *item,
                    int (*compare) (void *a, void *b)) {
   List *prev = NULL;

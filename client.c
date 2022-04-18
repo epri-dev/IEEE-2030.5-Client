@@ -34,7 +34,9 @@ void client_init (char *name, const char *cert);
 
 #ifndef HEADER_ONLY
 
-//查询dnssd返回的数据和网络层面的数据活动
+
+
+/* 查询dnssd返回的数据和网络层面的数据活动 */
 int client_poll (void **any, int timeout) {
   int event;
   static Service *s = NULL;
@@ -60,7 +62,7 @@ void client_init (char *name, const char *cert) {
     tls_init (cert, 0);
     security_init (cert);
   }
-  discover_init (name);
+  discover_init (name); //指的是dnssd功能的相关代码的初始化
 }
 
 #endif

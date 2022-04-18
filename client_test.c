@@ -46,6 +46,7 @@ void usage () {
 /*
 test记录了需要测试的内容，用bit位占位表示
 secure的值表示是否是加密了连接
+path就是dnssd参数中的/path
 */
 
 int server = 0, test = 0, secure = 0, interval = 5 * 60, primary = 0, pin = 0;
@@ -54,12 +55,12 @@ Stub *edevs;
 char *path = NULL;  //注意这里是一个全局变量
 uint64_t delete_sfdi;
 
-//要解析的指令是 <subtype[:1][/path]  |  URI> ， 可能跟msDNS功能有关
+//要解析的指令是 <subtype[:1][/path]       | URI> ， 可能跟msDNS功能有关
 int subtype_query (char *arg, char *name) {
   
   printf("arg in subtyupe_query is %s\n",arg);
 
-  char subtype[12] = {0}; //subtype就是在service_name字符串数组中的值
+  char subtype[12] = {0}; // subtype 就是在 service_name 字符串数组中的值
   int qu = 0, n;
   char *p = strchr (arg, ':'), *q = strchr (arg, '/');
   if (p) {
@@ -71,6 +72,7 @@ int subtype_query (char *arg, char *name) {
     n = p - arg;
   } else if (q) n = q - arg;
   else n = strlen (arg);
+  // n就是 subtype 这个指令参数字符串的长度
   if (n > 11) {
     printf("The n in subtype_query is more than 11,exit\n");
     return 0;
@@ -79,7 +81,7 @@ int subtype_query (char *arg, char *name) {
   
   printf("subtype in subtype_query(%d bytes):%s\n",(int)strlen(subtype),subtype);
 
-  if (server = se_subquery (subtype)) {
+  if (server = se_subquery (subtype)) {//"bill", "dr", "derp", "file", "msg", "ppy", "rsps", "tp", "tm", "upt","edev", "mup", "sdev", "smartenergy"
     printf("Selected server value is %d\n",server);
     if (!secure) client_init (name, NULL);
     se_discover (server, qu);
@@ -91,6 +93,8 @@ int subtype_query (char *arg, char *name) {
 }
 
 /* retrieval ： n. 找回，取回；（计算机系统信息的）检索；恢复，挽回 
+
+解析URI字符串，得到字符串包含的URI各个要素。
 
 */
 int uri_retrieval (char *arg) {
@@ -140,6 +144,10 @@ client_test interface [device_cert ca_certs..] <subtype[:1][/path] | URI>  [comm
 
 ./build/client_test eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 edev
 
+测试edev
+./build/client_test eth0 http://192.168.1.13:8088/dcap edev
+
+
 */
 void options (int argc, char **argv) {
   int i = 2, index;
@@ -158,11 +166,12 @@ void options (int argc, char **argv) {
   // process certificates and base query
   while (i < argc) { //前面i的值是2，所以从[device_cert ca_certs..] 开始检查参数
     DerDevice *d;
+    
     /*这里的意思是，选择其中一种方式来获取到数据，对应到前面的 <subtype[:1][/path] | URI> 这个参数项。
     尖括号表示"必须的选项"的意思，"|"表示“或”的意思。
     */
     if (subtype_query (argv[i], name)	|| uri_retrieval (argv[i])) { //获取到参数中所标注的这些资源
-      i++; break;
+      i++; break; //如果参数中的存在这两项中的一项，解析下一个参数。
     } else if (!secure) { //应该是 [device_cert ca_certs...] 部分参数
       client_init (name, argv[i]);  //初始化有关加密和dnssd相关功能
       secure = 1;
@@ -174,8 +183,9 @@ void options (int argc, char **argv) {
       exit (0);
     }
     i++;
-  }
 
+
+  //这里看起来是要求使用证书文件
   if (!secure) {
     printf ("options: warning, no device certificate specified, "
             "TLS library will be uninitialized\n");
@@ -184,7 +194,8 @@ void options (int argc, char **argv) {
     load_cert_dir ("certs");
   }
 
-  // process tests，应该是指令中的[commands]部分。
+
+  // process tests，应该是指令中的[commands]部分。这一段是直接操作
   while (i < argc) {
     uint64_t sfdi;
     const char *const commands[] = {
@@ -192,16 +203,16 @@ void options (int argc, char **argv) {
       "self", "subscribe", "metering", "meter", "alarm", "poll", "load",
       "device", "delete", "inverter"
     };
-    switch (string_index (argv[i], commands, 18)) {
+    switch (string_index (argv[i], commands, 18)) { // 返回跟 command 相对应的一个字符串 。
     case 0: // sfdi，这项参数是必须要加上的
-      if (++i == argc || !number64 (&device_sfdi, argv[i])) {
+      if (++i == argc || !number64 (&device_sfdi, argv[i])) { //格式必须是 sfdi xxxxxx（sfdi值）
         printf ("sfdi command expects number argument\n");
         exit (0);
       }
       break;
     case 1: // edev
       test |= GET_EDEV | GET_FSA;
-      primary = 1;
+      primary = 1;  //主要的？？
       break;
     case 2: // fsa
       test |= (GET_ALL ^ GET_DERC) | REGISTER_TEST;
@@ -313,6 +324,7 @@ void alarm_dep (Stub *r) {
   generic_alarm (r->deps->data);
 }
 
+/*上传一个DER设备的设置参数*/
 void put_der_settings (void *conn, Settings *ds, SE_DER_t *der) {
   link_put (conn, der, ds->dera, DERAvailability);
   link_put (conn, der, ds->dercap, DERCapability);
@@ -320,6 +332,7 @@ void put_der_settings (void *conn, Settings *ds, SE_DER_t *der) {
   link_put (conn, der, ds->ders, DERStatus);
 }
 
+/*作为edev的 completion 函数*/
 void edev_complete (Stub *r) {
   Stub *s, *t;
   SE_EndDevice_t *edev = resource_data (r);
@@ -417,6 +430,7 @@ void fsa_list (Stub *r) {
   foreach (l, r->reqs) if (fsa (l->data)) break;
 }
 
+//
 void get_edev_subs (Stub *edevs) {
   List *l;
   if (test & REGISTER_TEST) return; // wait for registration
@@ -467,6 +481,7 @@ void end_device (Stub *r) {
   }
 }
 
+/* 作为 dcap 对象的 completion 函数 */
 void edev_list (Stub *r) {
   edevs = r;
   if (test & DELETE_DEVICE) {
@@ -604,6 +619,8 @@ void self_device (Stub *r) {
   poll_resource (r);
 }
 
+
+/*这里相当于列举出了各个重要的于服务器交互的内容*/
 void test_dep (Stub *r) {
   switch (resource_type (r)) {
   case SE_Time:
@@ -640,7 +657,7 @@ void test_dep (Stub *r) {
 
 int main (int argc, char **argv) {
   Service *s;
-  void *any;
+  void *any;  //这个any是一个void类型的指针，即意思为任意类型的数据。这些数据类型的确定，由当时新增该事件的时候的type所决定。所以此时已知晓type之后，就可以正常处理了。
   version ();
   platform_init ();
 
@@ -648,17 +665,17 @@ int main (int argc, char **argv) {
 
   while (1) {
     switch (der_poll (&any, -1)) {
-    case SERVICE_FOUND:
+    case SERVICE_FOUND: //主要针对DNSSD的
       s = any;
       print_service (s);
-      if (test) get_dcap (s, secure);
+      if (test) get_dcap (s, secure); //test中任意一个bit置位的，则必须先查询到dcap资源
       else if (path)
         get_resource (service_connect (s, secure), -1, path, 0);
       else get_path (s, secure);
       break;
-    case TCP_ACCEPT:
+    case TCP_ACCEPT:  //作为服务器来说的一个事件
       // accept_notifier (any);
-    case TCP_PORT:      //可能是连接到了服务器？
+    case TCP_PORT:      //在连接到服务器成功后，socket上一旦有活动的数据，将触发该事件。
       if (conn_session (any)) {
         http_debug (any, 1);
         // if (http_client (any))
@@ -687,7 +704,7 @@ int main (int argc, char **argv) {
       print_default_control (any);
       break;
     case DEVICE_METERING:
-      post_readings (any);
+      post_readings (any);  //上报所有设备的读取到的数据
       break;
     }
   }
