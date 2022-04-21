@@ -52,7 +52,7 @@ int event_compare (void *a, void *b) {
 void print_events () {
   Event *e = cur_event;
   printf ("print_events %d: ", list_length (e));
-  while (e) { printf ("%p %d %d, ", e->data, e->type, e->time); e = e->next; }
+  while (e) { printf ("%p %d %ld, ", e->data, e->type, e->time); e = e->next; }
   printf ("\n");
 }
 

@@ -18,8 +18,8 @@ if [[ $tls_lib == "openssl" ]]; then
 	exit 0
     fi
     version=`openssl version -a`
-    if [[ ! ($version =~ "OpenSSL 1.1.0") ]]; then
-	echo "The EPRI 2030.5 client requires OpenSSL version 1.1.0."
+    if [[ ! ($version =~ "OpenSSL 1.1.1f") ]]; then
+	echo "The EPRI 2030.5 client requires OpenSSL version 1.1.1f."
 	echo "openssl version -a"
 	echo $version
 	exit 0
