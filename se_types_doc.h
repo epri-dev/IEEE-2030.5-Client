@@ -1,6 +1,6 @@
-/** @defgroup se_types 2030.5 Types */
+/** @defgroup se_types IEEE 2030.5 Types */
 
-/** @defgroup se_typedefs Typedefs
+/** @defgroup se_typedefs Typedefs 
     @ingroup se_types */
 
 /** @defgroup UInt48 UInt48
@@ -315,9 +315,9 @@
 
     65 = CosTheta (Displacement Power Factor)
 
-    67 = V2 (Volts squared)
+    67 = V² (Volts squared)
 
-    69 = A2 (Amp squared)
+    69 = A² (Amp squared)
 
     71 = VAh (Apparent energy)
 
@@ -385,9 +385,9 @@
 
     65 = CosTheta (Displacement Power Factor)
 
-    67 = V2 (Volts squared)
+    67 = V² (Volts squared)
 
-    69 = A2 (Amp squared)
+    69 = A² (Amp squared)
 
     71 = VAh (Apparent energy)
 
@@ -530,17 +530,17 @@
 
     4 = DeltaData
 
-    The difference between the value at the end of the prescribed interval and the beginning of the interval. This is used for incremental interval data.
+    The difference between the value at the end of the prescribed interval and the beginning of the interval. This is used for incremental interval data. 
 
     Note: One common application would be for load profile data, another use might be to report the number of events within an interval (such as the number of equipment energizations within the specified period of time.)
 
     6 = Indicating
 
-    As if a needle is swung out on the meter face to a value to indicate the current value. (Note: An “indicating” value is typically measured over hundreds of milliseconds or greater, or may imply a “pusher” mechanism to capture a value. Compare this to “instantaneous” which is measured over a shorter period of time.)
+    As if a needle is swung out on the meter face to a value to indicate the current value. (Note: An “indicating” value is typically measured over hundreds of milliseconds or greater, or may imply a “pusher” mechanism to capture a value. Compare this to “instantaneous” which is measured over a shorter period of time.) 
 
     9 = Summation
 
-    A form of accumulation which is selective with respect to time.
+    A form of accumulation which is selective with respect to time. 
 
     Note : “Summation” could be considered a specialization of “Bulk Quantity” according to the rules of inheritance where “Summation” selectively accumulates pulses over a timing pattern, and “BulkQuantity” accumulates pulses all of the time.
 
@@ -562,17 +562,17 @@
 
     4 = DeltaData
 
-    The difference between the value at the end of the prescribed interval and the beginning of the interval. This is used for incremental interval data.
+    The difference between the value at the end of the prescribed interval and the beginning of the interval. This is used for incremental interval data. 
 
     Note: One common application would be for load profile data, another use might be to report the number of events within an interval (such as the number of equipment energizations within the specified period of time.)
 
     6 = Indicating
 
-    As if a needle is swung out on the meter face to a value to indicate the current value. (Note: An “indicating” value is typically measured over hundreds of milliseconds or greater, or may imply a “pusher” mechanism to capture a value. Compare this to “instantaneous” which is measured over a shorter period of time.)
+    As if a needle is swung out on the meter face to a value to indicate the current value. (Note: An “indicating” value is typically measured over hundreds of milliseconds or greater, or may imply a “pusher” mechanism to capture a value. Compare this to “instantaneous” which is measured over a shorter period of time.) 
 
     9 = Summation
 
-    A form of accumulation which is selective with respect to time.
+    A form of accumulation which is selective with respect to time. 
 
     Note : “Summation” could be considered a specialization of “Bulk Quantity” according to the rules of inheritance where “Summation” selectively accumulates pulses over a timing pattern, and “BulkQuantity” accumulates pulses all of the time.
 
@@ -1014,7 +1014,7 @@
     @var SE_ReadingBase_t::qualityFlags
     List of codes indicating the quality of the reading, using specification:
 
-    Bit 0 - valid: data that has gone through all required validation checks and either passed them all or has been verified
+    Bit 0 - valid: data that has gone through all required validation checks and either passed them all or has been verified 
 
     Bit 1 - manually edited: Replaced or approved by a human
 
@@ -1024,7 +1024,7 @@
 
     Bit 4 - questionable: data that has failed one or more checks
 
-    Bit 5 - derived: data that has been calculated (using logic or mathematical operations), not necessarily measured directly
+    Bit 5 - derived: data that has been calculated (using logic or mathematical operations), not necessarily measured directly 
 
     Bit 6 - projected (forecast): data that has been calculated as a projection or forecast of future readings
 
@@ -1074,7 +1074,7 @@
     @var SE_Reading_t::qualityFlags
     List of codes indicating the quality of the reading, using specification:
 
-    Bit 0 - valid: data that has gone through all required validation checks and either passed them all or has been verified
+    Bit 0 - valid: data that has gone through all required validation checks and either passed them all or has been verified 
 
     Bit 1 - manually edited: Replaced or approved by a human
 
@@ -1084,7 +1084,7 @@
 
     Bit 4 - questionable: data that has failed one or more checks
 
-    Bit 5 - derived: data that has been calculated (using logic or mathematical operations), not necessarily measured directly
+    Bit 5 - derived: data that has been calculated (using logic or mathematical operations), not necessarily measured directly 
 
     Bit 6 - projected (forecast): data that has been calculated as a projection or forecast of future readings
 
@@ -1170,9 +1170,9 @@
 /** @defgroup mRIDType mRIDType
     @ingroup HexBinary128
 
-    A master resource identifier. The IANA PEN [PEN] provider ID SHALL be specified in bits 0-31, the least-significant bits, and objects created by that provider SHALL be assigned unique IDs with the remaining 96 bits.
+    A master resource identifier. The IANA PEN [PEN] provider ID SHALL be specified in bits 0-31, the least-significant bits, and objects created by that provider SHALL be assigned unique IDs with the remaining 96 bits. 
 
-    0xFFFFFFFFFFFFFFFFFFFFFFFF[XXXXXXXX], where [XXXXXXXX] is the PEN, is reserved for a object that is being created (e.g., a ReadingSet for the current time that is still accumulating).
+    0xFFFFFFFFFFFFFFFFFFFFFFFF[XXXXXXXX], where [XXXXXXXX] is the PEN, is reserved for a object that is being created (e.g., a ReadingSet for the current time that is still accumulating). 
 
     Except for this special reserved identifier, each modification of an object (resource) representation MUST have a different "version".
 
@@ -1180,9 +1180,9 @@
 
 /** @typedef SE_mRIDType_t
 
-    A master resource identifier. The IANA PEN [PEN] provider ID SHALL be specified in bits 0-31, the least-significant bits, and objects created by that provider SHALL be assigned unique IDs with the remaining 96 bits.
+    A master resource identifier. The IANA PEN [PEN] provider ID SHALL be specified in bits 0-31, the least-significant bits, and objects created by that provider SHALL be assigned unique IDs with the remaining 96 bits. 
 
-    0xFFFFFFFFFFFFFFFFFFFFFFFF[XXXXXXXX], where [XXXXXXXX] is the PEN, is reserved for a object that is being created (e.g., a ReadingSet for the current time that is still accumulating).
+    0xFFFFFFFFFFFFFFFFFFFFFFFF[XXXXXXXX], where [XXXXXXXX] is the PEN, is reserved for a object that is being created (e.g., a ReadingSet for the current time that is still accumulating). 
 
     Except for this special reserved identifier, each modification of an object (resource) representation MUST have a different "version".
 
@@ -1431,7 +1431,7 @@
 
     Bit 4 - isRevenueQuality - SHALL be set if usage was measured by a device certified as revenue quality
 
-    Bit 5 - isDC - SHALL be set if the usage point measures direct current
+    Bit 5 - isDC - SHALL be set if the usage point measures direct current 
 
     Bit 6 - isSubmeter - SHALL be set if the usage point is not a premises aggregation point
 
@@ -1453,7 +1453,7 @@
 
     Bit 4 - isRevenueQuality - SHALL be set if usage was measured by a device certified as revenue quality
 
-    Bit 5 - isDC - SHALL be set if the usage point measures direct current
+    Bit 5 - isDC - SHALL be set if the usage point measures direct current 
 
     Bit 6 - isSubmeter - SHALL be set if the usage point is not a premises aggregation point
 
@@ -1736,19 +1736,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_RespondableResource_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -1777,19 +1777,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_RespondableIdentifiedObject_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -2422,7 +2422,7 @@
     Indicates whether or not subscriptions are supported for this resource, and whether or not conditional (thresholds) are supported. If not specified, is "not subscribable" (0).
 
     @var SE_DERStatus_t::genConnectStatus
-    Connect/status value for generator DER.
+    Connect/status value for generator DER. 
 
     See ConnectStatusType for values.
 
@@ -2469,7 +2469,7 @@
 /** @defgroup PrimacyType PrimacyType
     @ingroup UInt8
 
-    Values possible for indication of "Primary" provider:
+    Values possible for indication of "Primary" provider: 
 
     0: In home energy management system
 
@@ -2489,7 +2489,7 @@
 
 /** @typedef SE_PrimacyType_t
 
-    Values possible for indication of "Primary" provider:
+    Values possible for indication of "Primary" provider: 
 
     0: In home energy management system
 
@@ -3271,29 +3271,29 @@
 #define SE_potentiallySuperseded_true (1 << 2)
 
     @var SE_EventStatus_t::currentStatus
-    Field representing the current status type.
+    Field representing the current status type. 
 
     0 = Scheduled
 
-    This status indicates that the event has been scheduled and the event has not yet started.  The server SHALL set the event to this status when the event is first scheduled and persist until the event has become active or has been cancelled.  For events with a start time less than or equal to the current time, this status SHALL never be indicated, the event SHALL start with a status of “Active”.
+    This status indicates that the event has been scheduled and the event has not yet started.  The server SHALL set the event to this status when the event is first scheduled and persist until the event has become active or has been cancelled.  For events with a start time less than or equal to the current time, this status SHALL never be indicated, the event SHALL start with a status of “Active”. 
 
     1 = Active
 
     This status indicates that the event is currently active. The server SHALL set the event to this status when the event reaches its earliest Effective Start Time.
 
-    2 = Cancelled
+    2 = Cancelled 
 
     When events are cancelled, the Status.dateTime attribute SHALL be set to the time the cancellation occurred, which cannot be in the future.  The server is responsible for maintaining the cancelled event in its collection for the duration of the original event, or until the server has run out of space and needs to store a new event. Client devices SHALL be aware of Cancelled events, determine if the Cancelled event applies to them, and cancel the event immediately if applicable.
 
-    3 = Cancelled with Randomization
+    3 = Cancelled with Randomization 
 
     The server is responsible for maintaining the cancelled event in its collection for the duration of the Effective Scheduled Period. Client devices SHALL be aware of Cancelled with Randomization events, determine if the Cancelled event applies to them, and cancel the event immediately, using the larger of (absolute value of randomizeStart) and (absolute value of randomizeDuration) as the end randomization, in seconds. This Status.type SHALL NOT be used with "regular" Events, only with specializations of RandomizableEvent.
 
     4 = Superseded
 
-    Events marked as Superseded by servers are events that may have been replaced by new events from the same program that target the exact same set of deviceCategory's (if applicable) and overlap for a given period of time. Servers SHALL mark an event as Superseded at the earliest Effective Start Time of the overlapping event. Servers are responsible for maintaining the Superseded event in their collection for the duration of the Effective Scheduled Period.
+    Events marked as Superseded by servers are events that may have been replaced by new events from the same program that target the exact same set of deviceCategory's (if applicable) and overlap for a given period of time. Servers SHALL mark an event as Superseded at the earliest Effective Start Time of the overlapping event. Servers are responsible for maintaining the Superseded event in their collection for the duration of the Effective Scheduled Period. 
 
-    Client devices encountering a Superseded event SHALL terminate execution of the event immediately and commence execution of the new event immediately, unless the current time is within the start randomization window of the superseded event, in which case the client SHALL obey the start randomization of the new event. This Status.type SHALL NOT be used with TextMessage, since multiple text messages can be active.
+    Client devices encountering a Superseded event SHALL terminate execution of the event immediately and commence execution of the new event immediately, unless the current time is within the start randomization window of the superseded event, in which case the client SHALL obey the start randomization of the new event. This Status.type SHALL NOT be used with TextMessage, since multiple text messages can be active. 
 
     All other values reserved.
 
@@ -3331,19 +3331,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_RespondableSubscribableIdentifiedObject_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -3384,19 +3384,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_Event_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -3448,19 +3448,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_RandomizableEvent_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -3518,19 +3518,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_DERControl_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -3596,17 +3596,17 @@
 /** @defgroup DERType DERType
     @ingroup UInt8
 
-    0 - Not applicable / Unknown
+    0 - Not applicable / Unknown 
 
-    1 - Virtual or mixed DER
+    1 - Virtual or mixed DER 
 
-    2 - Reciprocating engine
+    2 - Reciprocating engine 
 
-    3 - Fuel cell
+    3 - Fuel cell 
 
-    4 - Photovoltaic system
+    4 - Photovoltaic system 
 
-    5 - Combined heat and power
+    5 - Combined heat and power 
 
     80 - Storage (immobile)
 
@@ -3620,17 +3620,17 @@
 
 /** @typedef SE_DERType_t
 
-    0 - Not applicable / Unknown
+    0 - Not applicable / Unknown 
 
-    1 - Virtual or mixed DER
+    1 - Virtual or mixed DER 
 
-    2 - Reciprocating engine
+    2 - Reciprocating engine 
 
-    3 - Fuel cell
+    3 - Fuel cell 
 
-    4 - Photovoltaic system
+    4 - Photovoltaic system 
 
-    5 - Combined heat and power
+    5 - Combined heat and power 
 
     80 - Storage (immobile)
 
@@ -4495,19 +4495,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_FlowReservationResponse_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -4590,7 +4590,7 @@
     The dateTime attribute will provide a timestamp of when the request status was set. dateTime MUST be set to the time at which the status change occurred, not a time in the future or past.
 
     @var SE_RequestStatus_t::requestStatus
-    Field representing the request status type.
+    Field representing the request status type. 
 
     0 = Requested
 
@@ -5070,7 +5070,7 @@
 /** @defgroup CurrencyCode CurrencyCode
     @ingroup UInt16
 
-    Follows codes defined in [ISO 4217].
+    Follows codes defined in [ISO 4217]. 
 
     0 - Not Applicable (default, if not specified)
 
@@ -5088,7 +5088,7 @@
 
 /** @typedef SE_CurrencyCode_t
 
-    Follows codes defined in [ISO 4217].
+    Follows codes defined in [ISO 4217]. 
 
     0 - Not Applicable (default, if not specified)
 
@@ -6331,7 +6331,7 @@
 
     0 - Consumption Charge
 
-    1 - Rebate
+    1 - Rebate 
 
     2 - Auxiliary Charge
 
@@ -6347,7 +6347,7 @@
 
     0 - Consumption Charge
 
-    1 - Rebate
+    1 - Rebate 
 
     2 - Auxiliary Charge
 
@@ -6362,7 +6362,7 @@
 /** @defgroup Charge Charge
     @ingroup se_types
 
-    Charges contain charges on a customer bill.  These could be items like taxes, levies, surcharges, rebates, or others.  This is meant to allow the HAN device to retrieve enough information to be able to reconstruct an estimate of what the total bill would look like.
+    Charges contain charges on a customer bill.  These could be items like taxes, levies, surcharges, rebates, or others.  This is meant to allow the HAN device to retrieve enough information to be able to reconstruct an estimate of what the total bill would look like. 
 
     Providers can provide line item billing, including multiple charge kinds (e.g. taxes, surcharges) at whatever granularity desired, using as many Charges as desired during a billing period. There can also be any number of Charges associated with different ReadingTypes to distinguish between TOU tiers, consumption blocks, or demand charges.
 
@@ -6370,7 +6370,7 @@
 
 /** @struct SE_Charge_t se_types.h
 
-    Charges contain charges on a customer bill.  These could be items like taxes, levies, surcharges, rebates, or others.  This is meant to allow the HAN device to retrieve enough information to be able to reconstruct an estimate of what the total bill would look like.
+    Charges contain charges on a customer bill.  These could be items like taxes, levies, surcharges, rebates, or others.  This is meant to allow the HAN device to retrieve enough information to be able to reconstruct an estimate of what the total bill would look like. 
 
     Providers can provide line item billing, including multiple charge kinds (e.g. taxes, surcharges) at whatever granularity desired, using as many Charges as desired during a billing period. There can also be any number of Charges associated with different ReadingTypes to distinguish between TOU tiers, consumption blocks, or demand charges.
 
@@ -6419,7 +6419,7 @@
     @var SE_BillingReading_t::qualityFlags
     List of codes indicating the quality of the reading, using specification:
 
-    Bit 0 - valid: data that has gone through all required validation checks and either passed them all or has been verified
+    Bit 0 - valid: data that has gone through all required validation checks and either passed them all or has been verified 
 
     Bit 1 - manually edited: Replaced or approved by a human
 
@@ -6429,7 +6429,7 @@
 
     Bit 4 - questionable: data that has failed one or more checks
 
-    Bit 5 - derived: data that has been calculated (using logic or mathematical operations), not necessarily measured directly
+    Bit 5 - derived: data that has been calculated (using logic or mathematical operations), not necessarily measured directly 
 
     Bit 6 - projected (forecast): data that has been calculated as a projection or forecast of future readings
 
@@ -6597,19 +6597,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_TextMessage_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -6863,19 +6863,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_TimeTariffInterval_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -7127,11 +7127,11 @@
 
     @var SE_RateComponent_t::ActiveTimeTariffIntervalListLink
     @var SE_RateComponent_t::flowRateEndLimit
-    Specifies the maximum flow rate (e.g. kW for electricity) for which this RateComponent applies, for the usage point and given rate / tariff.
+    Specifies the maximum flow rate (e.g. kW for electricity) for which this RateComponent applies, for the usage point and given rate / tariff. 
 
     In combination with flowRateStartLimit, allows a service provider to define the demand or output characteristics for the particular tariff design.  If a server includes the flowRateEndLimit attribute, then it SHALL also include flowRateStartLimit attribute.
 
-    For example, a service provider’s tariff limits customers to 20 kWs of demand for the given rate structure.  Above this threshold (from 20-50 kWs), there are different demand charges per unit of consumption.  The service provider can use flowRateStartLimit and flowRateEndLimit to describe the demand characteristics of the different rates.  Similarly, these attributes can be used to describe limits on premises DERs that might be producing a commodity and sending it back into the distribution network.
+    For example, a service provider’s tariff limits customers to 20 kWs of demand for the given rate structure.  Above this threshold (from 20-50 kWs), there are different demand charges per unit of consumption.  The service provider can use flowRateStartLimit and flowRateEndLimit to describe the demand characteristics of the different rates.  Similarly, these attributes can be used to describe limits on premises DERs that might be producing a commodity and sending it back into the distribution network. 
 
     Note: At the time of writing, service provider tariffs with demand-based components were not originally identified as being in scope, and service provider tariffs vary widely in their use of demand components and the method for computing charges.  It is expected that industry groups (e.g., OpenSG) will document requirements in the future that the IEEE 2030.5 community can then use as source material for the next version of IEEE 2030.5.
 
@@ -7237,7 +7237,7 @@
     There is no limit to the number of relative price levels other than that indicated in the attribute type, but for practicality, service providers should strive for simplicity and recognize the diminishing returns derived from increasing the numCostLevel value greater than four.
 
     @var SE_EnvironmentalCost_t::numCostLevels
-    The number of all relative cost levels.
+    The number of all relative cost levels. 
 
     In conjunction with costLevel, numCostLevels signals the relative scarcity of the commodity for the duration of the TimeTariffInterval instance (e.g., a relative indication of cost). This is useful in providing context for nominal cost signals to consumers or devices that might see a range of amount values from different service providres or from the same service provider.
 
@@ -7267,14 +7267,14 @@
 
     @var SE_ConsumptionTariffInterval_t::EnvironmentalCost
     @var SE_ConsumptionTariffInterval_t::price
-    The charge for this rate component, per unit of measure defined by the associated ReadingType, in currency specified in TariffProfile.
+    The charge for this rate component, per unit of measure defined by the associated ReadingType, in currency specified in TariffProfile. 
 
     The Pricing service provider determines the appropriate price attribute value based on its applicable regulatory rules. For example, price could be net or inclusive of applicable taxes, fees, or levies.
 
     The Billing function set provides the ability to represent billing information in a more detailed manner.
 
     @var SE_ConsumptionTariffInterval_t::startValue
-    The lowest level of consumption that defines the starting point of this consumption step or block. Thresholds start at zero for each billing period.
+    The lowest level of consumption that defines the starting point of this consumption step or block. Thresholds start at zero for each billing period.    
 
     If specified, the first ConsumptionTariffInterval.startValue for a TimeTariffInteral instance SHALL begin at "0." Subsequent ConsumptionTariffInterval.startValue elements SHALL be greater than the previous one.
 
@@ -7569,29 +7569,29 @@
 
     The unit types defined for end device control target reductions.
 
-    0 - kWh
+    0 - kWh 
 
-    1 - kW
+    1 - kW  
 
-    2 - Watts
+    2 - Watts 
 
-    3 - Cubic Meters
+    3 - Cubic Meters 
 
-    4 - Cubic Feet
+    4 - Cubic Feet 
 
-    5 - US Gallons
+    5 - US Gallons 
 
-    6 - Imperial Gallons
+    6 - Imperial Gallons 
 
-    7 - BTUs
+    7 - BTUs 
 
-    8 - Liters
+    8 - Liters 
 
-    9 - kPA (gauge)
+    9 - kPA (gauge) 
 
-    10 - kPA (absolute)
+    10 - kPA (absolute)  
 
-    11 - Mega Joule
+    11 - Mega Joule 
 
     12 - Unitless
 
@@ -7603,29 +7603,29 @@
 
     The unit types defined for end device control target reductions.
 
-    0 - kWh
+    0 - kWh 
 
-    1 - kW
+    1 - kW  
 
-    2 - Watts
+    2 - Watts 
 
-    3 - Cubic Meters
+    3 - Cubic Meters 
 
-    4 - Cubic Feet
+    4 - Cubic Feet 
 
-    5 - US Gallons
+    5 - US Gallons 
 
-    6 - Imperial Gallons
+    6 - Imperial Gallons 
 
-    7 - BTUs
+    7 - BTUs 
 
-    8 - Liters
+    8 - Liters 
 
-    9 - kPA (gauge)
+    9 - kPA (gauge) 
 
-    10 - kPA (absolute)
+    10 - kPA (absolute)  
 
-    11 - Mega Joule
+    11 - Mega Joule 
 
     12 - Unitless
 
@@ -7661,9 +7661,9 @@
 
     The SetPoint object is used to apply specific temperature set points to a temperature control device. The values of the heatingSetpoint and coolingSetpoint attributes SHALL be calculated as follows:
 
-    Cooling/Heating Temperature Set Point / 100 = temperature in degrees Celsius where -273.15°C &lt;= temperature &lt;= 327.67°C, corresponding to a Cooling and/or Heating Temperature Set Point. The maximum resolution this format allows is 0.01°C.
+    Cooling/Heating Temperature Set Point / 100 = temperature in degrees Celsius where -273.15°C &lt;= temperature &lt;= 327.67°C, corresponding to a Cooling and/or Heating Temperature Set Point. The maximum resolution this format allows is 0.01°C. 
 
-    The field not present in a Response indicates that this field has not been used by the end device.
+    The field not present in a Response indicates that this field has not been used by the end device. 
 
     If a temperature is sent that exceeds the temperature limit boundaries that are programmed into the device, the device SHALL respond by setting the temperature at the limit.
 
@@ -7673,9 +7673,9 @@
 
     The SetPoint object is used to apply specific temperature set points to a temperature control device. The values of the heatingSetpoint and coolingSetpoint attributes SHALL be calculated as follows:
 
-    Cooling/Heating Temperature Set Point / 100 = temperature in degrees Celsius where -273.15°C &lt;= temperature &lt;= 327.67°C, corresponding to a Cooling and/or Heating Temperature Set Point. The maximum resolution this format allows is 0.01°C.
+    Cooling/Heating Temperature Set Point / 100 = temperature in degrees Celsius where -273.15°C &lt;= temperature &lt;= 327.67°C, corresponding to a Cooling and/or Heating Temperature Set Point. The maximum resolution this format allows is 0.01°C. 
 
-    The field not present in a Response indicates that this field has not been used by the end device.
+    The field not present in a Response indicates that this field has not been used by the end device. 
 
     If a temperature is sent that exceeds the temperature limit boundaries that are programmed into the device, the device SHALL respond by setting the temperature at the limit.
 
@@ -7699,7 +7699,7 @@
 
     If a temperature offset is sent that causes the heating or cooling temperature set point to exceed the limit boundaries that are programmed into the device, the device SHALL respond by setting the temperature at the limit.
 
-    If an EDC is being targeted at multiple devices or to a device that controls multiple devices (e.g., EMS), it can provide multiple Offset types within one EDC. For events with multiple Offset types, a client SHALL select the Offset that best fits their operating function.
+    If an EDC is being targeted at multiple devices or to a device that controls multiple devices (e.g., EMS), it can provide multiple Offset types within one EDC. For events with multiple Offset types, a client SHALL select the Offset that best fits their operating function. 
 
     Alternatively, an event with a single Offset type can be targeted at an EMS in order to request a percentage load reduction on the average energy usage of the entire premise. An EMS SHOULD use the Metering function set to determine the initial load in the premise, reduce energy consumption by controlling devices at its disposal, and at the conclusion of the event, once again use the Metering function set to determine if the desired load reduction was achieved.
 
@@ -7709,7 +7709,7 @@
 
     If a temperature offset is sent that causes the heating or cooling temperature set point to exceed the limit boundaries that are programmed into the device, the device SHALL respond by setting the temperature at the limit.
 
-    If an EDC is being targeted at multiple devices or to a device that controls multiple devices (e.g., EMS), it can provide multiple Offset types within one EDC. For events with multiple Offset types, a client SHALL select the Offset that best fits their operating function.
+    If an EDC is being targeted at multiple devices or to a device that controls multiple devices (e.g., EMS), it can provide multiple Offset types within one EDC. For events with multiple Offset types, a client SHALL select the Offset that best fits their operating function. 
 
     Alternatively, an event with a single Offset type can be targeted at an EMS in order to request a percentage load reduction on the average energy usage of the entire premise. An EMS SHOULD use the Metering function set to determine the initial load in the premise, reduce energy consumption by controlling devices at its disposal, and at the conclusion of the event, once again use the Metering function set to determine if the desired load reduction was achieved.
 
@@ -7758,45 +7758,45 @@
 
     Bit positions SHALL be defined as follows:
 
-    0 - Programmable Communicating Thermostat
+    0 - Programmable Communicating Thermostat 
 
-    1 - Strip Heaters
+    1 - Strip Heaters 
 
-    2 - Baseboard Heaters
+    2 - Baseboard Heaters 
 
-    3 - Water Heater
+    3 - Water Heater 
 
-    4 - Pool Pump
+    4 - Pool Pump 
 
-    5 - Sauna
+    5 - Sauna 
 
     6 - Hot tub
 
-    7 - Smart Appliance
+    7 - Smart Appliance 
 
-    8 - Irrigation Pump
+    8 - Irrigation Pump 
 
-    9 - Managed Commercial and Industrial (C&amp;I) Loads
+    9 - Managed Commercial and Industrial (C&amp;I) Loads 
 
-    10 - Simple misc. (Residential On/Off) loads
+    10 - Simple misc. (Residential On/Off) loads 
 
-    11 - Exterior Lighting
+    11 - Exterior Lighting 
 
-    12 - Interior Lighting
+    12 - Interior Lighting 
 
-    13 - Electric Vehicle
+    13 - Electric Vehicle 
 
-    14 - Generation Systems
+    14 - Generation Systems 
 
-    15 - Load Control Switch
+    15 - Load Control Switch 
 
-    16 - Smart Inverter
+    16 - Smart Inverter 
 
-    17 - EVSE
+    17 - EVSE 
 
     18 - RESU (Residential Energy Storage Unit)
 
-    19 - Energy Management System
+    19 - Energy Management System 
 
     20 - Smart Energy Module
 
@@ -7810,45 +7810,45 @@
 
     Bit positions SHALL be defined as follows:
 
-    0 - Programmable Communicating Thermostat
+    0 - Programmable Communicating Thermostat 
 
-    1 - Strip Heaters
+    1 - Strip Heaters 
 
-    2 - Baseboard Heaters
+    2 - Baseboard Heaters 
 
-    3 - Water Heater
+    3 - Water Heater 
 
-    4 - Pool Pump
+    4 - Pool Pump 
 
-    5 - Sauna
+    5 - Sauna 
 
     6 - Hot tub
 
-    7 - Smart Appliance
+    7 - Smart Appliance 
 
-    8 - Irrigation Pump
+    8 - Irrigation Pump 
 
-    9 - Managed Commercial and Industrial (C&amp;I) Loads
+    9 - Managed Commercial and Industrial (C&amp;I) Loads 
 
-    10 - Simple misc. (Residential On/Off) loads
+    10 - Simple misc. (Residential On/Off) loads 
 
-    11 - Exterior Lighting
+    11 - Exterior Lighting 
 
-    12 - Interior Lighting
+    12 - Interior Lighting 
 
-    13 - Electric Vehicle
+    13 - Electric Vehicle 
 
-    14 - Generation Systems
+    14 - Generation Systems 
 
-    15 - Load Control Switch
+    15 - Load Control Switch 
 
-    16 - Smart Inverter
+    16 - Smart Inverter 
 
-    17 - EVSE
+    17 - EVSE 
 
     18 - RESU (Residential Energy Storage Unit)
 
-    19 - Energy Management System
+    19 - Energy Management System 
 
     20 - Smart Energy Module
 
@@ -7867,9 +7867,9 @@
 
     1 - Temporary Appliance Load Reduction
 
-    Parameter requesting the appliance to respond by providing an aggressive load reduction for a short time period.  Typically referring to an “emergency/spinning reserve” event in which an appliance should start shedding load if currently in a load consuming period.
+    Parameter requesting the appliance to respond by providing an aggressive load reduction for a short time period.  Typically referring to an “emergency/spinning reserve” event in which an appliance should start shedding load if currently in a load consuming period. 
 
-    * Full definition of how appliances react when receiving each parameter is document in the EPA document - ENERGY STAR? Program Requirements, Product Specification for Residential Refrigerators and Freezers, Eligibility Criteria 5, Draft 2 Version 5.0.
+    * Full definition of how appliances react when receiving each parameter is document in the EPA document - ENERGY STAR® Program Requirements, Product Specification for Residential Refrigerators and Freezers, Eligibility Criteria 5, Draft 2 Version 5.0.
 
     All other values reserved.
 
@@ -7883,9 +7883,9 @@
 
     1 - Temporary Appliance Load Reduction
 
-    Parameter requesting the appliance to respond by providing an aggressive load reduction for a short time period.  Typically referring to an “emergency/spinning reserve” event in which an appliance should start shedding load if currently in a load consuming period.
+    Parameter requesting the appliance to respond by providing an aggressive load reduction for a short time period.  Typically referring to an “emergency/spinning reserve” event in which an appliance should start shedding load if currently in a load consuming period. 
 
-    * Full definition of how appliances react when receiving each parameter is document in the EPA document - ENERGY STAR? Program Requirements, Product Specification for Residential Refrigerators and Freezers, Eligibility Criteria 5, Draft 2 Version 5.0.
+    * Full definition of how appliances react when receiving each parameter is document in the EPA document - ENERGY STAR® Program Requirements, Product Specification for Residential Refrigerators and Freezers, Eligibility Criteria 5, Draft 2 Version 5.0.
 
     All other values reserved.
 
@@ -7942,19 +7942,19 @@
     A reference to the response resource address (URI). Required on a response to a GET if responseRequired is "true".
 
     @var SE_EndDeviceControl_t::responseRequired
-    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo".
+    Indicates whether or not a response is required upon receipt, creation or update of this resource. Responses shall be posted to the collection specified in "replyTo". 
 
     If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
-    Value encoded as hex according to the following bit assignments, any combination is possible.
+    Value encoded as hex according to the following bit assignments, any combination is possible. 
 
     See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
 
-    0 - End device shall indicate that message was received
+    0 - End device shall indicate that message was received 
 
-    1 - End device shall indicate specific response.
+    1 - End device shall indicate specific response. 
 
-    2 - End user / customer response is required.
+    2 - End user / customer response is required. 
 
     All other values reserved.
 
@@ -8287,7 +8287,7 @@
     This element MUST be set to the time at which the LD will issue its next GET request for file content from the File indicated by FileLink
 
     @var SE_FileStatus_t::request503Count
-    This value MUST be reset to 0 when FileLink is first pointed at a new File. This value MUST be incremented each time an
+    This value MUST be reset to 0 when FileLink is first pointed at a new File. This value MUST be incremented each time an 
 
     LD receives a 503 error from the FS.
 
@@ -8311,7 +8311,7 @@
 
     6 - File activation failed
 
-    7 - File activation in progress
+    7 - File activation in progress  
 
     8 - File activated successfully (this state may not be reached/persisted through an image activation)
 
@@ -8537,7 +8537,7 @@
 /** @defgroup DstRuleType DstRuleType
     @ingroup HexBinary32
 
-    Bit map encoded rule from which is calculated the start or end time, within the current year, to which daylight savings time offset must be applied.
+    Bit map encoded rule from which is calculated the start or end time, within the current year, to which daylight savings time offset must be applied. 
 
     The rule encoding:
 
@@ -8591,7 +8591,7 @@
 
 /** @typedef SE_DstRuleType_t
 
-    Bit map encoded rule from which is calculated the start or end time, within the current year, to which daylight savings time offset must be applied.
+    Bit map encoded rule from which is calculated the start or end time, within the current year, to which daylight savings time offset must be applied. 
 
     The rule encoding:
 
@@ -8791,7 +8791,7 @@
     May be used to transmit additional details about the event.
 
     @var SE_LogEvent_t::functionSet
-    If the profileID indicates this is IEEE 2030.5, the functionSet is defined by IEEE 2030.5 and SHALL be one of the values from the table below (IEEE 2030.5 function set identifiers). If the profileID is anything else, the functionSet is defined by the identified profile.
+    If the profileID indicates this is IEEE 2030.5, the functionSet is defined by IEEE 2030.5 and SHALL be one of the values from the table below (IEEE 2030.5 function set identifiers). If the profileID is anything else, the functionSet is defined by the identified profile. 
 
     0	General (not specific to a function set)
 
@@ -9246,7 +9246,7 @@
     @var SE_LLInterface_t::linkLayerType
     Specifies the type of link layer interface associated with the IPInterface. Values are below.
 
-    0 = Unspecified
+    0 = Unspecified 
 
     1 = IEEE 802.3 (Ethernet)
 
@@ -9658,13 +9658,13 @@
 
     0 - none
 
-    1 - mains
+    1 - mains 
 
     2 - battery
 
     3 - local generation
 
-    4 - emergency
+    4 - emergency 
 
     5 - unknown
 
@@ -9676,13 +9676,13 @@
 
     0 - none
 
-    1 - mains
+    1 - mains 
 
     2 - battery
 
     3 - local generation
 
-    4 - emergency
+    4 - emergency 
 
     5 - unknown
 
@@ -9727,7 +9727,7 @@
 
     1 = normal (more than LowChargeThreshold remaining)
 
-    2 = low (less than LowChargeThreshold remaining)
+    2 = low (less than LowChargeThreshold remaining) 
 
     3 = depleted (0% charge remaining)
 
@@ -11318,7 +11318,7 @@
 /** @defgroup PINType PINType
     @ingroup UInt32
 
-    6 digit unsigned decimal integer (0 - 999999).
+    6 digit unsigned decimal integer (0 - 999999). 
 
     (Note that this only requires 20 bits, if it can be allocated.)
 
@@ -11326,7 +11326,7 @@
 
 /** @typedef SE_PINType_t
 
-    6 digit unsigned decimal integer (0 - 999999).
+    6 digit unsigned decimal integer (0 - 999999). 
 
     (Note that this only requires 20 bits, if it can be allocated.)
 
@@ -11651,7 +11651,7 @@
     The number of times that the device has been turned on: Count of "device on" times, since the last time the counter was reset
 
     @var SE_DeviceStatus_t::opState
-    Device operational state:
+    Device operational state: 
 
     0 - Not applicable / Unknown
 
