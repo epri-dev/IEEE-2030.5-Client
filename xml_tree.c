@@ -20,10 +20,10 @@ typedef struct _Attribute {
 
 typedef struct _Element {
   struct _Element *next;
-  struct _Element *parent;
-  int type;
-  struct _Element *first, *last;
-  char *name, *prefix;
+  struct _Element *parent;  //所在的上级xml对象
+  int type; // NodeType 定义的值
+  struct _Element *first, *last;  //可能是同一个层级的子节点的表头和表尾
+  char *name, *prefix;  
   Attribute *attr;
 } Element;
 
@@ -34,6 +34,7 @@ typedef struct {
   char data[];
 } Text;
 
+//将一个解析后的节点数据放到结构化数据中。
 void add_node (Element *parent, void *node) {
   Node *n = node;
   n->next = NULL;
@@ -43,6 +44,7 @@ void add_node (Element *parent, void *node) {
   parent->last = node;
 }
 
+//
 char *local_name (char **prefix, char *qname) {
   char *c;
   if (c = strchr (qname, ':')) {
@@ -53,6 +55,7 @@ char *local_name (char **prefix, char *qname) {
   return qname;
 }
 
+//输入节点名字和属性列表，创建一个xml数据对象。
 Element *new_element (Element *parent, char *name, char **attr) {
   Element *e = malloc (sizeof (Element));
   int i;
@@ -62,7 +65,7 @@ Element *new_element (Element *parent, char *name, char **attr) {
   e->attr = NULL;
   e->first = e->last = NULL;
   add_node (parent, e);
-  for (i = 0; i < MAX_ATTRIBUTE * 2; i += 2)
+  for (i = 0; i < MAX_ATTRIBUTE * 2; i += 2)  //将属性列表中的属性加入进来
     if (attr[i]) {
       a = malloc (sizeof (Attribute));
       a->next = NULL;
@@ -75,6 +78,8 @@ Element *new_element (Element *parent, char *name, char **attr) {
   return e;
 }
 
+
+//加入一段文本字段
 void new_text (Element *parent, int type, char *content, int length) {
   Text *t = malloc (sizeof (Text) + length + 1);
   t->type = type;
@@ -83,13 +88,15 @@ void new_text (Element *parent, int type, char *content, int length) {
   add_node (parent, t);
 }
 
+//加入一段文本字段。是上面的new_text的函数的包装。
 void new_content (Element *parent, int type, char *content) {
   new_text (parent, type, content, strlen (content));
 }
 
+//释放掉“属性”所占用的空间。
 void free_attr (Attribute *a) {
   Attribute *t;
-  while (a) {
+  while (a) { //存在多个attr
     t = a;
     a = a->next;
     free (t->name);
@@ -98,6 +105,7 @@ void free_attr (Attribute *a) {
   }
 }
 
+//有
 void free_node (void *node) {
   Node *n = node, *t;
   Element *e;
@@ -107,7 +115,7 @@ void free_node (void *node) {
     switch (t->type) {
     case ELEMENT_NODE:
       e = (Element *)t;
-      free_node (e->first);
+      free_node (e->first); //从first开始应该是一个子节点列表
       if (e->name) free (e->name);
       if (e->attr) free_attr (e->attr);
     case TEXT_NODE:
@@ -118,6 +126,7 @@ void free_node (void *node) {
   }
 }
 
+//data参数是待解析的文本数据
 Element *xml_parse (char *data) {
   XmlParser p;
   Element *e, root;
@@ -159,6 +168,8 @@ Element *xml_parse (char *data) {
   }
 }
 
+
+//读取一个文件并且将其解析出来
 Element *xml_read (char *name) {
   char *buffer = file_read (name, NULL),
         *start = utf8_start (buffer);
@@ -167,6 +178,7 @@ Element *xml_read (char *name) {
   return e;
 }
 
+//从所有属性中，找到名字相符的那个属性。
 char *xml_attr (Element *e, char *name) {
   Attribute *a;
   foreach (a, e->attr)

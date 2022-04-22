@@ -252,14 +252,18 @@ int se_receive (void *conn) {
   char *data;
   int length, type, code, method;
   http_flush (h);
+  printf("into se_receive\n");
   switch (method = http_receive (h)) {
   case HTTP_NONE:
+    printf("se_receive:HTTP_NONE\n");
     break;
   case HTTP_ERROR:
+    printf("se_receive:HTTP_ERROR\n");
     return SE_ERROR;
   default:
     switch (s->state) {
     case SE_START:
+      printf("se_receive:SE_START\n");
       p->obj = NULL;
       print_http_status (h);
       if (h->media_range)
@@ -272,10 +276,20 @@ int se_receive (void *conn) {
         }
       } else return method;
     case SE_DATA: //在收到数据之后，将XML文档解析成一个数据对象。
+      printf("se_receive:SE_DATA\n");
       while (data = http_data (h, &length)) {
-        parser_rebuffer (p, data, length);
-        //if (parse_doc (p, &type)) { //parse_doc_p
-        if( parse_doc_p (p, &type) ) {
+        
+        #if 1
+        if(length > 0){ //add by lewis
+          printf("se_receive:length:%d\n",length);
+          printf("se_receive:content:\n%s\n",data);
+        }
+        #endif 
+        //add by lewis start
+        if(length <= 0) continue;
+        //add by lewis end
+        parser_rebuffer (p, data, length);  //这个length看起来没有用到。
+        if( parse_doc (p, &type) ) {
           s->state = SE_START;
           return method;
         } else if (!http_complete (h)) {
@@ -290,10 +304,12 @@ int se_receive (void *conn) {
       set_timeout (s);
     }
   }
+  printf("se_receive:SE_INCOMPLETE\n");
   return SE_INCOMPLETE;
 error:
   if (h->method == HTTP_RESPONSE) http_close (h);
   else http_error (h, code);
+  printf("se_receive:SE_ERROR\n");
   return SE_ERROR;
 }
 

@@ -2,14 +2,18 @@
 // author: Mark Slicker <mark.slicker@gmail.com>
 
 /** @defgroup parse Parse
+
     parser将一个XML或者EXI格式的文档，转换成一个C对象（一个类型化的数据结构）。
+
     The parser converts an XML or EXI document into a C object (a typed data
     structure). The parser is schema based, which means that the document
     structure (the order and types of elements and values) is predefined by an
     XML schema. Successful parsing means that the document conforms to the
     schema, failure means that the document did not conform or that the
     document is incomplete.
+    
     parser是状态化的，能够随时停止和开始解析，所以意味着可以一个大型的文档能够以分段的方式来解析。
+
     The parser has a state and can stop and resume parsing at any point in the
     document, this means that a large document can be parsed in segments.
     This feature can be used to reduce the space needed to store documents and
@@ -122,18 +126,18 @@ struct _ParserDriver;
 typedef struct _Parser {
   void *obj;  //用于存放这个数据对象的存储空间地址？？应该是解析后的对象。
   int type;   // completed object and type 完成解析后的数据对象和类型
-  struct _XmlParser *xml;
+  struct _XmlParser *xml; //要解析的xml对象？？
   ElementStack stack;
   const Schema *schema;
-  const SchemaElement *se;
+  const SchemaElement *se;  //SchemaElement对象列表
   const struct _ParserDriver *driver;
   void *base; //用于存放这个数据对象的空间？？
-  uint8_t *ptr, *end;
+  uint8_t *ptr, *end;//ptr是当前在处理的字符串（指针）。
   StringTable *global, *local;
   int state, token, flag, bit;
-  unsigned int xml_decl : 1;
+  unsigned int xml_decl : 1;  //是否是 XML Declaration 类型的token
   unsigned int need_token : 1;  //??
-  unsigned int empty : 1;
+  unsigned int empty : 1; //
   unsigned int truncated : 1;
   //unsigned int incomplete : 1;
 } Parser;
@@ -189,7 +193,7 @@ char *parser_data (Parser *p) {
 }
 
 void parser_rebuffer (Parser *p, void *data, int length) {
-  p->driver->rebuffer (p, data, length);
+  p->driver->rebuffer (p, data, length);  //xml_rebuffer
 }
 
 #define set_count(flags, count, bit) \
@@ -211,7 +215,14 @@ void *add_element (StackItem *t) {
   return l;
 }
 
+
 // return parsed object on success NULL otherwise
+
+
+/*
+const ParserDriver xml_parser={xml_start,xml_next,xml_end,xml_sequence,parse_value,parse_text_value,parse_done,xml_rebuffer};
+*/
+
 void *parse_doc (Parser *p, int *type) {
   static int iterate=0;
   const SchemaElement *se;
@@ -223,18 +234,18 @@ void *parse_doc (Parser *p, int *type) {
   while (1) {
     switch (p->state) {
     case PARSE_START:
-      printf("parse_doc:PARSE_START:1\n");
-      ok (d->parse_start (p));
-      printf("parse_doc:PARSE_START:2\n");
+      //printf("parse_doc:PARSE_START:1\n");
+      ok (d->parse_start (p));  // xml_start
+      //printf("parse_doc:PARSE_START:2\n");
       stack->n = 0;
       p->state++;
       size = object_element_size (p->se, p->schema);
       p->obj = p->base = calloc (1, size);  //首先是构建了这个对象的基类的存放空间。
       break;
     case PARSE_ELEMENT:
-      printf("parse_doc:PARSE_ELEMENT\n");
-      se = p->se;
-      p->flag = se->bit;
+      //printf("parse_doc:PARSE_ELEMENT\n");
+      se = p->se;//上一次的经过了设置之后的
+      p->flag = se->bit;//将这个se的表示自己在父级中的中表示占据第几位的 bit 传递到 parser
       if (se->attribute) {  //如果含有“属性”成员
         if (!se->min && !is_pointer (se->xs_type)) {
           set_count (p->base, 1, p->flag);  //在flag中标记好 "数量" 值
@@ -262,17 +273,10 @@ parse_element:
       p->se = &p->schema->elements[se->index + 1];
       p->state = PARSE_NEXT;
     case PARSE_NEXT:
-      printf("parse_doc:PARSE_NEXT:1\n");
-      ok (d->parse_next (p)); 
-      printf("parse_doc:PARSE_NEXT:2\n");
+      ok (d->parse_next (p));// xml_next
       break;
-      
     case PARSE_ATTRIBUTE:
-      
-      printf("parse_doc:PARSE_ATTRIBUTE:1\n");
-      ok (d->parse_attr_value (p, p->base + p->se->offset));
-      printf("parse_doc:PARSE_ATTRIBUTE:2\n");
-      
+      ok (d->parse_attr_value (p, p->base + p->se->offset));  // parse_value
       p->state--; //PARSE_NEXT
       p->se++;
       break;
@@ -281,9 +285,9 @@ parse_value:
       
     case PARSE_VALUE:
       
-      printf("parse_doc:PARSE_VALUE:1\n");
-      ok (d->parse_value (p, p->base));      
-      printf("parse_doc:PARSE_VALUE:2\n");
+      //printf("parse_doc:PARSE_VALUE:1\n");
+      ok (d->parse_value (p, p->base));      //parse_text_value
+      //printf("parse_doc:PARSE_VALUE:2\n");
 
       p->state++; //PARSE_END
       break;
@@ -293,9 +297,9 @@ parse_value:
         se = t->se;
 
         //printf("d->parse_end (p, se)=%d,exit\n",(d->parse_end (p, se)));
-        printf("parse_doc:PARSE_END:1\n");
-        ok (d->parse_end (p, se));
-        printf("parse_doc:PARSE_END:2\n");
+        //printf("parse_doc:PARSE_END:1\n");
+        ok (d->parse_end (p, se));  // xml_end
+        //printf("parse_doc:PARSE_END:2\n");
         
         t->count++;
         if (se->unbounded || t->count < se->max)
@@ -310,7 +314,7 @@ parse_value:
       }
       break;
     case PARSE_SEQUENCE:
-      printf("parse_doc:PARSE_SEQUENCE\n");
+      //printf("parse_doc:PARSE_SEQUENCE\n");
       t = stack_top (stack);
       se = t->se;
       if (d->parse_sequence (p, t)) {
@@ -330,7 +334,7 @@ parse_value:
       }
       break;
     case SEQUENCE_END:
-      printf("parse_doc:SEQUENCE_END\n");
+      //printf("parse_doc:SEQUENCE_END\n");
       if (t->diff)
         set_count (t->base, t->count - se->min, se->bit);
       p->se = pop_element (stack, &p->base) + 1;
@@ -345,12 +349,6 @@ parse_error:
   printf("Parser:PARSE_INVALID,exit\n");
   p->state = PARSE_INVALID;
   return NULL;
-}
-
-void *parse_doc_p (Parser *p, int *type){
-  if(parse_doc(p,type) == NULL){
-    printf("parse_doc return NULL\n");
-  }
 }
 
 Parser *parser_new () {

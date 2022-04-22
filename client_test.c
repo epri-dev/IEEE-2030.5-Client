@@ -144,14 +144,45 @@ client_test interface [device_cert ca_certs..] <subtype[:1][/path] | URI>  [comm
 
 ./build/client_test eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 edev
 
-测试edev
-./build/client_test eth0 http://192.168.1.13:8088/dcap edev
+测试edev，测试软件调整到core 009
+client_test eth0 http://192.168.1.13:8088/dcap edev
+
+使用gdb调试步骤：
+1） 编译的时候使用 ./build debug，即以带gdb功能方式编译。
+2）进入到./build目录，然后启动gdb，输入 file client_test。
+3）如果直接运行，则带上该程序运行参数：run eth0 http://192.168.1.13:8088/dcap edev
+
+在vscode启用gdb调试工具的配置中，配置如下：
+
+{
+    "configurations": [
+    
+            {
+                "type": "by-gdb",
+                "request": "launch",
+                "name": "Launch(gdb)",
+                "program": "/home/vmuser/IEEE-2030.5-Client/build/client_test",
+                "stopOnEntry": true,
+                "programArgs": "eth0 http://192.168.1.13:8088/dcap edev",
+                "cwd": "${workspaceFolder}"
+            }   //使用vscode的智能提示功能，来得知该工具中使用那个参数来表示“arguments”：输入一个双引号然后观察给出的提示，选择一个合理的
+        ]
+
+}
+
+现在使用了一个名字叫 “ GDB Debugger - Beyond  v0.9.6 ” 的gdb工具，感觉可以用。至少输出的log都是正常的。
+
 
 
 */
 void options (int argc, char **argv) {
   int i = 2, index;
   char *name = argv[1]; //就是网卡名 interface
+
+  printf("[options] argc:%d\n",argc);
+  int j=0;
+  for(j=0;j<argc;j++) printf("[options] arg[%d]:%s\n",j,argv[j]);
+  
   if (argc < 3){
     printf("The input argument count less than 3,argv[0]=%s\n",argv[0]); 
     usage (); 
@@ -165,13 +196,15 @@ void options (int argc, char **argv) {
 
   // process certificates and base query
   while (i < argc) { //前面i的值是2，所以从[device_cert ca_certs..] 开始检查参数
+    printf("[options] now dealing arg[%d]:%s\n",i,argv[i]);
     DerDevice *d;
-    
     /*这里的意思是，选择其中一种方式来获取到数据，对应到前面的 <subtype[:1][/path] | URI> 这个参数项。
     尖括号表示"必须的选项"的意思，"|"表示“或”的意思。
     */
     if (subtype_query (argv[i], name)	|| uri_retrieval (argv[i])) { //获取到参数中所标注的这些资源
-      i++; break; //如果参数中的存在这两项中的一项，解析下一个参数。
+      printf("break;\n");
+      i++;
+      break; //如果参数中的存在这两项中的一项，解析下一个参数。
     } else if (!secure) { //应该是 [device_cert ca_certs...] 部分参数
       client_init (name, argv[i]);  //初始化有关加密和dnssd相关功能
       secure = 1;
@@ -184,7 +217,8 @@ void options (int argc, char **argv) {
     }
     i++;
 
-
+  }
+  
   //这里看起来是要求使用证书文件
   if (!secure) {
     printf ("options: warning, no device certificate specified, "
@@ -194,7 +228,9 @@ void options (int argc, char **argv) {
     load_cert_dir ("certs");
   }
 
-
+  
+  printf("[options] process tests \n");
+  
   // process tests，应该是指令中的[commands]部分。这一段是直接操作
   while (i < argc) {
     uint64_t sfdi;
@@ -203,6 +239,7 @@ void options (int argc, char **argv) {
       "self", "subscribe", "metering", "meter", "alarm", "poll", "load",
       "device", "delete", "inverter"
     };
+    printf("parsing argv[%d]:%s ...\n",i,argv[i]);
     switch (string_index (argv[i], commands, 18)) { // 返回跟 command 相对应的一个字符串 。
     case 0: // sfdi，这项参数是必须要加上的
       if (++i == argc || !number64 (&device_sfdi, argv[i])) { //格式必须是 sfdi xxxxxx（sfdi值）
@@ -211,6 +248,7 @@ void options (int argc, char **argv) {
       }
       break;
     case 1: // edev
+      printf("[options] edev\n");
       test |= GET_EDEV | GET_FSA;
       primary = 1;  //主要的？？
       break;
@@ -288,7 +326,6 @@ void options (int argc, char **argv) {
       exit (0);
     }
     i++;
-    }
   }
 }
 

@@ -316,9 +316,9 @@ typedef struct _HttpConnection {
   char *headers, *version;  //version 就是HTTP 版本，通常是1.1
   const char *media; // media type for POST/PUT 发送的媒体类型
   const char *accept; // media types accepted 可以接收的数据类型
-  char *data; // pointer to the next header line or http content 指向后面一个header行或者HTTP内容
-  int end;    // buffer + end = the end of the http message
-  int length; // the amount of data in buffer 在bufer中存放的数据的总大小
+  char *data; // pointer to the next header line or http content 指向后面一个header行或者HTTP内容。这个指针是“活动的”。
+  int end;    // buffer + end = the end of the http message   指向接收缓冲区中的最后一个字节 。
+  int length; // the amount of data in buffer   在bufer中存放的数据的总大小。指向最后一个字符（不是'\0'）
   int content_length; // from the Content-Length header 在Header中的Content-Length值。
   uint8_t state, method, request_method;  //request_method：请求的方法，比如是GET还是POST
   unsigned body : 1;    // response or request has a body 是否包含一个body 
@@ -582,7 +582,7 @@ void http_error (void *conn, int status) {
   http_respond (conn, status);
   http_close (conn);
 }
-//读取HTTP数据（余下的部分） 
+//读取HTTP数据，存放到以 h->buffer + h->length 开始的往后的地址。
 int http_read (void *conn) {
   HttpConnection *h = conn;
   int n = conn_read (conn, h->buffer + h->length,
@@ -593,6 +593,7 @@ int http_read (void *conn) {
   return n;
 }
 
+//判断Http接收是否已经结束了。
 int http_complete (void *conn) {
   HttpConnection *c = conn;
   return c->state == HTTP_CLOSED || c->end <= c->length;
@@ -611,12 +612,20 @@ top:
     *length = c->end;
     c->state++; // HTTP_COMPLETE
   } else if (!buffer_full (c) && http_read (c) > 0)
-    goto top;
+    goto top; //如果读取不满且还有数据可以读取，则继续读取。
   else *length = c->length;
   *length -= c->data - c->buffer;
   return c->data;
 }
 
+/*
+
+memmove 函数原型：
+
+void *memmove(void *dest, const void *src, size_t n);
+
+这个函数的功能见前面的解释。
+*/
 void http_rebuffer (void *conn, char *data) {
   HttpConnection *c = conn;
   int n;
@@ -624,7 +633,7 @@ void http_rebuffer (void *conn, char *data) {
     if (c->end) c->end -= n;
     c->length -= n;
     c->data = c->buffer;
-    memmove (c->buffer, data, c->length + 1);
+    memmove (c->buffer, data, c->length + 1); //将最后一个字节'\0'也带上。
   }
 }
 
@@ -653,6 +662,7 @@ top:
 #define HTTP_CONTENT_LENGTH 8
 #define HTTP_CONNECTION 16
 #define HTTP_LOCATION 32
+
 
 //HTTP数据接收的各个状态。enum HttpState {HTTP_START, HTTP_HEADER, HTTP_DATA, HTTP_COMPLETE, HTTP_CLOSED};
 // receive an HTTP message 接收HTTP数据。由于接收的数据中包含了基本的数据的信息，所以可以反推出来这项数据该怎么保存？？
@@ -748,7 +758,7 @@ int http_receive (void *conn) {
             c->content_type = data;
             break;
           case 3: // Content-Length
-            data = ows (number (&c->end, data));
+            data = ows (number (&c->end, data));  //获取到Content-Length的值并且将data指向下一行开始的地方
             if (data && *data == '\0')
               c->content_length = c->end;
             else c->error = 400;

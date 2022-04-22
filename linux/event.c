@@ -211,13 +211,14 @@ poll:
 retry:
 
     /*
-      3、epoll_wait 函数
+      3、 epoll_wait 函数
          函数声明:int epoll_wait(int epfd,struct epoll_event * events,int maxevents,int timeout)
          功能：该函数用于轮询I/O事件的发生；
          @epfd：由epoll_create生成的epoll专用的文件描述符；
          @epoll_event：用于回传待处理事件的数组；
          @maxevents：每次能处理最大数量的事件数；
-         @timeout：等待I/O事件发生的超时值；
+         @timeout：等待I/O事件发生的超时值；指定超时值为-1会导致epoll_wait（）无限期阻塞，
+         而指定的超时时间等于零导致epoll_wait（）立即返回，即使没有可用事件。
          成功：成功将返回触发I0事件的fd个数。错误将返回-1，并设定errno；时将返回0;
     */
     

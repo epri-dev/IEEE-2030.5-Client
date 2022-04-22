@@ -42,16 +42,21 @@ int signed_int (int64_t *y, char *data) {
 #define pack_unsigned(dest, ux, data) \
   (unsigned_int (&ux, data)? *dest = ux, 1 : 0)
 
+
+//解析出来一个 token 。
 int parse_token (Parser *p) {
   if (!p->need_token) return p->token;
   switch ((p->token = xml_token (p->xml))) {
   case XML_INVALID:
     p->state = PARSE_INVALID;
+    printf("parse_token:PARSE_INVALID\n");
     return XML_INVALID;
   case XML_INCOMPLETE:
     p->ptr = (uint8_t *)p->xml->content;
+    printf("parse_token:XML_INCOMPLETE\n");
     return XML_INCOMPLETE;
   default:
+    printf("parse_token:default,p->token:%d\n",p->token);
     p->need_token = 0;
     return p->token;
   }
@@ -67,6 +72,7 @@ int parse_text (Parser *p) {
     p->ptr = "";
     break;
   default:
+    printf("parse_text:default return 0\n");
     return 0;
   }
   return 1;
@@ -90,17 +96,18 @@ int parse_hex (uint8_t *value, int n, char *data) {
   }
   return 1;
 }
-
+//解析一个tag中的属性值，将其填充到value指针给出的地址上去。这个地址是这个待解析的属性，在基类数据中的偏移地址。
 int parse_value (Parser *p, void *value) {
   int64_t sx;
   uint64_t ux;
   int type = p->se->xs_type;
   char *data = (char *)p->ptr;
   int n = type >> 4;
+  printf("parse_value:%s\n",data);
   switch (type & 0xf) {
   case XS_STRING:
     if (n) {
-      if (strlen (data) > n - 1) return 0;
+      if (strlen (data) > n - 1){printf("parse_value:XS_STRING length error\n");return 0;}
       strcpy (value, data);
     } else *(char **)(value) = strdup (data);
     return 1;
@@ -134,6 +141,7 @@ int parse_value (Parser *p, void *value) {
   case XS_UBYTE:
     return pack_unsigned ((uint8_t *)value, ux, data);
   }
+  printf("parse_value:return 0 at end\n");
   return 0;
 }
 
@@ -142,15 +150,15 @@ int parse_text_value (Parser *p, void *value) {
 }
 
 int start_tag (Parser *p, const SchemaElement *se) {
-  const char *name = se_name (se, p->schema);
+  const char *name = se_name (se, p->schema);printf("\nstart_tag:name:%s\n",name);
   switch (parse_token (p)) {
   case START_TAG:
   case EMPTY_TAG:
     if (p->empty) p->state = PARSE_INVALID;
     else if (!streq (name, p->xml->name)) break;
     else {
-      p->empty = p->token;
-      p->need_token = 1;
+      p->empty = p->token;  //
+      p->need_token = 1;    //
       if (p->empty && se->simple) p->state = PARSE_INVALID;
       else return 1;
     }
@@ -166,13 +174,17 @@ int start_tag (Parser *p, const SchemaElement *se) {
 
 int end_tag (Parser *p, const SchemaElement *se) {
   const char *name = se_name (se, p->schema);
-  switch (parse_token (p)) {
+  printf("end_tag:name:%s\n",name);
+  int token=0;
+  switch (token = parse_token (p)) {
   case END_TAG:
     if (streq (name, p->xml->name)) {
       p->need_token = 1;
+      printf("end_tag:return 1\n");
       return 1;
     }
   }
+  printf("end_tag:return 0,token:%d\n",token);
   return 0;
 }
 
@@ -182,12 +194,14 @@ int compare_names (const void *a, const void *b) {
   return strcmp (*name_a, *name_b);
 }
 
+//在schema->names( 在 se_schema.c 这个文档中 ) 中找到要搜索的name。
 void *find_se_name (const Schema *schema, char *name) {
   return bsearch (&name, schema->names, schema->length,
                   sizeof (char *), compare_names);
 }
 
 int xml_start (Parser *p) {
+  //static int times = 0;
   p->need_token = 1;
   while (1) {
     const char *const *name;
@@ -206,6 +220,7 @@ int xml_start (Parser *p) {
       p->need_token = !p->empty;
       return 1;
     case XML_INCOMPLETE:
+      //printf("xml_start:XML_INCOMPLETE,#%d\n",times++);
       return 0;
     default:
       goto invalid;
@@ -213,35 +228,42 @@ int xml_start (Parser *p) {
   }
 invalid:
   p->state = PARSE_INVALID;
+  printf("xml_start:PARSE_INVALID,return 0\n");
   return 0;
 }
-
+/*检查当前的这个se（从se_schema中取出的某一行）是否：1）属于了前面从xml中解析出来的属性表中的其中一个属性，如果是，则接下去的步骤是解析该属性。2）是否是一个tag，如果是，则接下去解析*/
 int xml_next (Parser *p) {
   const SchemaElement *se = p->se;
   while (p->state == PARSE_NEXT) {
-    if (!se->n) p->state = PARSE_END;
+    if (!se->n) p->state = PARSE_END; //如果n=0，表示这一个基类中的子类都已经解析完了，解析到此结束。
     else if (se->attribute) {
-      const char *name = se_name (se, p->schema);
+      const char *name = se_name (se, p->schema);printf("xml_next:se name:%s\n",name);
       if ((p->ptr = attr_value (p->xml->attr, name)))
         p->state = PARSE_ELEMENT;
     } else if (!p->empty) {
       if (start_tag (p, se)) p->state = PARSE_ELEMENT;
-      else if (p->token == XML_INCOMPLETE) return 0;
+      else if (p->token == XML_INCOMPLETE) {
+        printf("xml_next:XML_INCOMPLETE,return 0\n");
+        return 0;
+      }
     } else if (se->min) p->state = PARSE_INVALID;
-    se++;
+    se++; //从基类开始，逐个子类解析。
   }
   p->se = se - 1;
   return 1;
 }
+
 
 int xml_end (Parser *p, const SchemaElement *se) {
   if (p->empty || end_tag (p, se)) {
     p->empty = 0;
     return 1;
   }
+  printf("xml_end:return 0\n");
   return 0;
 }
 
+//应该是1表示成功。
 int xml_sequence (Parser *p, StackItem *t) {
   const SchemaElement *se = t->se;
   if (start_tag (p, se)) return 1;
@@ -252,24 +274,25 @@ int xml_sequence (Parser *p, StackItem *t) {
   return 0;
 }
 
+//
 void parse_done (Parser *p) {
   p->ptr = p->xml->data;
   p->xml->content = NULL;
 }
 
+/*
+
+*/
 void xml_rebuffer (Parser *p, char *data, int length) {
   XmlParser *xml = p->xml;
   if (xml->content) {
-    int offset = xml->content - data;
-    xml->content = data;
-    xml->data -= offset;
+    int offset = xml->content - data; //这应该是一个负值。
+    xml->content = data;  //content 重新指向新的数据
+    xml->data -= offset;  /* data指针重新定位到以传入的 data 指针开始的地方 */
   } else xml->data = data;
 }
 
-const ParserDriver xml_parser = {
-  xml_start, xml_next, xml_end, xml_sequence,
-  parse_value, parse_text_value, parse_done, xml_rebuffer
-};
+const ParserDriver xml_parser = { xml_start, xml_next, xml_end, xml_sequence,parse_value, parse_text_value, parse_done, xml_rebuffer };
 
 /*XML parser 的初始化*/
 void parse_init (Parser *p, const Schema *schema, char *data) {

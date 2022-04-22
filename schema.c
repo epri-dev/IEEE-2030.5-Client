@@ -36,7 +36,7 @@ typedef struct {
 typedef struct _Schema {
   const char *namespace;  /* "http://ieee.org/2030.5" */
   const char *schemaId;   /* "S1" */
-  const int length;     /* 下面的 schema->elements 数组中，在se_types.h中定义的基本类型type的个数，而不是下面的elements长度。*/
+  const int length;     /* 下面的 schema->elements 数组中，在 se_types.h 中定义的基本类型type的个数（最后一个是SE_mRIDType 320），而不是下面的elements长度。*/
   const SchemaElement *elements;        /* 一个数组，是SchemaElement元素的集合。其中前面的length部分，跟后面的部分内容不一样。 */
   const char *const *names; /* 名字列表 */
   const uint16_t *ids;  /* id列表 */
@@ -201,9 +201,9 @@ const char *type_name (int type, const Schema *schema) {
 
 /*参数中，se是从属于schema对象中的一个元素。在现在这个程序中，获取的是全局变量se_names[]中的有一个字符串*/
 const char *se_name (const SchemaElement *se, const Schema *schema) {
-  int index = se - schema->elements;/*获取se在数组schema->elementsh中的相对位置*/
-  int id = index < schema->length ? index : schema->ids[index - schema->length];
-  return schema->names[id];
+  int index = se - schema->elements;/*获取se在数组 schema->elements 中的相对位置*/
+  int id = index < schema->length ? index : schema->ids[index - schema->length];  /*排在 schema->length 之前的是基类；如果超过基类范围，则取ids中的值作为偏移量*/
+  return schema->names[id]; //最后获得名字。
 }
 
 //不同的元素的占用空间大小

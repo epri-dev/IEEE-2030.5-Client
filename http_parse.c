@@ -71,13 +71,16 @@ static char *qvalue (int *q, char *data) {
   return data;
 }
 
-//移动字符串指针，跳过那些空格或者tab
+
+//移动字符串指针，跳过那些空格或者tab。ows这三个字母应该是 " omit white space " 的意思。
+
 static char *ows (char *data) {
   int c;
   if (!data) return NULL;
   for (c = *data; hws (c); c = *(++data));
   return data;
 }
+
 
 typedef struct {
   char *type, *sub;
