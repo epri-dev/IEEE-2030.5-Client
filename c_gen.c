@@ -649,17 +649,33 @@ void print_schema (List *sorted, SchemaDoc *doc) {
       names = q;
     } else names = list_insert (names, e->name);
   }
+
+  int print_new_line = 0;
   qnames = list_reverse (list_cat (qnames, names));
   print ("const char * const se_names[] = {");
-  foreach (q, qnames) print ("\"%s\", ", q->data);
+  foreach (q, qnames) {
+    print ("\"%s\", ", q->data);
+    if(++print_new_line == 10){
+      print_new_line =0;
+      print ("\n");
+    }
+  }
   print ("};\n\n");
+  
+  print_new_line =0;
   print ("const uint16_t se_ids[] = {");
   foreach (s, sorted) {
     SchemaType *t = s->data;
     if (t->kind != ComplexType) continue;
     if (t->name) print ("0, ");
-    foreach (te, t->entries)
-    print ("%d, ", find_index_by_name (qnames, te->name));
+    foreach (te, t->entries){
+      print ("%d, ", find_index_by_name (qnames, te->name));
+      if(++print_new_line == 30){
+        print_new_line = 0;
+        print ("\n");
+      }
+
+    }
   }
   print ("};\n\n");
   print ("Schema se_schema = "

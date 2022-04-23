@@ -56,7 +56,7 @@ int parse_token (Parser *p) {
     printf("parse_token:XML_INCOMPLETE\n");
     return XML_INCOMPLETE;
   default:
-    printf("parse_token:default,p->token:%d\n",p->token);
+    printf("parse_token:default:succeed,token name:%s\n",p->xml->name);
     p->need_token = 0;
     return p->token;
   }
@@ -150,7 +150,7 @@ int parse_text_value (Parser *p, void *value) {
 }
 
 int start_tag (Parser *p, const SchemaElement *se) {
-  const char *name = se_name (se, p->schema);printf("\nstart_tag:name:%s\n",name);
+  const char *name = se_name (se, p->schema);//printf("\nstart_tag:name:%s\n",name);
   switch (parse_token (p)) {
   case START_TAG:
   case EMPTY_TAG:
@@ -194,12 +194,13 @@ int compare_names (const void *a, const void *b) {
   return strcmp (*name_a, *name_b);
 }
 
-//在schema->names( 在 se_schema.c 这个文档中 ) 中找到要搜索的name。
+//在schema->names( 在 se_schema.c 这个文档中 ) 中找到要搜索的name，看是否存在。
 void *find_se_name (const Schema *schema, char *name) {
   return bsearch (&name, schema->names, schema->length,
                   sizeof (char *), compare_names);
 }
 
+/*解析到一个“START_TAG”，取得其名字和属性，以及名字相对应的se位置*/
 int xml_start (Parser *p) {
   //static int times = 0;
   p->need_token = 1;
@@ -211,16 +212,16 @@ int xml_start (Parser *p) {
       p->xml_decl = 1;
       p->need_token = 1;
       continue;
-    case START_TAG:
+    case START_TAG: //如果解析到一个表示“开始”的tag
     case EMPTY_TAG:
       if (!(name = find_se_name (p->schema, p->xml->name))) goto invalid;
-      p->type = name - p->schema->names;
-      p->se = &p->schema->elements[p->type];
+      p->type = name - p->schema->names;    //相对于数组首元素的偏移量，与 se_types.h 中定义的类型定义一致。
+      p->se = &p->schema->elements[p->type];//在 elements 数组中的位置
       p->empty = p->token;
       p->need_token = !p->empty;
+      printf("xml_start:succeed to parse a tag,name:%s,return 1\n",p->xml->name);
       return 1;
     case XML_INCOMPLETE:
-      //printf("xml_start:XML_INCOMPLETE,#%d\n",times++);
       return 0;
     default:
       goto invalid;
@@ -228,9 +229,10 @@ int xml_start (Parser *p) {
   }
 invalid:
   p->state = PARSE_INVALID;
-  printf("xml_start:PARSE_INVALID,return 0\n");
+  printf("xml_start:PARSE_INVALID,tag name:%s,return 0\n",p->xml->name);
   return 0;
 }
+
 /*检查当前的这个se（从se_schema中取出的某一行）是否：1）属于了前面从xml中解析出来的属性表中的其中一个属性，如果是，则接下去的步骤是解析该属性。2）是否是一个tag，如果是，则接下去解析*/
 int xml_next (Parser *p) {
   const SchemaElement *se = p->se;

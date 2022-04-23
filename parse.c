@@ -126,7 +126,7 @@ struct _ParserDriver;
 typedef struct _Parser {
   void *obj;  //用于存放这个数据对象的存储空间地址？？应该是解析后的对象。
   int type;   // completed object and type 完成解析后的数据对象和类型
-  struct _XmlParser *xml; //要解析的xml对象？？
+  struct _XmlParser *xml; //xml解析器。
   ElementStack stack;
   const Schema *schema;
   const SchemaElement *se;  //SchemaElement对象列表
@@ -134,7 +134,7 @@ typedef struct _Parser {
   void *base; //用于存放这个数据对象的空间？？
   uint8_t *ptr, *end;//ptr是当前在处理的字符串（指针）。
   StringTable *global, *local;
-  int state, token, flag, bit;
+  int state, token, flag, bit;  //token：表示当前这个token的类型，取TokenType中的值。
   unsigned int xml_decl : 1;  //是否是 XML Declaration 类型的token
   unsigned int need_token : 1;  //??
   unsigned int empty : 1; //
@@ -224,26 +224,21 @@ const ParserDriver xml_parser={xml_start,xml_next,xml_end,xml_sequence,parse_val
 */
 
 void *parse_doc (Parser *p, int *type) {
-  static int iterate=0;
   const SchemaElement *se;
   const ParserDriver *d = p->driver;
   ElementStack *stack = &p->stack;
   StackItem *t;
   int size;
-  printf("parse_doc:%d\n",iterate++);
   while (1) {
     switch (p->state) {
     case PARSE_START:
-      //printf("parse_doc:PARSE_START:1\n");
-      ok (d->parse_start (p));  // xml_start
-      //printf("parse_doc:PARSE_START:2\n");
+      ok (d->parse_start (p));  // xml_start，得到一个 "start_tag" 
       stack->n = 0;
       p->state++;
       size = object_element_size (p->se, p->schema);
       p->obj = p->base = calloc (1, size);  //首先是构建了这个对象的基类的存放空间。
       break;
     case PARSE_ELEMENT:
-      //printf("parse_doc:PARSE_ELEMENT\n");
       se = p->se;//上一次的经过了设置之后的
       p->flag = se->bit;//将这个se的表示自己在父级中的中表示占据第几位的 bit 传递到 parser
       if (se->attribute) {  //如果含有“属性”成员
@@ -282,13 +277,8 @@ parse_element:
       break;
 parse_value:
       p->state = PARSE_VALUE;
-      
     case PARSE_VALUE:
-      
-      //printf("parse_doc:PARSE_VALUE:1\n");
       ok (d->parse_value (p, p->base));      //parse_text_value
-      //printf("parse_doc:PARSE_VALUE:2\n");
-
       p->state++; //PARSE_END
       break;
     case PARSE_END:

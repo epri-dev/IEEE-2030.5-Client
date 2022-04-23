@@ -11,15 +11,21 @@
 #define MAX_ATTRIBUTE 16
 
 typedef struct _XmlParser {
-  char *name, *content, *data;  // name指的是上次解析后的token的名字。    content 和 data 指向所要解析的数据（文本），data是一个活动的指针，content是首地址。
+  char *name, *content, *data;  
+  /*
+  name指的是当前token的名字。    
+  content 和 data 指向所要解析的数据（文本），data是一个在解析过程中向后移动的指针，content是首地址。
+  */
   int state, token, length;     // state : 当前解析到哪一步了。 token:指的是类型，由TokenType这个类型来指定。
-  char *attr[MAX_ATTRIBUTE * 2];
+  char *attr[MAX_ATTRIBUTE * 2];//记录这一个tag的所有属性的数组，存放的是 key - value 的指针值。
 } XmlParser;
 
 enum TokenType {START_TAG, EMPTY_TAG, END_TAG, XML_DECL, XML_PI, XML_TEXT,
                 XML_NONE, XML_INCOMPLETE, XML_INVALID
                };
 /*含义解释
+START_TAG:一个表示一段内容的开始的 tag ，可能包含了属性。
+
 XML_DECL:
 The XML declaration is a processing instruction that identifies the document as being XML.
 All XML documents should begin with an XML declaration.
@@ -61,7 +67,7 @@ int name_char (int c) { /*空格、等号没有包含在内*/
 }
 
 
-//获取到一个tag中的名字部分，比如   <TimeLink href="/dcap/tm"/>中，TimeLink就是name。
+//获取到一个tag中的名字部分的最后一个字符的位置，比如   <TimeLink href="/dcap/tm"/>中，TimeLink就是name。
 char *xml_name (char *data) {
   int first = 1, c;
   char *next;
@@ -142,7 +148,7 @@ char *token_end (char *data, char *end, int n) {
 
 /*实例：<EndDeviceListLink all="1" href="/edev"/>  
 属性的值，都是用双引号或者单引号包含起来。
-函数作用：将一个以双引号或者单引号开头的字符串放到value数组中，然后再这个函数中对这个字符串执行解析，
+函数作用：将一个以双引号或者单引号开头的字符串放到value数组中，然后在这个函数中对这个字符串执行解析，
 得到“属性”的有效部分，最后指针指向处理过了的字符串之后的位置。
 */
 char *att_value (char *value) {
@@ -173,21 +179,21 @@ char *xml_eq (char *data) {
   return *eq == '=' ? trim (eq + 1) : NULL;
 }
 
-/**/
+/*attr是一个存储属性的 key 和 value 的数组，这里将全部的属性都解析出来。*/
 char *xml_attributes (char **attr, char *data) {
   char *next, *end;
   int i = 0;
   data = trim (data);
-  memset (attr, 0, sizeof(char *)*MAX_ATTRIBUTE * 2);
+  memset (attr, 0, sizeof(char *)*MAX_ATTRIBUTE * 2); //每隔单元中放的都是指针。所以如果遇到0的，就表示到此结束。所以这里没有一个专门用于表示数组长度的单元。
   while (end = xml_name (data)) {
     char *value = xml_eq (end); //跳过等号。
     if (value && (next = att_value (value++))) {
-      *end = '\0';
+      *end = '\0';  //将这个属性的名字部分截断
       attr[i] = data; //存储的是地址。
       attr[i + 1] = value;  //存储的都是地址
       i = (i + 2) % (2 * MAX_ATTRIBUTE);  //保证不会溢出。但是如果过长的话导致前面几个会被覆盖掉。
     } else return NULL;
-    data = trim (next); //跳过空白字符，然后指向下一个名字开始的地方
+    data = trim (next); //跳过空白字符，然后指向下一个属性的 key 即名字开始的地方
   }
   return data;
 }
@@ -213,16 +219,16 @@ int xml_pi (XmlParser *p, char *data) {
   return 1;
 }
 
-//
+/*将这个tag的名字取出，并且解析所有的属性，放到attr数组中。*/
 char *xml_tag (XmlParser *p, char *data) {
-  char *end;
+  char *end;  //如果是类似于 "</EndDeviceList>" 这样的，那么就是一个表示结束的 tag。否则就是表示开始的tag
   p->token = *data == '/' ? data++, END_TAG : START_TAG;  //先判断 *data == '/'，最后才对 p->token 赋值。如果遇到 / 则表示一个tag结束了。比如 <TimeLink href="/dcap/tm"/>
-  p->name = data;
-  ok (data = end = xml_name (data));
+  p->name = data;   //将name的开始部分保存下来。
+  ok (data = end = xml_name (data));  //得到这个 tag 的 name 的结尾位置
   if (p->token == START_TAG) {
     if (ws (*data))
       ok (data = xml_attributes (p->attr, data + 1));
-    if (*data == '/') data++, p->token = EMPTY_TAG;
+    if (*data == '/') data++, p->token = EMPTY_TAG; // 空的tag??  没有内容的 tag ?
   } else data = trim (data);
   ok (*data == '>');
   *end = '\0';
@@ -232,7 +238,7 @@ char *xml_tag (XmlParser *p, char *data) {
 // scan an xml token, return the token type 
 
 /*
-扫描一个token，返回这个token的类型
+扫描一个token，返回这个token的类型以及解析出这个token中的所有属性。
 */
 
 int xml_token (XmlParser *p) {
@@ -271,7 +277,7 @@ int xml_token (XmlParser *p) {
         } else goto incomplete;
       }
       break;
-    case 2: // "<" (tag)
+    case 2: // "<" (tag)  如果是一个"<"符号，则解析到末尾，将整个"<>"包围的内容全部解析出来，包含这个tag的name，各项属性值。
       switch (c) {
       case '!': //如果是!开头的，则是注释
         state = 4;
@@ -291,7 +297,7 @@ int xml_token (XmlParser *p) {
         }
         if (strchr (next, '>'))
           return (p->data = xml_tag (p, data)) ?
-                 p->state = 0, p->token : XML_INVALID;
+                 p->state = 0, p->token : XML_INVALID;  //返回这次解析到的token类型。
         goto incomplete;
       }
       break;
