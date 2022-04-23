@@ -3056,8 +3056,9 @@ typedef struct {
 #define SE_FunctionSetAssignmentsListLink_exists (1 << 17)
 #define SE_FlowReservationResponseListLink_exists (1 << 18)
 #define SE_FlowReservationRequestListLink_exists (1 << 19)
-#define SE_enabled_true (1 << 20)
-#define SE_enabled_exists (1 << 21)
+#define SE_deviceCategory_exists (1 << 20)
+#define SE_enabled_true (1 << 21)
+#define SE_enabled_exists (1 << 22)
 typedef struct {
   uint32_t _flags;
   char * href;
@@ -3075,6 +3076,7 @@ typedef struct {
   SE_PowerStatusLink_t PowerStatusLink;
   SE_SFDIType_t sFDI;
   SE_TimeType_t changedTime;
+  SE_DeviceCategoryType_t deviceCategory;
   SE_FlowReservationRequestListLink_t FlowReservationRequestListLink;
   SE_FlowReservationResponseListLink_t FlowReservationResponseListLink;
   SE_FunctionSetAssignmentsListLink_t FunctionSetAssignmentsListLink;

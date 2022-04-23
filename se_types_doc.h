@@ -11519,8 +11519,10 @@
 
 #define SE_FlowReservationRequestListLink_exists (1 << 19)
 
-#define SE_enabled_true (1 << 20)
-#define SE_enabled_exists (1 << 21)
+#define SE_deviceCategory_exists (1 << 20)
+
+#define SE_enabled_true (1 << 21)
+#define SE_enabled_exists (1 << 22)
 
     @var SE_EndDevice_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -11548,6 +11550,9 @@
 
     @var SE_EndDevice_t::changedTime
     The time at which this resource was last modified or created.
+
+    @var SE_EndDevice_t::deviceCategory
+    Specifies the bitmap indicating  the categories of devices that SHOULD respond. Devices SHOULD ignore events that do not indicate their device category. If not present, all devices SHOULD respond.
 
     @var SE_EndDevice_t::FlowReservationRequestListLink
     @var SE_EndDevice_t::FlowReservationResponseListLink

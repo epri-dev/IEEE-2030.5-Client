@@ -412,6 +412,8 @@ int main () {
   List *sorted;
   SchemaDoc doc = {0};
 
+  printf("schema_gen start...\n");  //在没有加这条printf之前，执行该程序会报告错误：segmentation fault (core dumped) 错误。可能是编译的过程错误导致的。
+  
   Named *se_list = load_list ("se_list.txt");
   Element *root = xml_read ("sep.xsd");
   process_schema (&doc, root);
@@ -435,6 +437,9 @@ int main () {
   file = fopen ("se_list.c", "wb+");
   print_list_info (se_list, doc.types);
   fclose (file);
+
+  printf("schema_gen finished\n");
+  
   // java_gen (&doc);
   return 0;
 }
