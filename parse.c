@@ -266,7 +266,7 @@ void *parse_doc (Parser *p, int *type) {
 parse_element:
       if (se->simple) goto parse_value;
       p->se = &p->schema->elements[se->index + 1];
-      p->state = PARSE_NEXT;
+      p->state = PARSE_NEXT;  //注意这里没有break
     case PARSE_NEXT:
       ok (d->parse_next (p));// xml_next
       break;
@@ -299,7 +299,7 @@ parse_value:
         d->parse_done (p);
         p->state = PARSE_START;
         *type = p->type;
-        printf("parse_doc:succeed,return p->obj:0x%lx\n",(long)p->obj);
+        printf("parse_doc:succeed\n");
         return p->obj;
       }
       break;

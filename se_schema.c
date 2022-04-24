@@ -101,23 +101,23 @@ const SchemaElement se_elements[] = {
   {.min=1, .max=1, .index=1362}, // DemandResponseProgramLink
   {.min=1, .max=1, .index=1355}, // DemandResponseProgramList
   {.min=1, .max=1, .index=1765}, // DemandResponseProgramListLink
-  {.min=1, .max=1, .index=1929}, // DeviceCapability
+  {.min=1, .max=1, .index=1931}, // DeviceCapability
   {.min=1, .max=1, .index=458}, // DeviceCapabilityLink
   {.min=1, .max=1, .simple=1, .xs_type=xs_type(XS_HEX_BINARY,4)}, // DeviceCategoryType
   {.min=1, .max=1, .index=1617}, // DeviceInformation
   {.min=1, .max=1, .index=1821}, // DeviceInformationLink
-  {.min=1, .max=1, .index=1912}, // DeviceStatus
+  {.min=1, .max=1, .index=1914}, // DeviceStatus
   {.min=1, .max=1, .index=1819}, // DeviceStatusLink
   {.min=1, .max=1, .index=1685}, // DrResponse
   {.min=1, .max=1, .simple=1, .xs_type=xs_type(XS_HEX_BINARY,4)}, // DstRuleType
   {.min=1, .max=1, .index=1307}, // DutyCycle
-  {.min=1, .max=1, .index=1878}, // EndDevice
+  {.min=1, .max=1, .index=1880}, // EndDevice
   {.min=1, .max=1, .index=1311}, // EndDeviceControl
   {.min=1, .max=1, .index=1333}, // EndDeviceControlList
   {.min=1, .max=1, .index=1339}, // EndDeviceControlListLink
   {.min=1, .max=1, .index=456}, // EndDeviceLink
-  {.min=1, .max=1, .index=1901}, // EndDeviceList
-  {.min=1, .max=1, .index=1926}, // EndDeviceListLink
+  {.min=1, .max=1, .index=1903}, // EndDeviceList
+  {.min=1, .max=1, .index=1928}, // EndDeviceListLink
   {.min=1, .max=1, .index=1232}, // EnvironmentalCost
   {.min=1, .max=1, .index=432}, // Error
   {.min=1, .max=1, .index=630}, // Event
@@ -133,16 +133,16 @@ const SchemaElement se_elements[] = {
   {.min=1, .max=1, .simple=1, .xs_type=XS_UBYTE}, // FlowDirectionType
   {.min=1, .max=1, .index=823}, // FlowReservationRequest
   {.min=1, .max=1, .index=834}, // FlowReservationRequestList
-  {.min=1, .max=1, .index=1875}, // FlowReservationRequestListLink
+  {.min=1, .max=1, .index=1877}, // FlowReservationRequestListLink
   {.min=1, .max=1, .index=799}, // FlowReservationResponse
   {.min=1, .max=1, .index=813}, // FlowReservationResponseList
-  {.min=1, .max=1, .index=1872}, // FlowReservationResponseListLink
+  {.min=1, .max=1, .index=1874}, // FlowReservationResponseListLink
   {.min=1, .max=1, .index=1697}, // FlowReservationResponseResponse
   {.min=1, .max=1, .index=582}, // FreqDroopType
   {.min=1, .max=1, .index=1783}, // FunctionSetAssignments
   {.min=1, .max=1, .index=1771}, // FunctionSetAssignmentsBase
   {.min=1, .max=1, .index=1799}, // FunctionSetAssignmentsList
-  {.min=1, .max=1, .index=1869}, // FunctionSetAssignmentsListLink
+  {.min=1, .max=1, .index=1871}, // FunctionSetAssignmentsListLink
   {.min=1, .max=1, .index=994}, // HistoricalReading
   {.min=1, .max=1, .index=1001}, // HistoricalReadingList
   {.min=1, .max=1, .index=1016}, // HistoricalReadingListLink
@@ -184,7 +184,7 @@ const SchemaElement se_elements[] = {
   {.min=1, .max=1, .index=376}, // MirrorReadingSet
   {.min=1, .max=1, .index=406}, // MirrorUsagePoint
   {.min=1, .max=1, .index=421}, // MirrorUsagePointList
-  {.min=1, .max=1, .index=1923}, // MirrorUsagePointListLink
+  {.min=1, .max=1, .index=1925}, // MirrorUsagePointListLink
   {.min=1, .max=1, .index=1485}, // Neighbor
   {.min=1, .max=1, .index=1490}, // NeighborList
   {.min=1, .max=1, .index=1501}, // NeighborListLink
@@ -245,8 +245,8 @@ const SchemaElement se_elements[] = {
   {.min=1, .max=1, .index=327}, // ReadingType
   {.min=1, .max=1, .index=958}, // ReadingTypeLink
   {.min=1, .max=1, .index=884}, // RealEnergy
-  {.min=1, .max=1, .index=1859}, // Registration
-  {.min=1, .max=1, .index=1867}, // RegistrationLink
+  {.min=1, .max=1, .index=1861}, // Registration
+  {.min=1, .max=1, .index=1869}, // RegistrationLink
   {.min=1, .max=1, .index=820}, // RequestStatus
   {.min=1, .max=1, .index=325}, // Resource
   {.min=1, .max=1, .index=439}, // RespondableIdentifiedObject
@@ -260,8 +260,8 @@ const SchemaElement se_elements[] = {
   {.min=1, .max=1, .index=1750}, // ResponseSetListLink
   {.min=1, .max=1, .simple=1, .xs_type=xs_type(XS_HEX_BINARY,2)}, // RoleFlagsType
   {.min=1, .max=1, .simple=1, .xs_type=XS_ULONG}, // SFDIType
-  {.min=1, .max=1, .index=1843}, // SelfDevice
-  {.min=1, .max=1, .index=1921}, // SelfDeviceLink
+  {.min=1, .max=1, .index=1844}, // SelfDevice
+  {.min=1, .max=1, .index=1923}, // SelfDeviceLink
   {.min=1, .max=1, .index=849}, // ServiceChange
   {.min=1, .max=1, .simple=1, .xs_type=XS_UBYTE}, // ServiceKind
   {.min=1, .max=1, .simple=1, .xs_type=XS_UBYTE}, // ServiceStatusType
@@ -279,7 +279,7 @@ const SchemaElement se_elements[] = {
   {.min=1, .max=1, .index=1728}, // Subscription
   {.min=1, .max=1, .index=1709}, // SubscriptionBase
   {.min=1, .max=1, .index=1736}, // SubscriptionList
-  {.min=1, .max=1, .index=1864}, // SubscriptionListLink
+  {.min=1, .max=1, .index=1866}, // SubscriptionListLink
   {.min=1, .max=1, .index=840}, // SupplyInterruptionOverride
   {.min=1, .max=1, .index=844}, // SupplyInterruptionOverrideList
   {.min=1, .max=1, .index=876}, // SupplyInterruptionOverrideListLink
@@ -295,7 +295,7 @@ const SchemaElement se_elements[] = {
   {.min=1, .max=1, .index=1006}, // TariffProfileLink
   {.min=1, .max=1, .index=1203}, // TariffProfileList
   {.min=1, .max=1, .index=1747}, // TariffProfileListLink
-  {.min=1, .max=1, .index=1908}, // Temperature
+  {.min=1, .max=1, .index=1910}, // Temperature
   {.min=1, .max=1, .index=1122}, // TextMessage
   {.min=1, .max=1, .index=1136}, // TextMessageList
   {.min=1, .max=1, .index=1142}, // TextMessageListLink
@@ -2095,10 +2095,11 @@ const SchemaElement se_elements[] = {
   {.offset=offsetof(SE_ConfigurationLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
   // AbstractDevice (1828)
   {.size=sizeof(SE_AbstractDevice_t), .index=496},
-  {.offset=offsetof(SE_AbstractDevice_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=14},
-  {.offset=offsetof(SE_AbstractDevice_t,subscribable), .min=0, .max=1, .attribute=1, .bit=1, .xs_type=XS_UBYTE, .n=13},
-  {.offset=offsetof(SE_AbstractDevice_t,ConfigurationLink), .min=0, .max=1, .bit=14, .index=1826, .n=12},
-  {.offset=offsetof(SE_AbstractDevice_t,DERListLink), .min=0, .max=1, .bit=13, .index=1823, .n=11},
+  {.offset=offsetof(SE_AbstractDevice_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=15},
+  {.offset=offsetof(SE_AbstractDevice_t,subscribable), .min=0, .max=1, .attribute=1, .bit=1, .xs_type=XS_UBYTE, .n=14},
+  {.offset=offsetof(SE_AbstractDevice_t,ConfigurationLink), .min=0, .max=1, .bit=15, .index=1826, .n=13},
+  {.offset=offsetof(SE_AbstractDevice_t,DERListLink), .min=0, .max=1, .bit=14, .index=1823, .n=12},
+  {.offset=offsetof(SE_AbstractDevice_t,deviceCategory), .min=0, .max=1, .bit=13, .simple=1, .xs_type=xs_type(XS_HEX_BINARY,4), .n=11},
   {.offset=offsetof(SE_AbstractDevice_t,DeviceInformationLink), .min=0, .max=1, .bit=12, .index=1821, .n=10},
   {.offset=offsetof(SE_AbstractDevice_t,DeviceStatusLink), .min=0, .max=1, .bit=11, .index=1819, .n=9},
   {.offset=offsetof(SE_AbstractDevice_t,FileStatusLink), .min=0, .max=1, .bit=10, .index=1817, .n=8},
@@ -2109,13 +2110,14 @@ const SchemaElement se_elements[] = {
   {.offset=offsetof(SE_AbstractDevice_t,LogEventListLink), .min=0, .max=1, .bit=6, .index=1808, .n=3},
   {.offset=offsetof(SE_AbstractDevice_t,PowerStatusLink), .min=0, .max=1, .bit=5, .index=1806, .n=2},
   {.offset=offsetof(SE_AbstractDevice_t,sFDI), .min=1, .max=1, .simple=1, .xs_type=XS_ULONG, .n=1},
-  // SelfDevice (1843)
+  // SelfDevice (1844)
   {.size=sizeof(SE_SelfDevice_t), .index=1828},
-  {.offset=offsetof(SE_SelfDevice_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=15},
-  {.offset=offsetof(SE_SelfDevice_t,pollRate), .min=0, .max=1, .attribute=1, .bit=17, .xs_type=XS_UINT, .n=14},
-  {.offset=offsetof(SE_SelfDevice_t,subscribable), .min=0, .max=1, .attribute=1, .bit=1, .xs_type=XS_UBYTE, .n=13},
-  {.offset=offsetof(SE_SelfDevice_t,ConfigurationLink), .min=0, .max=1, .bit=14, .index=1826, .n=12},
-  {.offset=offsetof(SE_SelfDevice_t,DERListLink), .min=0, .max=1, .bit=13, .index=1823, .n=11},
+  {.offset=offsetof(SE_SelfDevice_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=16},
+  {.offset=offsetof(SE_SelfDevice_t,pollRate), .min=0, .max=1, .attribute=1, .bit=17, .xs_type=XS_UINT, .n=15},
+  {.offset=offsetof(SE_SelfDevice_t,subscribable), .min=0, .max=1, .attribute=1, .bit=1, .xs_type=XS_UBYTE, .n=14},
+  {.offset=offsetof(SE_SelfDevice_t,ConfigurationLink), .min=0, .max=1, .bit=15, .index=1826, .n=13},
+  {.offset=offsetof(SE_SelfDevice_t,DERListLink), .min=0, .max=1, .bit=14, .index=1823, .n=12},
+  {.offset=offsetof(SE_SelfDevice_t,deviceCategory), .min=0, .max=1, .bit=13, .simple=1, .xs_type=xs_type(XS_HEX_BINARY,4), .n=11},
   {.offset=offsetof(SE_SelfDevice_t,DeviceInformationLink), .min=0, .max=1, .bit=12, .index=1821, .n=10},
   {.offset=offsetof(SE_SelfDevice_t,DeviceStatusLink), .min=0, .max=1, .bit=11, .index=1819, .n=9},
   {.offset=offsetof(SE_SelfDevice_t,FileStatusLink), .min=0, .max=1, .bit=10, .index=1817, .n=8},
@@ -2126,37 +2128,38 @@ const SchemaElement se_elements[] = {
   {.offset=offsetof(SE_SelfDevice_t,LogEventListLink), .min=0, .max=1, .bit=6, .index=1808, .n=3},
   {.offset=offsetof(SE_SelfDevice_t,PowerStatusLink), .min=0, .max=1, .bit=5, .index=1806, .n=2},
   {.offset=offsetof(SE_SelfDevice_t,sFDI), .min=1, .max=1, .simple=1, .xs_type=XS_ULONG, .n=1},
-  // Registration (1859)
+  // Registration (1861)
   {.size=sizeof(SE_Registration_t), .index=325},
   {.offset=offsetof(SE_Registration_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=3},
   {.offset=offsetof(SE_Registration_t,pollRate), .min=0, .max=1, .attribute=1, .bit=17, .xs_type=XS_UINT, .n=2},
   {.offset=offsetof(SE_Registration_t,dateTimeRegistered), .min=1, .max=1, .simple=1, .xs_type=XS_LONG, .n=1},
   {.offset=offsetof(SE_Registration_t,pIN), .min=1, .max=1, .simple=1, .xs_type=XS_UINT, .n=1},
-  // SubscriptionListLink (1864)
+  // SubscriptionListLink (1866)
   {.size=sizeof(SE_SubscriptionListLink_t), .index=448},
   {.offset=offsetof(SE_SubscriptionListLink_t,all), .min=0, .max=1, .attribute=1, .bit=0, .xs_type=XS_USHORT, .n=2},
   {.offset=offsetof(SE_SubscriptionListLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
-  // RegistrationLink (1867)
+  // RegistrationLink (1869)
   {.size=sizeof(SE_RegistrationLink_t), .index=446},
   {.offset=offsetof(SE_RegistrationLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
-  // FunctionSetAssignmentsListLink (1869)
+  // FunctionSetAssignmentsListLink (1871)
   {.size=sizeof(SE_FunctionSetAssignmentsListLink_t), .index=448},
   {.offset=offsetof(SE_FunctionSetAssignmentsListLink_t,all), .min=0, .max=1, .attribute=1, .bit=0, .xs_type=XS_USHORT, .n=2},
   {.offset=offsetof(SE_FunctionSetAssignmentsListLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
-  // FlowReservationResponseListLink (1872)
+  // FlowReservationResponseListLink (1874)
   {.size=sizeof(SE_FlowReservationResponseListLink_t), .index=448},
   {.offset=offsetof(SE_FlowReservationResponseListLink_t,all), .min=0, .max=1, .attribute=1, .bit=0, .xs_type=XS_USHORT, .n=2},
   {.offset=offsetof(SE_FlowReservationResponseListLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
-  // FlowReservationRequestListLink (1875)
+  // FlowReservationRequestListLink (1877)
   {.size=sizeof(SE_FlowReservationRequestListLink_t), .index=448},
   {.offset=offsetof(SE_FlowReservationRequestListLink_t,all), .min=0, .max=1, .attribute=1, .bit=0, .xs_type=XS_USHORT, .n=2},
   {.offset=offsetof(SE_FlowReservationRequestListLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
-  // EndDevice (1878)
+  // EndDevice (1880)
   {.size=sizeof(SE_EndDevice_t), .index=1828},
-  {.offset=offsetof(SE_EndDevice_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=14},
-  {.offset=offsetof(SE_EndDevice_t,subscribable), .min=0, .max=1, .attribute=1, .bit=1, .xs_type=XS_UBYTE, .n=13},
-  {.offset=offsetof(SE_EndDevice_t,ConfigurationLink), .min=0, .max=1, .bit=14, .index=1826, .n=12},
-  {.offset=offsetof(SE_EndDevice_t,DERListLink), .min=0, .max=1, .bit=13, .index=1823, .n=11},
+  {.offset=offsetof(SE_EndDevice_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=15},
+  {.offset=offsetof(SE_EndDevice_t,subscribable), .min=0, .max=1, .attribute=1, .bit=1, .xs_type=XS_UBYTE, .n=14},
+  {.offset=offsetof(SE_EndDevice_t,ConfigurationLink), .min=0, .max=1, .bit=15, .index=1826, .n=13},
+  {.offset=offsetof(SE_EndDevice_t,DERListLink), .min=0, .max=1, .bit=14, .index=1823, .n=12},
+  {.offset=offsetof(SE_EndDevice_t,deviceCategory), .min=0, .max=1, .bit=13, .simple=1, .xs_type=xs_type(XS_HEX_BINARY,4), .n=11},
   {.offset=offsetof(SE_EndDevice_t,DeviceInformationLink), .min=0, .max=1, .bit=12, .index=1821, .n=10},
   {.offset=offsetof(SE_EndDevice_t,DeviceStatusLink), .min=0, .max=1, .bit=11, .index=1819, .n=9},
   {.offset=offsetof(SE_EndDevice_t,FileStatusLink), .min=0, .max=1, .bit=10, .index=1817, .n=8},
@@ -2168,27 +2171,26 @@ const SchemaElement se_elements[] = {
   {.offset=offsetof(SE_EndDevice_t,PowerStatusLink), .min=0, .max=1, .bit=5, .index=1806, .n=2},
   {.offset=offsetof(SE_EndDevice_t,sFDI), .min=1, .max=1, .simple=1, .xs_type=XS_ULONG, .n=1},
   {.offset=offsetof(SE_EndDevice_t,changedTime), .min=1, .max=1, .simple=1, .xs_type=XS_LONG, .n=1},
-  {.min=0, .max=1, .bit=21, .simple=1, .xs_type=XS_BOOLEAN, .n=8},
-  {.offset=offsetof(SE_EndDevice_t,deviceCategory), .min=0, .max=1, .bit=20, .simple=1, .xs_type=xs_type(XS_HEX_BINARY,4), .n=7},
-  {.offset=offsetof(SE_EndDevice_t,FlowReservationRequestListLink), .min=0, .max=1, .bit=19, .index=1875, .n=6},
-  {.offset=offsetof(SE_EndDevice_t,FlowReservationResponseListLink), .min=0, .max=1, .bit=18, .index=1872, .n=5},
-  {.offset=offsetof(SE_EndDevice_t,FunctionSetAssignmentsListLink), .min=0, .max=1, .bit=17, .index=1869, .n=4},
-  {.offset=offsetof(SE_EndDevice_t,RegistrationLink), .min=0, .max=1, .bit=16, .index=1867, .n=3},
-  {.offset=offsetof(SE_EndDevice_t,SubscriptionListLink), .min=0, .max=1, .bit=15, .index=1864, .n=2},
-  // EndDeviceList (1901)
+  {.min=0, .max=1, .bit=21, .simple=1, .xs_type=XS_BOOLEAN, .n=7},
+  {.offset=offsetof(SE_EndDevice_t,FlowReservationRequestListLink), .min=0, .max=1, .bit=20, .index=1877, .n=6},
+  {.offset=offsetof(SE_EndDevice_t,FlowReservationResponseListLink), .min=0, .max=1, .bit=19, .index=1874, .n=5},
+  {.offset=offsetof(SE_EndDevice_t,FunctionSetAssignmentsListLink), .min=0, .max=1, .bit=18, .index=1871, .n=4},
+  {.offset=offsetof(SE_EndDevice_t,RegistrationLink), .min=0, .max=1, .bit=17, .index=1869, .n=3},
+  {.offset=offsetof(SE_EndDevice_t,SubscriptionListLink), .min=0, .max=1, .bit=16, .index=1866, .n=2},
+  // EndDeviceList (1903)
   {.size=sizeof(SE_EndDeviceList_t), .index=539},
   {.offset=offsetof(SE_EndDeviceList_t,all), .min=1, .max=1, .attribute=1, .xs_type=XS_USHORT, .n=1},
   {.offset=offsetof(SE_EndDeviceList_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=3},
   {.offset=offsetof(SE_EndDeviceList_t,pollRate), .min=0, .max=1, .attribute=1, .bit=17, .xs_type=XS_UINT, .n=2},
   {.offset=offsetof(SE_EndDeviceList_t,results), .min=1, .max=1, .attribute=1, .xs_type=XS_UBYTE, .n=1},
   {.offset=offsetof(SE_EndDeviceList_t,subscribable), .min=0, .max=1, .attribute=1, .bit=1, .xs_type=XS_UBYTE, .n=3},
-  {.offset=offsetof(SE_EndDeviceList_t,EndDevice), .min=0, .unbounded=1, .index=1878, .n=2},
-  // Temperature (1908)
+  {.offset=offsetof(SE_EndDeviceList_t,EndDevice), .min=0, .unbounded=1, .index=1880, .n=2},
+  // Temperature (1910)
   {.size=sizeof(SE_Temperature_t), .index=0},
   {.offset=offsetof(SE_Temperature_t,multiplier), .min=1, .max=1, .simple=1, .xs_type=XS_BYTE, .n=1},
   {.offset=offsetof(SE_Temperature_t,subject), .min=1, .max=1, .simple=1, .xs_type=XS_UBYTE, .n=1},
   {.offset=offsetof(SE_Temperature_t,value), .min=1, .max=1, .simple=1, .xs_type=XS_SHORT, .n=1},
-  // DeviceStatus (1912)
+  // DeviceStatus (1914)
   {.size=sizeof(SE_DeviceStatus_t), .index=325},
   {.offset=offsetof(SE_DeviceStatus_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=3},
   {.offset=offsetof(SE_DeviceStatus_t,pollRate), .min=0, .max=1, .attribute=1, .bit=17, .xs_type=XS_UINT, .n=2},
@@ -2196,20 +2198,20 @@ const SchemaElement se_elements[] = {
   {.offset=offsetof(SE_DeviceStatus_t,onCount), .min=0, .max=1, .bit=7, .simple=1, .xs_type=XS_USHORT, .n=6},
   {.offset=offsetof(SE_DeviceStatus_t,opState), .min=0, .max=1, .bit=6, .simple=1, .xs_type=XS_UBYTE, .n=5},
   {.offset=offsetof(SE_DeviceStatus_t,opTime), .min=0, .max=1, .bit=5, .simple=1, .xs_type=XS_UINT, .n=4},
-  {.offset=offsetof(SE_DeviceStatus_t,Temperature), .min=0, .unbounded=1, .index=1908, .n=3},
+  {.offset=offsetof(SE_DeviceStatus_t,Temperature), .min=0, .unbounded=1, .index=1910, .n=3},
   {.offset=offsetof(SE_DeviceStatus_t,TimeLink), .min=0, .max=1, .bit=4, .index=1745, .n=2},
-  // SelfDeviceLink (1921)
+  // SelfDeviceLink (1923)
   {.size=sizeof(SE_SelfDeviceLink_t), .index=446},
   {.offset=offsetof(SE_SelfDeviceLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
-  // MirrorUsagePointListLink (1923)
+  // MirrorUsagePointListLink (1925)
   {.size=sizeof(SE_MirrorUsagePointListLink_t), .index=448},
   {.offset=offsetof(SE_MirrorUsagePointListLink_t,all), .min=0, .max=1, .attribute=1, .bit=0, .xs_type=XS_USHORT, .n=2},
   {.offset=offsetof(SE_MirrorUsagePointListLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
-  // EndDeviceListLink (1926)
+  // EndDeviceListLink (1928)
   {.size=sizeof(SE_EndDeviceListLink_t), .index=448},
   {.offset=offsetof(SE_EndDeviceListLink_t,all), .min=0, .max=1, .attribute=1, .bit=0, .xs_type=XS_USHORT, .n=2},
   {.offset=offsetof(SE_EndDeviceListLink_t,href), .min=1, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=1},
-  // DeviceCapability (1929)
+  // DeviceCapability (1931)
   {.size=sizeof(SE_DeviceCapability_t), .index=1771},
   {.offset=offsetof(SE_DeviceCapability_t,href), .min=0, .max=1, .attribute=1, .xs_type=XS_ANY_URI, .n=16},
   {.offset=offsetof(SE_DeviceCapability_t,pollRate), .min=0, .max=1, .attribute=1, .bit=17, .xs_type=XS_UINT, .n=15},
@@ -2223,9 +2225,9 @@ const SchemaElement se_elements[] = {
   {.offset=offsetof(SE_DeviceCapability_t,TariffProfileListLink), .min=0, .max=1, .bit=6, .index=1747, .n=7},
   {.offset=offsetof(SE_DeviceCapability_t,TimeLink), .min=0, .max=1, .bit=4, .index=1745, .n=6},
   {.offset=offsetof(SE_DeviceCapability_t,UsagePointListLink), .min=0, .max=1, .bit=5, .index=1742, .n=5},
-  {.offset=offsetof(SE_DeviceCapability_t,EndDeviceListLink), .min=0, .max=1, .bit=16, .index=1926, .n=4},
-  {.offset=offsetof(SE_DeviceCapability_t,MirrorUsagePointListLink), .min=0, .max=1, .bit=15, .index=1923, .n=3},
-  {.offset=offsetof(SE_DeviceCapability_t,SelfDeviceLink), .min=0, .max=1, .bit=14, .index=1921, .n=2},
+  {.offset=offsetof(SE_DeviceCapability_t,EndDeviceListLink), .min=0, .max=1, .bit=16, .index=1928, .n=4},
+  {.offset=offsetof(SE_DeviceCapability_t,MirrorUsagePointListLink), .min=0, .max=1, .bit=15, .index=1925, .n=3},
+  {.offset=offsetof(SE_DeviceCapability_t,SelfDeviceLink), .min=0, .max=1, .bit=14, .index=1923, .n=2},
   {0}
 };
 
@@ -2340,9 +2342,9 @@ const uint16_t se_ids[] = {0, 321, 322, 323, 0, 324, 0, 324, 325, 326, 327, 328,
 539, 267, 0, 324, 568, 664, 357, 477, 0, 324, 568, 664, 357, 477, 0, 324, 665, 0, 324, 665, 666, 247, 357, 667, 0, 360, 324, 361, 187, 0, 668, 669, 670, 0, 324, 665, 36, 
 671, 672, 673, 674, 0, 360, 324, 362, 361, 275, 0, 360, 324, 0, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 324, 58, 
 99, 84, 124, 172, 210, 256, 293, 301, 315, 0, 324, 348, 58, 99, 84, 124, 172, 210, 256, 293, 301, 315, 350, 351, 352, 0, 360, 324, 362, 361, 348, 138, 
-0, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 324, 0, 324, 0, 324, 0, 360, 324, 0, 324, 0, 324, 348, 38, 80, 104, 106, 126, 151, 551, 163, 675, 168, 203, 676, 0, 324, 362, 348, 
-38, 80, 104, 106, 126, 151, 551, 163, 675, 168, 203, 676, 0, 324, 362, 677, 678, 0, 360, 324, 0, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 324, 348, 38, 80, 104, 
-106, 126, 151, 551, 163, 675, 168, 203, 676, 643, 679, 536, 132, 135, 141, 245, 278, 0, 360, 324, 362, 361, 348, 110, 0, 321, 477, 323, 0, 324, 362, 643, 680, 
-681, 682, 294, 301, 0, 324, 0, 360, 324, 0, 360, 324, 0, 324, 362, 58, 99, 84, 124, 172, 210, 256, 293, 301, 315, 116, 183, 260, };
+0, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 324, 0, 324, 0, 324, 0, 360, 324, 0, 324, 0, 324, 348, 38, 80, 536, 104, 106, 126, 151, 551, 163, 675, 168, 203, 676, 0, 324, 362, 
+348, 38, 80, 536, 104, 106, 126, 151, 551, 163, 675, 168, 203, 676, 0, 324, 362, 677, 678, 0, 360, 324, 0, 324, 0, 360, 324, 0, 360, 324, 0, 360, 324, 0, 324, 348, 38, 
+80, 536, 104, 106, 126, 151, 551, 163, 675, 168, 203, 676, 643, 679, 132, 135, 141, 245, 278, 0, 360, 324, 362, 361, 348, 110, 0, 321, 477, 323, 0, 324, 362, 
+643, 680, 681, 682, 294, 301, 0, 324, 0, 360, 324, 0, 360, 324, 0, 324, 362, 58, 99, 84, 124, 172, 210, 256, 293, 301, 315, 116, 183, 260, };
 
 Schema se_schema = {"http://ieee.org/2030.5", "S1", 321, se_elements, se_names, se_ids};

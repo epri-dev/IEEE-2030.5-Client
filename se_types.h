@@ -2943,14 +2943,16 @@ typedef struct {
 #define SE_FileStatusLink_exists (1 << 10)
 #define SE_DeviceStatusLink_exists (1 << 11)
 #define SE_DeviceInformationLink_exists (1 << 12)
-#define SE_DERListLink_exists (1 << 13)
-#define SE_ConfigurationLink_exists (1 << 14)
+#define SE_deviceCategory_exists (1 << 13)
+#define SE_DERListLink_exists (1 << 14)
+#define SE_ConfigurationLink_exists (1 << 15)
 typedef struct {
   uint32_t _flags;
   char * href;
   SE_SubscribableType_t subscribable;
   SE_ConfigurationLink_t ConfigurationLink;
   SE_DERListLink_t DERListLink;
+  SE_DeviceCategoryType_t deviceCategory;
   SE_DeviceInformationLink_t DeviceInformationLink;
   SE_DeviceStatusLink_t DeviceStatusLink;
   SE_FileStatusLink_t FileStatusLink;
@@ -2973,8 +2975,9 @@ typedef struct {
 // #define SE_FileStatusLink_exists (1 << 10)
 // #define SE_DeviceStatusLink_exists (1 << 11)
 // #define SE_DeviceInformationLink_exists (1 << 12)
-// #define SE_DERListLink_exists (1 << 13)
-// #define SE_ConfigurationLink_exists (1 << 14)
+// #define SE_deviceCategory_exists (1 << 13)
+// #define SE_DERListLink_exists (1 << 14)
+// #define SE_ConfigurationLink_exists (1 << 15)
 // #define SE_pollRate_exists (1 << 17)
 typedef struct {
   uint32_t _flags;
@@ -2982,6 +2985,7 @@ typedef struct {
   SE_SubscribableType_t subscribable;
   SE_ConfigurationLink_t ConfigurationLink;
   SE_DERListLink_t DERListLink;
+  SE_DeviceCategoryType_t deviceCategory;
   SE_DeviceInformationLink_t DeviceInformationLink;
   SE_DeviceStatusLink_t DeviceStatusLink;
   SE_FileStatusLink_t FileStatusLink;
@@ -3049,14 +3053,14 @@ typedef struct {
 // #define SE_FileStatusLink_exists (1 << 10)
 // #define SE_DeviceStatusLink_exists (1 << 11)
 // #define SE_DeviceInformationLink_exists (1 << 12)
-// #define SE_DERListLink_exists (1 << 13)
-// #define SE_ConfigurationLink_exists (1 << 14)
-#define SE_SubscriptionListLink_exists (1 << 15)
-#define SE_RegistrationLink_exists (1 << 16)
-#define SE_FunctionSetAssignmentsListLink_exists (1 << 17)
-#define SE_FlowReservationResponseListLink_exists (1 << 18)
-#define SE_FlowReservationRequestListLink_exists (1 << 19)
-#define SE_deviceCategory_exists (1 << 20)
+// #define SE_deviceCategory_exists (1 << 13)
+// #define SE_DERListLink_exists (1 << 14)
+// #define SE_ConfigurationLink_exists (1 << 15)
+#define SE_SubscriptionListLink_exists (1 << 16)
+#define SE_RegistrationLink_exists (1 << 17)
+#define SE_FunctionSetAssignmentsListLink_exists (1 << 18)
+#define SE_FlowReservationResponseListLink_exists (1 << 19)
+#define SE_FlowReservationRequestListLink_exists (1 << 20)
 #define SE_enabled_true (1 << 21)
 #define SE_enabled_exists (1 << 22)
 typedef struct {
@@ -3065,6 +3069,7 @@ typedef struct {
   SE_SubscribableType_t subscribable;
   SE_ConfigurationLink_t ConfigurationLink;
   SE_DERListLink_t DERListLink;
+  SE_DeviceCategoryType_t deviceCategory;
   SE_DeviceInformationLink_t DeviceInformationLink;
   SE_DeviceStatusLink_t DeviceStatusLink;
   SE_FileStatusLink_t FileStatusLink;
@@ -3076,7 +3081,6 @@ typedef struct {
   SE_PowerStatusLink_t PowerStatusLink;
   SE_SFDIType_t sFDI;
   SE_TimeType_t changedTime;
-  SE_DeviceCategoryType_t deviceCategory;
   SE_FlowReservationRequestListLink_t FlowReservationRequestListLink;
   SE_FlowReservationResponseListLink_t FlowReservationResponseListLink;
   SE_FunctionSetAssignmentsListLink_t FunctionSetAssignmentsListLink;

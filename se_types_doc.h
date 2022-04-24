@@ -11220,9 +11220,11 @@
 
 #define SE_DeviceInformationLink_exists (1 << 12)
 
-#define SE_DERListLink_exists (1 << 13)
+#define SE_deviceCategory_exists (1 << 13)
 
-#define SE_ConfigurationLink_exists (1 << 14)
+#define SE_DERListLink_exists (1 << 14)
+
+#define SE_ConfigurationLink_exists (1 << 15)
 
     @var SE_AbstractDevice_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -11232,6 +11234,7 @@
 
     @var SE_AbstractDevice_t::ConfigurationLink
     @var SE_AbstractDevice_t::DERListLink
+    @var SE_AbstractDevice_t::deviceCategory
     @var SE_AbstractDevice_t::DeviceInformationLink
     @var SE_AbstractDevice_t::DeviceStatusLink
     @var SE_AbstractDevice_t::FileStatusLink
@@ -11280,9 +11283,11 @@
 
 #define SE_DeviceInformationLink_exists (1 << 12)
 
-#define SE_DERListLink_exists (1 << 13)
+#define SE_deviceCategory_exists (1 << 13)
 
-#define SE_ConfigurationLink_exists (1 << 14)
+#define SE_DERListLink_exists (1 << 14)
+
+#define SE_ConfigurationLink_exists (1 << 15)
 
     @var SE_SelfDevice_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -11292,6 +11297,7 @@
 
     @var SE_SelfDevice_t::ConfigurationLink
     @var SE_SelfDevice_t::DERListLink
+    @var SE_SelfDevice_t::deviceCategory
     @var SE_SelfDevice_t::DeviceInformationLink
     @var SE_SelfDevice_t::DeviceStatusLink
     @var SE_SelfDevice_t::FileStatusLink
@@ -11505,21 +11511,21 @@
 
 #define SE_DeviceInformationLink_exists (1 << 12)
 
-#define SE_DERListLink_exists (1 << 13)
+#define SE_deviceCategory_exists (1 << 13)
 
-#define SE_ConfigurationLink_exists (1 << 14)
+#define SE_DERListLink_exists (1 << 14)
 
-#define SE_SubscriptionListLink_exists (1 << 15)
+#define SE_ConfigurationLink_exists (1 << 15)
 
-#define SE_RegistrationLink_exists (1 << 16)
+#define SE_SubscriptionListLink_exists (1 << 16)
 
-#define SE_FunctionSetAssignmentsListLink_exists (1 << 17)
+#define SE_RegistrationLink_exists (1 << 17)
 
-#define SE_FlowReservationResponseListLink_exists (1 << 18)
+#define SE_FunctionSetAssignmentsListLink_exists (1 << 18)
 
-#define SE_FlowReservationRequestListLink_exists (1 << 19)
+#define SE_FlowReservationResponseListLink_exists (1 << 19)
 
-#define SE_deviceCategory_exists (1 << 20)
+#define SE_FlowReservationRequestListLink_exists (1 << 20)
 
 #define SE_enabled_true (1 << 21)
 #define SE_enabled_exists (1 << 22)
@@ -11532,6 +11538,7 @@
 
     @var SE_EndDevice_t::ConfigurationLink
     @var SE_EndDevice_t::DERListLink
+    @var SE_EndDevice_t::deviceCategory
     @var SE_EndDevice_t::DeviceInformationLink
     @var SE_EndDevice_t::DeviceStatusLink
     @var SE_EndDevice_t::FileStatusLink
@@ -11550,9 +11557,6 @@
 
     @var SE_EndDevice_t::changedTime
     The time at which this resource was last modified or created.
-
-    @var SE_EndDevice_t::deviceCategory
-    Specifies the bitmap indicating  the categories of devices that SHOULD respond. Devices SHOULD ignore events that do not indicate their device category. If not present, all devices SHOULD respond.
 
     @var SE_EndDevice_t::FlowReservationRequestListLink
     @var SE_EndDevice_t::FlowReservationResponseListLink

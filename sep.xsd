@@ -42,6 +42,7 @@ Portland, OR  97239</xs:documentation>
         <xs:sequence>
           <xs:element name="ConfigurationLink" type="ConfigurationLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="DERListLink" type="DERListLink" minOccurs="0" maxOccurs="1" />
+          <xs:element name="deviceCategory" type="DeviceCategoryType" minOccurs="0" maxOccurs="1"/>
           <xs:element name="DeviceInformationLink" type="DeviceInformationLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="DeviceStatusLink" type="DeviceStatusLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="FileStatusLink" type="FileStatusLink" minOccurs="0" maxOccurs="1" />
@@ -131,11 +132,6 @@ Portland, OR  97239</xs:documentation>
               <xs:documentation>This attribute indicates whether or not an EndDevice is enabled, or registered, on the server. If a server sets this attribute to false, the device is no longer registered. It should be noted that servers can delete EndDevice instances, but using this attribute for some time is more convenient for clients.</xs:documentation>
             </xs:annotation>
           </xs:element>
-	        <xs:element name="deviceCategory" minOccurs="0" maxOccurs="1" type="DeviceCategoryType">
-		        <xs:annotation>
-		          <xs:documentation>Specifies the bitmap indicating  the categories of devices that SHOULD respond. Devices SHOULD ignore events that do not indicate their device category. If not present, all devices SHOULD respond.</xs:documentation>
-		        </xs:annotation>
-	        </xs:element>
           <xs:element name="FlowReservationRequestListLink" type="FlowReservationRequestListLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="FlowReservationResponseListLink" type="FlowReservationResponseListLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="FunctionSetAssignmentsListLink" type="FunctionSetAssignmentsListLink" minOccurs="0" maxOccurs="1" />

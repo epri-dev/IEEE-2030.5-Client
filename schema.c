@@ -30,7 +30,7 @@ typedef struct {
   
   unsigned int attribute : 1; //表示自己是否是一个属性成员
   unsigned int simple : 1;    //是否自己是否是简单类型，比如整形类型或者指针类型
-  unsigned int unbounded : 1; //看起来跟是否是 List 类型有关。先参考一下free_elements函数的内部实现。
+  unsigned int unbounded : 1; //看起来跟是否是 List 类型有关。指示该子类的“长度”是不定的，比如List成员。
 } SchemaElement;
 
 typedef struct _Schema {

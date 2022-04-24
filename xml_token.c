@@ -37,7 +37,7 @@ XML_PI:
 
 
 */
-//从attr列表中获取到于name相匹配的属性值
+//从attr列表中获取到于name相匹配的属性值。如果找不到该name，那么返回NULL。
 void *attr_value (char **attr, const char *name) {
   int i;
   for (i = 0; i < MAX_ATTRIBUTE * 2; i += 2)

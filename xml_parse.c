@@ -103,7 +103,7 @@ int parse_value (Parser *p, void *value) {
   int type = p->se->xs_type;
   char *data = (char *)p->ptr;
   int n = type >> 4;
-  printf("parse_value:%s\n",data);
+  //printf("parse_value:%s\n",data);
   switch (type & 0xf) {
   case XS_STRING:
     if (n) {
@@ -148,19 +148,19 @@ int parse_value (Parser *p, void *value) {
 int parse_text_value (Parser *p, void *value) {
   return parse_text (p) && parse_value (p, value);
 }
-
+//如果解析到一个tag的开始部分（tag的名字部分）
 int start_tag (Parser *p, const SchemaElement *se) {
   const char *name = se_name (se, p->schema);//printf("\nstart_tag:name:%s\n",name);
   switch (parse_token (p)) {
   case START_TAG:
   case EMPTY_TAG:
     if (p->empty) p->state = PARSE_INVALID;
-    else if (!streq (name, p->xml->name)) break;
-    else {
+    else if (!streq (name, p->xml->name)) break;  //如果待比较的xml中的这个tag的名字跟现在se中的名字不符，那么就退出。
+    else {//如果比较后相符，则相当于该xml中的这个tag存在于“se_schema.c”文件中的某一个类型中的某个子类（的名字），意味这个这个tag是有效的。
       p->empty = p->token;  //
-      p->need_token = 1;    //
+      p->need_token = 1;    //看起来意味着“解析下一个token”的意思。
       if (p->empty && se->simple) p->state = PARSE_INVALID;
-      else return 1;
+      else return 1;  //表示找到了一个在表中的token（SE子类名）
     }
     break;
   case END_TAG:
@@ -174,13 +174,12 @@ int start_tag (Parser *p, const SchemaElement *se) {
 
 int end_tag (Parser *p, const SchemaElement *se) {
   const char *name = se_name (se, p->schema);
-  printf("end_tag:name:%s\n",name);
+  //printf("end_tag:name:%s\n",name);
   int token=0;
   switch (token = parse_token (p)) {
   case END_TAG:
     if (streq (name, p->xml->name)) {
       p->need_token = 1;
-      printf("end_tag:return 1\n");
       return 1;
     }
   }
@@ -232,24 +231,29 @@ invalid:
   printf("xml_start:PARSE_INVALID,tag name:%s,return 0\n",p->xml->name);
   return 0;
 }
-
+/*基本原理是：从某个se对象的第一个成员开始，逐行往下，对之前xml文本中解析出来的内容执行匹配，如果匹配到，那么*/
 /*检查当前的这个se（从se_schema中取出的某一行）是否：1）属于了前面从xml中解析出来的属性表中的其中一个属性，如果是，则接下去的步骤是解析该属性。2）是否是一个tag，如果是，则接下去解析*/
 int xml_next (Parser *p) {
-  const SchemaElement *se = p->se;
+  const SchemaElement *se = p->se;  //从前面设定好了的se开始往后扫描
   while (p->state == PARSE_NEXT) {
     if (!se->n) p->state = PARSE_END; //如果n=0，表示这一个基类中的子类都已经解析完了，解析到此结束。
-    else if (se->attribute) {
-      const char *name = se_name (se, p->schema);printf("xml_next:se name:%s\n",name);
-      if ((p->ptr = attr_value (p->xml->attr, name)))
-        p->state = PARSE_ELEMENT;
+    else if (se->attribute) { //如果这行表示的似乎属性
+      const char *name = se_name (se, p->schema);printf("xml_next:attribute se name:%s\n",name);  //如果se的名字在之前所解析到的attr中，那么就解析该对象到se对象中。
+      if ((p->ptr = attr_value (p->xml->attr, name))){
+        printf("xml_next:find a attribute %s,value:%s\n",name,p->ptr);
+        p->state = PARSE_ELEMENT; //如果符合其中的一个属性，则需要对该属性做SE层面的解析。
+      }
     } else if (!p->empty) {
-      if (start_tag (p, se)) p->state = PARSE_ELEMENT;
+      if (start_tag (p, se)){
+        printf("xml_next:find a new tag:%s\n",p->xml->name);
+        p->state = PARSE_ELEMENT;  //如果解析到一个tag名字，则意味着需要继续解析该tag。
+      }
       else if (p->token == XML_INCOMPLETE) {
         printf("xml_next:XML_INCOMPLETE,return 0\n");
         return 0;
       }
     } else if (se->min) p->state = PARSE_INVALID;
-    se++; //从基类开始，逐个子类解析。
+    se++; // 从基类开始，逐个子类解析。
   }
   p->se = se - 1;
   return 1;
