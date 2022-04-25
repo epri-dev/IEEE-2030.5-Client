@@ -136,13 +136,13 @@ Element *xml_parse (char *data) {
   xml_init (&p, data);
   while (1) {
     switch (xml_token (&p)) {
-    case START_TAG:
+    case START_TAG: //形如“<DERList xsi:schemaLocation="urn:ieee:std:2030.5:ns sep.xsd" xmlns="urn:ieee:std:2030.5:ns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" href="/edev/edev0/der" all="1" results="1">”
       e = new_element (e, p.name, p.attr);
       break;
     case EMPTY_TAG:
-      new_element (e, p.name, p.attr);
+      new_element (e, p.name, p.attr);  
       break;
-    case END_TAG:
+    case END_TAG: //形如“</DERList>”
       name = local_name (&prefix, p.name);
       if (!e->parent || strcmp (name, e->name) != 0
           || strcmp (prefix, e->prefix) != 0) {

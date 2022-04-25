@@ -107,7 +107,7 @@ void free_se_body (void *conn);
     @param conn is a pointer to a SeConnection
     @returns the HTTP method on success (see @ref http_receive)
 
-    SE_INCOMPLETE to indicate an incomplete message SE_INCOMPLETE表示这个是一个完整的消息体
+    SE_INCOMPLETE to indicate an incomplete message SE_INCOMPLETE 表示这个是一个不完整的消息体
 
     SE_ERROR to indicate an error in the message  SE_ERROR 表示这个函数一个错误。
 */
@@ -252,7 +252,6 @@ int se_receive (void *conn) {
   char *data;
   int length, type, code, method;
   http_flush (h);
-  printf("into se_receive\n");
   switch (method = http_receive (h)) {
   case HTTP_NONE:
     printf("se_receive:HTTP_NONE\n");
@@ -279,22 +278,23 @@ int se_receive (void *conn) {
       printf("se_receive:SE_DATA\n");
       while (data = http_data (h, &length)) {
         
-        #if 1
+        #if 0
         if(length > 0){ //add by lewis
           printf("se_receive:length:%d\n",length);
           printf("se_receive:content:\n%s\n",data);
         }
-        #endif 
+        #endif
         //add by lewis start
-        if(length <= 0) continue;
+        if(length <= 0) continue; //收到了数据之后，再执行后面的流程。为了方便调试。
         //add by lewis end
-        parser_rebuffer (p, data, length);  //这个length看起来没有用到。
+        parser_rebuffer (p, data, length);  //重新指定新的待解析的数据的开始地址，待后面解析。
         if( parse_doc (p, &type) ) {
           s->state = SE_START;
+          printf("se_receive:return method,s->state=SE_START\n");
           return method;
         } else if (!http_complete (h)) {
           http_rebuffer (h, p->ptr);
-        } else {
+        } else {  //如果遇到这个错误，通常是由于服务器返回的消息中，包含了客户端无法识别的SE名称。
           printf ("parse error in message body\n");
           print_parse_stack (p);
           code = 400;
@@ -304,7 +304,7 @@ int se_receive (void *conn) {
       set_timeout (s);
     }
   }
-  printf("se_receive:SE_INCOMPLETE\n");
+  printf("se_receive:return SE_INCOMPLETE\n");
   return SE_INCOMPLETE;
 error:
   if (h->method == HTTP_RESPONSE) http_close (h);

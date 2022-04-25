@@ -3,7 +3,7 @@
 
 /** @defgroup client Client
 
-    Provides client initialization and service discovery events.
+    Provides client initialization and service discovery events. 这个文件主要是面向 DNSSD 协议的
     @{
 */
 

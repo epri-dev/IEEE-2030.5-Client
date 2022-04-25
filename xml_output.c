@@ -18,14 +18,14 @@ void output_init (Output *o, const Schema *schema, char *buffer, int size);
 /*向output对象的缓冲区输出一个字节*/
 int output_char (Output *o, int c) {
   if (o->ptr + 1 < o->end) {
-    *o->ptr++ = c;
+    *o->ptr++ = c;  //"*"的优先级高于"++"，所以是先设置值，再增长ptr的值。
     *o->ptr = '\0';
     return 1;
   }
   return 0;
 }
 
-/* 向output对象的缓冲器输出一个“转义符” */
+/* 向output对象的缓冲器输出一个“转义字符”。比如在数据对象中，原本是'<'符号，要以"&lt;"符号输出来表示。 */
 int output_escaped (Output *o, char *s) {
   char *ptr = o->ptr;
   int c;
@@ -144,7 +144,7 @@ int output_break (Output *o, char *format, ...) {
   va_list args;
   int n, size;
   char *last = o->ptr;
-  if (!o->first) {
+  if (!o->first) {  //如果当前打印的不是第一行，或者说第一行已经打印掉了，则需要在后面打印空格作为缩进。
     char *end = o->ptr + o->indent + 1;
     if (end >= o->end) return 0;
     *o->ptr++ = '\n';
@@ -154,7 +154,7 @@ int output_break (Output *o, char *format, ...) {
   va_start (args, format);
   n = vsnprintf (o->ptr, size, format, args);
   va_end (args);
-  if (n >= size || n < 0) {
+  if (n >= size || n < 0) { //如果实际可以打印的内容超过了缓冲区大小，则意味着打印失败。
     *last = '\0';
     o->ptr = last;
     return 0;
@@ -163,7 +163,7 @@ int output_break (Output *o, char *format, ...) {
   return 1;
 }
 
-/*将之前输出的内容废弃*/
+/*将之前待输出的内容废弃掉*/
 void output_flush (Output *o) {
   o->ptr = o->buffer;
 }
@@ -182,24 +182,24 @@ int output_event (Output *o, const SchemaElement *se, int event) {
       o->open = 0;
       o->indent -= 2;
     } else if (se->simple) {
-      return output_string (o, "</%s>", name);  /*典型的如</dstStartTime>*/
+      return output_string (o, "</%s>", name);/* 如果是一个简单类型，比如数字，则开始tag和结束tag都是在同一行中。*/
     } else {
       o->indent -= 2;
-      if (!output_break (o, "</%s>", name)) {   /*典型的如</dstStartTime>*/
+      if (!output_break (o, "</%s>", name)) { /* 如果是复杂类型的，则需要多行来容纳，需要换行。*/
         o->indent += 2;
         return 0;
       }
     }
     break;
   case AT_EVENT:
-    return output_string (o, " %s=", name);        /*典型的如  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" href="/dcap/tm"> */
+    return output_string (o, " %s=", name);   /*应该是打印属性的意思，典型的如  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" href="/dcap/tm"> */
   case SE_SIMPLE:
-    return output_break (o, "<%s>", name);
+    return output_break (o, "<%s>", name);  //这个是一个开始tag并且不含有属性。
   case SE_COMPLEX:
     if (output_break (o, "<%s", name)) {
-      if (o->first) {
+      if (o->first) { //如果首行还未打印则现在打印首行。
         const char *ns = o->schema->namespace;
-        if (ns && !output_string (o, " xmlns=\"%s\"", ns)) return 0;
+        if (ns && !output_string (o, " xmlns=\"%s\"", ns)) return 0;  //namespace存在就打印namespace
         o->first = 0;
       }
       o->open = 1;

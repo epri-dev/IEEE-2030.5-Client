@@ -126,7 +126,7 @@ struct _ParserDriver;
 typedef struct _Parser {
   void *obj;  //用于存放这个数据对象的存储空间地址？？应该是解析后的对象。
   int type;   // completed object and type 完成解析后的数据对象和类型
-  struct _XmlParser *xml; //xml解析器。
+  struct _XmlParser *xml; //xml解析器。这个是底层接口。
   ElementStack stack;
   const Schema *schema;
   const SchemaElement *se;  //SchemaElement对象列表
@@ -136,7 +136,7 @@ typedef struct _Parser {
   StringTable *global, *local;
   int state, token, flag, bit;  //token：表示当前这个token的类型，取TokenType中的值。
   unsigned int xml_decl : 1;  //是否是 XML Declaration 类型的token
-  unsigned int need_token : 1;  //??
+  unsigned int need_token : 1;  //指示接下去是否需要继续解析一个token。
   unsigned int empty : 1; //
   unsigned int truncated : 1;
   //unsigned int incomplete : 1;
@@ -232,16 +232,16 @@ void *parse_doc (Parser *p, int *type) {
   while (1) {
     switch (p->state) {
     case PARSE_START:
-      ok (d->parse_start (p));  // xml_start，得到一个 "start_tag" 
+      ok (d->parse_start (p));  // xml_start，得到一个 "start_tag" 。大体上是找到了一个SE类型中的基类（在se_schema数组中的偏移量，即offset）。
       stack->n = 0;
       p->state++;
       size = object_element_size (p->se, p->schema);
-      p->obj = p->base = calloc (1, size);  //首先是构建了这个对象的基类的存放空间。
+      p->obj = p->base = calloc (1, size);  //首先是构建了这个对象的存放空间。
       break;
     case PARSE_ELEMENT:
-      se = p->se;//上一次的经过了设置之后的
+      se = p->se;//上一次的经过了设置之后的se
       p->flag = se->bit;//将这个se的表示自己在父级中的中表示占据第几位的 bit 传递到 parser
-      if (se->attribute) {  //如果含有“属性”成员
+      if (se->attribute) {  //如果该se是一个含有“属性”成员的类。
         if (!se->min && !is_pointer (se->xs_type)) {
           set_count (p->base, 1, p->flag);  //在flag中标记好 "数量" 值
           p->flag++;
@@ -251,7 +251,7 @@ void *parse_doc (Parser *p, int *type) {
       } else if (t = push_element (stack, se, p->base)) {
         p->base += se->offset;
         t->size = object_element_size (se, p->schema);
-        if (se->unbounded) {  //这段完全不懂
+        if (se->unbounded) {  //判断是否是一个List类型的成员。
           List *l = *(List **)p->base = add_element (t);
           p->base = l->data;
         } else {
@@ -265,15 +265,15 @@ void *parse_doc (Parser *p, int *type) {
       }
 parse_element:
       if (se->simple) goto parse_value;
-      p->se = &p->schema->elements[se->index + 1];
+      p->se = &p->schema->elements[se->index + 1];  //通过该SE中指定的index数值，就可以直接定位到该se的偏移量"se->index"，而"se->index +1"就是其第一个子类位置。
       p->state = PARSE_NEXT;  //注意这里没有break
     case PARSE_NEXT:
       ok (d->parse_next (p));// xml_next
       break;
-    case PARSE_ATTRIBUTE:
+    case PARSE_ATTRIBUTE: //要解析到一个SE属性到内存空间中去。
       ok (d->parse_attr_value (p, p->base + p->se->offset));  // parse_value
       p->state--; //PARSE_NEXT
-      p->se++;
+      p->se++;  //se指向下一个单元。
       break;
 parse_value:
       p->state = PARSE_VALUE;

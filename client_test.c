@@ -113,11 +113,11 @@ int uri_retrieval (char *arg) {
   printf("Connecting to host...\n");
   
   conn = se_connect_uri (uri);
-  if (uri->query && !parse_query (&q, uri->query)) {
+  if (uri->query && !parse_query (&q, uri->query)) {  //解析查询参数。
     printf ("error parsing URI query \"%s\"\n", uri->query);
     exit (0);
   }
-  get_resource (conn, -1, uri->path, q.limit);
+  get_resource (conn, -1, uri->path, q.limit);  //获取这个资源，通常是dcap路径下的资源。
   return 1;
 }
 
@@ -715,7 +715,7 @@ int main (int argc, char **argv) {
       // accept_notifier (any);
     case TCP_PORT:      //在连接到服务器成功后，socket上一旦有活动的数据，将触发该事件。
       if (conn_session (any)) {
-        http_debug (any, 1);
+        http_debug (any, 1);  //使能debug。
         // if (http_client (any))
         process_http (any, test_dep);
         // else process_notifications (any, test_dep);

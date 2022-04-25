@@ -45,7 +45,7 @@ int signed_int (int64_t *y, char *data) {
 
 //解析出来一个 token 。
 int parse_token (Parser *p) {
-  if (!p->need_token) return p->token;
+  if (!p->need_token) return p->token;  //由need_token字段来控制是否向下继续解析。
   switch ((p->token = xml_token (p->xml))) {
   case XML_INVALID:
     p->state = PARSE_INVALID;
@@ -56,7 +56,7 @@ int parse_token (Parser *p) {
     printf("parse_token:XML_INCOMPLETE\n");
     return XML_INCOMPLETE;
   default:
-    printf("parse_token:default:succeed,token name:%s\n",p->xml->name);
+    if(p->token == START_TAG) printf("parse_token:succeed,token name:%s\n",p->xml->name); //add by lewis
     p->need_token = 0;
     return p->token;
   }
@@ -66,7 +66,7 @@ int parse_text (Parser *p) {
   switch (parse_token (p)) {
   case XML_TEXT:
     p->ptr = (uint8_t *)p->xml->content;
-    p->need_token = 1;
+    p->need_token = 1;  //??
     break;
   case END_TAG:
     p->ptr = "";
@@ -122,7 +122,7 @@ int parse_value (Parser *p, void *value) {
   case XS_HEX_BINARY:
     return parse_hex (value, n, data);
   case XS_ANY_URI:
-    *(char **)(value) = strdup (data);
+    *(char **)(value) = strdup (data);  //URI是一个动态申请的数据，而href仅仅是存储了一个内存地址。
     return 1;
   case XS_LONG:
     return pack_signed ((int64_t *)value, sx, data);
@@ -155,7 +155,7 @@ int start_tag (Parser *p, const SchemaElement *se) {
   case START_TAG:
   case EMPTY_TAG:
     if (p->empty) p->state = PARSE_INVALID;
-    else if (!streq (name, p->xml->name)) break;  //如果待比较的xml中的这个tag的名字跟现在se中的名字不符，那么就退出。
+    else if (!streq (name, p->xml->name)) break;  //如果待比较的xml中的这个tag的名字跟现在se中的名字相符合（=0），说明匹配上了那么就退出。
     else {//如果比较后相符，则相当于该xml中的这个tag存在于“se_schema.c”文件中的某一个类型中的某个子类（的名字），意味这个这个tag是有效的。
       p->empty = p->token;  //
       p->need_token = 1;    //看起来意味着“解析下一个token”的意思。
@@ -202,7 +202,7 @@ void *find_se_name (const Schema *schema, char *name) {
 /*解析到一个“START_TAG”，取得其名字和属性，以及名字相对应的se位置*/
 int xml_start (Parser *p) {
   //static int times = 0;
-  p->need_token = 1;
+  p->need_token = 1;  //因为刚刚开始解析，所以指定需要一个token??
   while (1) {
     const char *const *name;
     switch (parse_token (p)) {
@@ -214,11 +214,11 @@ int xml_start (Parser *p) {
     case START_TAG: //如果解析到一个表示“开始”的tag
     case EMPTY_TAG:
       if (!(name = find_se_name (p->schema, p->xml->name))) goto invalid;
-      p->type = name - p->schema->names;    //相对于数组首元素的偏移量，与 se_types.h 中定义的类型定义一致。
+      p->type = name - p->schema->names;    //相对于数组首元素的偏移量，与 se_types.h 中定义的类型定义的偏移量一致。
       p->se = &p->schema->elements[p->type];//在 elements 数组中的位置
       p->empty = p->token;
       p->need_token = !p->empty;
-      printf("xml_start:succeed to parse a tag,name:%s,return 1\n",p->xml->name);
+      printf("xml_start:succeed to parse a tag,name:%s\n",p->xml->name);
       return 1;
     case XML_INCOMPLETE:
       return 0;
@@ -237,14 +237,14 @@ int xml_next (Parser *p) {
   const SchemaElement *se = p->se;  //从前面设定好了的se开始往后扫描
   while (p->state == PARSE_NEXT) {
     if (!se->n) p->state = PARSE_END; //如果n=0，表示这一个基类中的子类都已经解析完了，解析到此结束。
-    else if (se->attribute) { //如果这行表示的似乎属性
-      const char *name = se_name (se, p->schema);printf("xml_next:attribute se name:%s\n",name);  //如果se的名字在之前所解析到的attr中，那么就解析该对象到se对象中。
-      if ((p->ptr = attr_value (p->xml->attr, name))){
-        printf("xml_next:find a attribute %s,value:%s\n",name,p->ptr);
-        p->state = PARSE_ELEMENT; //如果符合其中的一个属性，则需要对该属性做SE层面的解析。
+    else if (se->attribute) { //如果这行SE表示的是一个属性，即在数组中.attribute的值为1。
+      const char *name = se_name (se, p->schema);//printf("xml_next:attribute se name:%s\n",name);  //如果se的名字在之前所解析到的attr中，那么就解析该对象到se对象中。
+      if ((p->ptr = attr_value (p->xml->attr, name))){  //如果该se的名字出现在刚获取到的文本中...
+        printf("xml_next:find a attribute:\"%s\",value:%s\n",name,p->ptr);
+        p->state = PARSE_ELEMENT; //如果命中其中的一个属性，则需要对该属性做SE层面的解析。
       }
     } else if (!p->empty) {
-      if (start_tag (p, se)){
+      if (start_tag (p, se)){ //比较se->xml->name是否当前选中的se一样。如果一样，就表示“命中”了。
         printf("xml_next:find a new tag:%s\n",p->xml->name);
         p->state = PARSE_ELEMENT;  //如果解析到一个tag名字，则意味着需要继续解析该tag。
       }
@@ -286,16 +286,17 @@ void parse_done (Parser *p) {
   p->xml->content = NULL;
 }
 
-/*
 
+/*
+这里的length参数其实没有用到。该函数将重新指定待解析的内容的开始地址。
 */
 void xml_rebuffer (Parser *p, char *data, int length) {
   XmlParser *xml = p->xml;
   if (xml->content) {
-    int offset = xml->content - data; //这应该是一个负值。
-    xml->content = data;  //content 重新指向新的数据
-    xml->data -= offset;  /* data指针重新定位到以传入的 data 指针开始的地方 */
-  } else xml->data = data;
+    int offset = xml->content - data; // 如果data指针是往后增长的话，这应该是一个负值。
+    xml->content = data;  /* content 重新指向新的数据 */
+    xml->data -= offset;  /* data指针重新定位到以传入的 data 指针开始的地方，此时应该跟content位置重合？？ */
+  } else xml->data = data;  //可能当接收到的数据不是放在xml->content中的时候，用data指针来记录待解析的数据。
 }
 
 const ParserDriver xml_parser = { xml_start, xml_next, xml_end, xml_sequence,parse_value, parse_text_value, parse_done, xml_rebuffer };

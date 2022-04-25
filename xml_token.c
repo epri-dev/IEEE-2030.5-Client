@@ -14,9 +14,10 @@ typedef struct _XmlParser {
   char *name, *content, *data;  
   /*
   name指的是当前token的名字。    
-  content 和 data 指向所要解析的数据（文本），data是一个在解析过程中向后移动的指针，content是首地址。
+  content 和 data 指向所要解析的数据（文本），data是一个在解析过程中不断向后移动的指针，表示下一个要解析的文本。
+  content是首地址。
   */
-  int state, token, length;     // state : 当前解析到哪一步了。 token:指的是类型，由TokenType这个类型来指定。
+  int state, token, length;     // state : 当前解析到哪一步了。 token:指的是类型，由 TokenType 这个类型来指定。
   char *attr[MAX_ATTRIBUTE * 2];//记录这一个tag的所有属性的数组，存放的是 key - value 的指针值。
 } XmlParser;
 
@@ -25,6 +26,7 @@ enum TokenType {START_TAG, EMPTY_TAG, END_TAG, XML_DECL, XML_PI, XML_TEXT,
                };
 /*含义解释
 START_TAG:一个表示一段内容的开始的 tag ，可能包含了属性。
+EMPTY_TAG:形如 "<element />"的tag，即只有名称，而无属性的tag。
 
 XML_DECL:
 The XML declaration is a processing instruction that identifies the document as being XML.
@@ -71,12 +73,12 @@ int name_char (int c) { /*空格、等号没有包含在内*/
 char *xml_name (char *data) {
   int first = 1, c;
   char *next;
-  while (next = utf8_char (&c, data)) {
+  while (next = utf8_char (&c, data)) { 
     if (first) {
       first = 0;
       ok (name_start (c));  //如果首个字母不符合要求，则直接返回NULL。
-    } else if (!name_char (c)) return data; //如果遇到空格或者等号或者无法识别的内容，则返回。
-    data = next;
+    } else if (!name_char (c)) return data; //如果遇到空格或者等号或者无法识别的内容，则返回。相当于取了一个字符串之后的空格位置。
+    data = next;  //对于ascii字符串来说，就是逐字节向后递增。
   }
   return NULL;
 }
@@ -96,7 +98,7 @@ int hex_digit (int c) {
   return 0;
 }
 
-//看起来像是将一个16进制字符串转换成一个16进制数字。
+//看起来像是将一个16进制字符串转换成一个16进制数字，转换结果放在x中传出。函数返回一个经过了读取之后的字符串地址。
 char *hex_number (int *x, char *data) {
   int c, d, y = 0, n = 0;
   while (c = hex_digit (d = *data))     //直到遇到不是16进制数字字符的字符。
@@ -114,12 +116,14 @@ char *hex_number (int *x, char *data) {
   
 将一个经过了转义的字符串，转换成原来的内涵。
 
+data是一个以"&"符号开头的字符串。
+
 */
 
 char *xml_reference (char **ptr, char *data) {
-  const char *const refs[] = {"amp", "lt", "gt", "quot", "apos"};
-  const char entity[] = {'&', '<', '>', '\"', '\''};
-  char *end = strchr (data, ';');
+  const char *const refs[] = {"amp", "lt", "gt", "quot", "apos"}; //转义后的字符串
+  const char entity[] = {'&', '<', '>', '\"', '\''};  //实际的字符
+  char *end = strchr (data, ';'); 
   int ref = 0, i;
   if (!end) return NULL;
   *end++ = '\0';  //++优先级高于*。 所以是先将";"替换成'\0'然后再将end往后移动一个字节。
@@ -128,9 +132,9 @@ char *xml_reference (char **ptr, char *data) {
     data = *data == 'x' ? hex_number (&ref, data + 1)
            : number (&ref, data); //如果#符号后面跟随的是x，则表示一个16进制数字，否则是10进制数字。然后将字符串转换成实际的数字。=号的优先级最低。
     return data && *data == '\0' ?
-           *ptr = utf8_encode (*ptr, ref), end : NULL;
+           *ptr = utf8_encode (*ptr, ref), end : NULL;  //对ref数值进行UTF8编码。
   }
-  i = string_index (data, refs, 5);
+  i = string_index (data, refs, 5);//如果是前面的转义字符，则直接获取到原始的字符。
   return i < 5 ? *(*ptr)++ = entity[i], end : NULL; //将用refs中表示的字符转换成为实际含义的字符。
 }
 
@@ -154,7 +158,7 @@ char *token_end (char *data, char *end, int n) {
 char *att_value (char *value) {
   int c, q = *value++;
   char *data = value; // data 的值已经是指向了双引号或者单引号之后的首个字符位置 （ 无论是可见字符还是不可见字符 ）
-  ok (q == '"' || q == '\'');
+  ok (q == '"' || q == '\''); //以单引号或者双引号作为一个属性的值开始的特征。
   while (c = *data++) {
     switch (c) {
     case '\0':
@@ -176,7 +180,7 @@ char *att_value (char *value) {
 */
 char *xml_eq (char *data) {
   char *eq = trim (data);
-  return *eq == '=' ? trim (eq + 1) : NULL;
+  return *eq == '=' ? trim (eq + 1) : NULL; //返回等号之后的字符地址。比如后面是"号则返回引号地址。
 }
 
 /*attr是一个存储属性的 key 和 value 的数组，这里将全部的属性都解析出来。*/
@@ -185,11 +189,11 @@ char *xml_attributes (char **attr, char *data) {
   int i = 0;
   data = trim (data);
   memset (attr, 0, sizeof(char *)*MAX_ATTRIBUTE * 2); //每隔单元中放的都是指针。所以如果遇到0的，就表示到此结束。所以这里没有一个专门用于表示数组长度的单元。
-  while (end = xml_name (data)) {
-    char *value = xml_eq (end); //跳过等号。
-    if (value && (next = att_value (value++))) {
-      *end = '\0';  //将这个属性的名字部分截断
-      attr[i] = data; //存储的是地址。
+  while (end = xml_name (data)) { //取到空格位置的地址。如果不能再发现“name”了，那么
+    char *value = xml_eq (end); //跳过等号，到达引号位置。
+    if (value && (next = att_value (value++))) {  //在获取完属性值之后，value往后移动一个位置
+      *end = '\0';      //将这个属性的名字部分截断（将空格填充0，完成截断）。
+      attr[i] = data;   //存储的是地址。
       attr[i + 1] = value;  //存储的都是地址
       i = (i + 2) % (2 * MAX_ATTRIBUTE);  //保证不会溢出。但是如果过长的话导致前面几个会被覆盖掉。
     } else return NULL;
@@ -219,7 +223,7 @@ int xml_pi (XmlParser *p, char *data) {
   return 1;
 }
 
-/*将这个tag的名字取出，并且解析所有的属性，放到attr数组中。*/
+/*将这个tag的名字取出。如果是START_TAG，则解析所有的属性，放到attr数组中。*/
 char *xml_tag (XmlParser *p, char *data) {
   char *end;  //如果是类似于 "</EndDeviceList>" 这样的，那么就是一个表示结束的 tag。否则就是表示开始的tag
   p->token = *data == '/' ? data++, END_TAG : START_TAG;  //先判断 *data == '/'，最后才对 p->token 赋值。如果遇到 / 则表示一个tag结束了。比如 <TimeLink href="/dcap/tm"/>
@@ -228,10 +232,10 @@ char *xml_tag (XmlParser *p, char *data) {
   if (p->token == START_TAG) {
     if (ws (*data))
       ok (data = xml_attributes (p->attr, data + 1));
-    if (*data == '/') data++, p->token = EMPTY_TAG; // 空的tag??  没有内容的 tag ?
-  } else data = trim (data);
-  ok (*data == '>');
-  *end = '\0';
+    if (*data == '/') data++, p->token = EMPTY_TAG; //形如 "<element />" 的tag。即只有名字，没有属性。
+  } else data = trim (data);  //如果是END_TAG，则因为只有一个tag的名字字符串，所以不用作其他操作。
+  ok (*data == '>');  //要求最后一个字符必须是'>'。
+  *end = '\0';  //将名字的后面的空格设置成'\0'，即截断。
   return data + 1;
 }
 
@@ -295,7 +299,7 @@ int xml_token (XmlParser *p) {
           state++;
           break;
         }
-        if (strchr (next, '>'))
+        if (strchr (next, '>')) //如果是一个完整的tag，即同时含有“<>”两个符号，则对整个tag作各个字段，即名字、属性，的提取。
           return (p->data = xml_tag (p, data)) ?
                  p->state = 0, p->token : XML_INVALID;  //返回这次解析到的token类型。
         goto incomplete;

@@ -80,7 +80,7 @@ typedef struct _Output {
   const SchemaElement *se;        /*se从属于schema，是里面的一个元素*/
   ElementStack stack;
   char *buffer, *ptr, *end;     /*buffer是用来保存输出内容的空间，ptr表示缓冲区buffer当前的位置，end是缓冲区结尾地址*/
-  int state, indent;
+  int state, indent;  //indent：表示每一行需要在行首添加的空格数。
   void *base;/*indent用于表示换行之后，需要在一行前部添加的空格的个数。*/
   /* For the EXI driver keep track of the number of possible event codes and
      the current event code for a given context. The number of possible event
@@ -93,13 +93,16 @@ typedef struct _Output {
   StringTable *global, *local;
   const struct _OutputDriver *driver;   /*用于打印的驱动函数表*/
   unsigned int open : 1;        /*表示输出的内容是否已经结束，即字符">"是否已经添加*/
-  unsigned int first : 1;
+  unsigned int first : 1;   //表示“首行”是否还存在。1表示还存在，未打印过；0表示已经打印过了。
 } Output;
 
 Output output_global;
 
-/*前面的EE和AT表示什么意思？*/
+
 enum OutputEvent {EE_EVENT, AT_EVENT, SE_SIMPLE, SE_COMPLEX};
+//AT_EVENT：打印属性
+//EE_EVENT：打印一个“结尾”，比如一个简单类型的，一个复杂类型的结尾标签。
+
 
 typedef struct _OutputDriver {
   int (*output_event) (Output *, const SchemaElement *, int);

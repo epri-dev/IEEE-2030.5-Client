@@ -30,7 +30,7 @@ directories then the certificates from `./certs` in the local directory
 are loaded.
 
 The `<subtype[:1][/path] | URI>` argument delimits(vt. 划界；定界限) the list of certificates and
-specifies either to perform xmDNS service discovery, or to retrieve the document at the specified URI.
+specifies either to perform xmDNS service discovery, OR to retrieve the document at the specified URI.
 要么使用xmDNS方式来发现服务Service，要么通过遍历的方式找到在URI指定下的文档
 
 Subtype DNS-SD queries 注意，下面的指令只是针对DNS-SD服务
@@ -83,7 +83,7 @@ the resource either `http` for an unencrypted connection or `https` for
 a secure TLS connection. If no port is specified, the default ports for
 HTTP and HTTPS are used, 80 and 443 respectively.
 
-通过URI路径中是HTTPS还是HTTP来判断是加密的还是没有加密的
+通过URI路径中是 “HTTPS” 还是 “HTTP” 来判断是加密的还是没有加密的
 
 
 Commands
@@ -126,11 +126,11 @@ ordering and retrieve only the DERProgramList associated with that FSA,
 then retrieve the DERCurveList and DERControlList associated with the
 highest priority DERProgram in the DERProgramList. Finally schedule the
 events when retrieval is complete.
-
-跟前面的primary类似，除了所有的DERPrograms和与之相关联的DERCurveLists和DERControlLists。
+在执行resigter之外，执行获取FSA，执行DERProgram的功能。
 
 -   `all` - Perform the same functions as `primary`, except all DERPrograms
 and the associated DERCurveLists and DERControlLists are retrieved.
+跟前面的primary类似，除了所有的DERPrograms和与之相关联的DERCurveLists和DERControlLists。
 
 -   `time` - Perform the time test.
 

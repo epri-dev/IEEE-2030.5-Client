@@ -199,7 +199,7 @@ const char *type_name (int type, const Schema *schema) {
   return schema->names[type];
 }
 
-/*参数中，se是从属于schema对象中的一个元素。在现在这个程序中，获取的是全局变量se_names[]中的有一个字符串*/
+/*参数中，se是从属于schema对象中的一个元素。在现在这个程序中，获取的是全局变量se_names[]中的有一个字符串。schema->ids表中的长度跟se_elements的长度一致，每一行对应，值表示了 se_types.h 中定义的值。schema->names跟 se_types.h定义id宏定义值对应，通过偏移量即可获得名字字符串。*/
 const char *se_name (const SchemaElement *se, const Schema *schema) {
   int index = se - schema->elements;/*获取se在数组 schema->elements 中的相对位置*/
   int id = index < schema->length ? index : schema->ids[index - schema->length];  /*排在 schema->length 之前的是基类；如果超过基类范围，则取ids中的值作为偏移量*/

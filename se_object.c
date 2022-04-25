@@ -17,7 +17,7 @@
 void mrid_gen (uint8_t *mrid);
 
 typedef struct {
-  unsigned short offset;  //表示从来做比较值，在Key所在的对象中的偏移量。通过这偏移量和下面的type信息，就可以知道用来比较的这个数据的真实大小，以便用来比较。
+  unsigned short offset;  //表示从来做比较的值，在Key所在的对象中的偏移量。通过这偏移量和下面的type信息，就可以知道用来比较的这个数据的真实大小，以便用来比较。
   short type; //用来比较的值的类型，其值是 XsType 类型中定义的值
 } Key;
 
@@ -40,7 +40,7 @@ typedef struct {
 
     一个IEEE2030.5的类型是否是从一个基类中派生出来的？
     
-    查询schema以决定某一个类型的对象是否是从一个基类中派生出来的？
+    查询schema以决定某一个类型的对象是否是从一个基类中派生出来的？这个查询过程主要依据 se_schema 这个数组的内部结构上来实现的。
     Queries the schema to determine if an object of certain type is derived
     from a base object. This is useful for dealing with certain classes of
     objects (e.g se_type_is_a (type, SE_Resource), or
@@ -56,14 +56,14 @@ typedef struct {
 
 
 /** @brief Is an IEEE 2030.5 object type a List derived type?
-    判断一个SE对象，是否是一个从“ SE_SubscribableList ” 对象中派生出来的子类（SE_SubscribableList是基类，SE中存在很多基类）
+    判断一个SE对象，是否是一个从“ SE_SubscribableList ” 对象中派生出来的子类（SE_SubscribableList是基类，SE中存在很多基类和由此派生的子类）
     @returns 1 if the type is a SubscribableList or a List type, 0 otherwise
 */
 
 
 /* 搜索过程分解演示 ：
 
-1）首先找到这个 SubscribableList 所在的行，对应代码行 base = schema->elements[base].index;  //获得base的值
+1）通过类型值（类型值就是在se_types.h最后部分定义的宏定义值），首先找到这个 SubscribableList 所在的行，对应代码行 base = schema->elements[base].index;  //获得base的值
   {.min = 1, .max = 1, .index = 539}, // SubscribableList
 
 后面的过程，即执行:
@@ -72,7 +72,7 @@ while (se->index) { //有的index是0，也就是说碰到了index是0的数组�
   se = &schema->elements[se->index];  //看起来是一个可以循环跳转的表
 }
 
-看起来像是不断的搜索“父类”的过程，Resource --》SubscribableResource --》SubscribableList
+看起来像是不断的搜索“父类”的过程，Resource :: SubscribableResource :: SubscribableList
 2）找到539行：这里才是 SE_SubscribableList，即这个类的具体描述。
     // SubscribableList (539)
     {.size = sizeof(SE_SubscribableList_t), .index = 496},
@@ -219,6 +219,7 @@ void mrid_gen (uint8_t *mrid) {
   PACK32 (mrid + 12, pen_id);
 }
 
+/*仅仅用于下面的bsearch函数*/
 int compare_ids (const void *a, const void *b) {
   const int short *x = a, *y = b;
   return *x - *y;
@@ -236,7 +237,6 @@ base  指向进行查找的数组
 num   数组中元素的个数
 size  数组中每个元素的大小，一般用sizeof()表示
 cmp   比较两个元素的函数，定义比较规则。需要注意的是，查找数组必须是经过预先排序的，而排序的规则要和比较子函数cmp的规则相同。
-
 
 */
 
@@ -308,7 +308,7 @@ int compare_keys (void *a, void *b, ListInfo *info) {
   return ret; //也可能返回一个相等的值
 }
 
-//以排序后的顺序来插入一个新的 ListInfo 元素。这里应该是升序排列的。
+//以排序后的顺序来插入一个新的 ListInfo 元素。这里应该是升序排列的。n是待插入的对象，list是被插入的表，info是这个这个list中包含了用于比较的基准值的信息。
 void *insert_se_object (List *list, List *n, ListInfo *info) {
   List *prev = NULL, *l = list;
   while (l && (compare_keys (n->data, l->data, info) > 0))
@@ -320,20 +320,19 @@ void *insert_se_object (List *list, List *n, ListInfo *info) {
 }
 
 
-/*初始化se输出对象。
-指定schema，驱动函数等。*/
+/*初始化se输出对象。指定schema，驱动函数等。*/
 void se_output_init (Output *o, char *buffer, int size, int xml) {
   if (xml) output_init (o, &se_schema, buffer, size);
   else exi_output_init (o, &se_schema, buffer, size);
 }
 
 
-//将对象内容以文本方式打印出来
+//将se对象内容以文本方式打印出来
 void print_se_object (void *obj, int type) {
   Output o;
-  char buffer[1024];
-  output_init (&o, &se_schema, buffer, 1024);
-  while (output_doc (&o, obj, type)) printf ("%s", buffer);
+  char buffer[2048];
+  output_init (&o, &se_schema, buffer, 2048);
+  while (output_doc (&o, obj, type)) printf ("print_se_object:\n%s", buffer);
 }
 
 #endif

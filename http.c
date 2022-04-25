@@ -614,7 +614,7 @@ top:
   } else if (!buffer_full (c) && http_read (c) > 0)
     goto top; //如果读取不满且还有数据可以读取，则继续读取。
   else *length = c->length;
-  *length -= c->data - c->buffer;
+  *length -= c->data - c->buffer; //data指针总是往后增长的。
   return c->data;
 }
 

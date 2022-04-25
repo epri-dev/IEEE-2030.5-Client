@@ -533,7 +533,7 @@ Stub *match_request (void *conn, void *data, int type) {
   }
   return NULL;
 }
-
+//处理响应
 void process_response (void *conn, int status, DepFunc dep) {
   Stub *s;
   void *obj;
@@ -599,6 +599,7 @@ int process_http (void *conn, DepFunc dep) {
     case 200:
     case 201:
     case 204:
+      printf("process_http: se_receive return HTTP_RESPONSE,http_status return status:%d\n",status);
       process_response (conn, status, dep); //如果成功回复，则将执行dep函数
       return status;
     case 300:
@@ -606,6 +607,7 @@ int process_http (void *conn, DepFunc dep) {
       process_redirect (conn, status);
       break;
     default:  // 如果是访问资源但是回复的数据不是上述表示成功的情况，则表示该资源（看起来）已经被删除了，所以要再本地也同样的删除掉。
+      printf("process_http: se_receive default\n");
       if (http_method (conn) == HTTP_GET
           && (s = find_target (conn))) {
         s->status = status;
