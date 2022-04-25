@@ -1,5 +1,6 @@
 // Client side C/C++ program to demonstrate Socket
 // programming
+//https://stackoverflow.com/questions/57730441/sockets-programming-sending-and-receiving-different-data-to-different-clients-i
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,7 +12,7 @@ int main(int argc, char const* argv[])
 {
 	int sock = 0, valread; //initialize sock and valread
 	struct sockaddr_in serv_addr;
-	char* hello = "Hello from client msg changed"; // message to be sent
+	char* hello = "Client say hello"; // message to be sent
 	char buffer[1024] = { 0 };
 	//if sock < 0 socket creation error
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
