@@ -52,7 +52,7 @@ path就是dnssd参数中的/path
 int server = 0, test = 0, secure = 0, interval = 5 * 60, primary = 0, pin = 0;
 
 Stub *edevs;
-char *path = NULL;  //注意这里是一个全局变量
+char *path = NULL;  //注意这里是一个全局变量。是在<subtype[:1][/path]       | URI>中的path值。可能为空。
 uint64_t delete_sfdi;
 
 //要解析的指令是 <subtype[:1][/path]       | URI> ， 可能跟msDNS功能有关
@@ -426,12 +426,13 @@ void edev_complete (Stub *r) {
   }
 }
 
+/*获取所有的 DERProgram 下面的 DefaultDERControl和 DERControlList 和 DERCurveList 资源。*/
 void der_program (Stub *d) {
   if (test & GET_DERC) {
-    Stub *cl;
+    Stub *cl; //ControlList
     SE_DERProgram_t *dp = resource_data (d);
-    get_dep (d, dp, DefaultDERControl);
-    if (cl = get_list_dep (d, dp, DERControlList)) {
+    get_dep (d, dp, DefaultDERControl); // 获取从属于dp的DefaultDERControl资源。
+    if (cl = get_list_dep (d, dp, DERControlList)) {  //获取从属于dp的DERControlList资源。
       cl->poll_rate = active_poll_rate;
       poll_resource (cl);
     }
@@ -439,6 +440,8 @@ void der_program (Stub *d) {
   }
 }
 
+
+/*仅仅是查询DERProgramList资源操作，主要作用函数是 poll_resource */
 void poll_derpl (Stub *r) {
   SE_DERProgramList_t *derpl = resource_data (r);
   r->poll_rate = se_exists (derpl, pollRate) ? derpl->pollRate : 900;
@@ -446,14 +449,17 @@ void poll_derpl (Stub *r) {
 }
 
 // select the highest priority DERProgram from a DERProgramList
+//
 void der_program_list (Stub *r) {
-  if (primary && r->reqs) der_program (r->reqs->data);
+  if (primary && r->reqs) der_program (r->reqs->data);  //意思是第一个的DERProgram的优先级（priority）最高？
 }
 
+
+/* 测试中获取到FSA资源 */
 int fsa (Stub *r) {
   if (test & GET_DERP) {
     SE_FunctionSetAssignments_t *fsa = resource_data (r);
-    Stub *d = get_list_dep (r, fsa, DERProgramList);
+    Stub *d = get_list_dep (r, fsa, DERProgramList);//获取到 DERProgramList 资源 
     if (d && primary) {
       d->completion = der_program_list;
       return 1;
@@ -529,7 +535,7 @@ void edev_list (Stub *r) {
     if (test & GET_EDEV) {
       SE_EndDevice_t edev = {0};
       edev.sFDI = device_sfdi;
-      se_post (r->conn, &edev, SE_EndDevice, r->base.name);
+      se_post (r->conn, &edev, SE_EndDevice, r->base.name); //POST
     }
     if (test & DEVICE_TEST)
       test_fail ("device test", "client EndDevice instance not found");
@@ -553,14 +559,15 @@ void edev_list (Stub *r) {
   r->completion = NULL;
 }
 
+
 void dcap (Stub *r) {
   SE_DeviceCapability_t *dcap = resource_data (r);
   if (test & GET_TIME) {
-    if (!get_root (r->conn, dcap, Time))
+    if (!get_root (r->conn, dcap, Time))  //获取到dcap中的Time资源。
       test_fail ("time", "no TimeLink in DeviceCapability");
   }
-  if (test & GET_EDEV) {
-    if (r = get_list_root (r->conn, dcap, EndDeviceList))
+  if (test & GET_EDEV) {  
+    if (r = get_list_root (r->conn, dcap, EndDeviceList)) // 获取
       r->completion = edev_list;
     else test_fail ("edev", "no EndDeviceListLink in DeviceCapability");
   }
@@ -574,11 +581,12 @@ void dcap (Stub *r) {
   }
 }
 
+//请求时间同步
 void time_sync (Stub *s) {
-  SE_Time_t *tm = resource_data (s);
-  s->poll_rate = se_exists (tm, pollRate) ? tm->pollRate : 900;
-  poll_resource (s);
-  set_time (tm);
+  SE_Time_t *tm = resource_data (s);  //获取到时间资源
+  s->poll_rate = se_exists (tm, pollRate) ? tm->pollRate : 900; //默认是900秒来获取一次数据。
+  poll_resource (s);  //添加一个异步请求
+  set_time (tm);  //？？不知道为什么这里需要重新设置一下时间。
 }
 
 void update_mup (Stub *s) {
@@ -658,20 +666,21 @@ void self_device (Stub *r) {
 }
 
 
-/*这里相当于列举出了各个重要的于服务器交互的内容*/
+/*这里相当于列举出了各个重要的于服务器交互的内容
+这个函数是 process_http中  的   DepFunc 函数，应用于*/
 void test_dep (Stub *r) {
   switch (resource_type (r)) {
   case SE_Time:
-    time_sync (r);
+    time_sync (r);  //时间同步？
     break;
   case SE_DERProgram:
-    if (!primary) der_program (r);
+    if (!primary) der_program (r);  //获取 DERProgram 下面的三个主要资源。
     break;
   case SE_DERProgramList:
     poll_derpl (r);
     break;
   case SE_FunctionSetAssignments:
-    if (!primary) fsa (r);
+    if (!primary) fsa (r);  //获取FSA下面的部分资源。
     break;
   case SE_DeviceCapability:
     dcap (r);
@@ -702,7 +711,7 @@ int main (int argc, char **argv) {
   options (argc, argv);
 
   while (1) {
-    switch (der_poll (&any, -1)) {
+    switch (der_poll (&any, -1)) {  //这个函数的执行结果是由内部的 client_poll 提供的
     case SERVICE_FOUND: //主要针对DNSSD的
       s = any;
       print_service (s);
@@ -711,10 +720,10 @@ int main (int argc, char **argv) {
         get_resource (service_connect (s, secure), -1, path, 0);
       else get_path (s, secure);
       break;
-    case TCP_ACCEPT:  //作为服务器来说的一个事件
+    case TCP_ACCEPT:  //作为服务器来说的一个事件。注意下面没有break。
       // accept_notifier (any);
     case TCP_PORT:      //在连接到服务器成功后，socket上一旦有活动的数据，将触发该事件。
-      if (conn_session (any)) {
+      if (conn_session (any)) { //如果是连接的
         http_debug (any, 1);  //使能debug。
         // if (http_client (any))
         process_http (any, test_dep);

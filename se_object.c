@@ -34,7 +34,7 @@ typedef struct {
     @param info is a pointer to the ListInfo for the list type    info 是一个对于list类型的指向ListInfo的指针
     @returns a pointer to the list field of the object    返回这个对象中的list域（数据）
 */
-#define se_list_field(obj, info) (List **)((obj)+(info)->offset)  //在某一个IEEE对象中的List类型数据，在这个IEEE对象中的offset值。该值
+#define se_list_field(obj, info) (List **)((obj)+(info)->offset)  //在某一个IEEE对象中的List类型数据，在这个IEEE对象中的offset值。
 
 /** @brief Is an IEEE 2030.5 object type derived from a base type?
 
@@ -332,7 +332,8 @@ void print_se_object (void *obj, int type) {
   Output o;
   char buffer[2048];
   output_init (&o, &se_schema, buffer, 2048);
-  while (output_doc (&o, obj, type)) printf ("print_se_object:\n%s", buffer);
+  printf("print_se_object:\n");
+  while (output_doc (&o, obj, type)) printf ("%s", buffer);
 }
 
 #endif

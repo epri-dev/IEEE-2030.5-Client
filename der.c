@@ -98,6 +98,7 @@ DerDevice *get_device (uint64_t sfdi) {
   return d;
 }
 
+//将该设备的settings变量填充（在"setting"文件夹中的内容）
 void device_settings (uint64_t sfdi, char *path) {
   DerDevice *d = get_device (sfdi);
   process_dir (path, &d->settings, load_settings);

@@ -154,7 +154,7 @@ typedef struct _SeConnection {
   HttpConnection http;
   Address host;
   Parser parser;
-  int state, media;
+  int state, media; //这里的state只有 SE_START 和 SE_DATA 两种状态。
   uint64_t sfdi;
   struct _SeConnection *next;
 } SeConnection;
@@ -194,6 +194,7 @@ int select_media (char *range) {
   return type;
 }
 
+//准备好 SE 解析器
 int se_parse_init (void *conn) {
   SeConnection *c = conn;
   HttpConnection *h = &c->http;
@@ -230,13 +231,13 @@ void free_se_body (void *conn) {
 }
 
 
-//取出se回复的数据中的body部分。
+//取出se回复的数据中的对象部分，也就是前面HTTP回复中的body部分。
 void *se_body (void *conn, int *type) {
   SeConnection *s = conn;
   void *body;
   if (body = s->parser.obj) {
     *type = s->parser.type;
-    s->parser.obj = NULL;
+    s->parser.obj = NULL; //取出之后就将原来的指针腾空出来。
   }
   return body;
 }
@@ -244,7 +245,7 @@ void *se_body (void *conn, int *type) {
 #define SE_START 0
 #define SE_DATA 1
 
-// return HTTP method, SE_ERROR, or SE_INCOMPLETE
+// return HTTP method, SE_ERROR, or SE_INCOMPLETE 接收服务器回复的数据并且尝试解析成SE对象。
 int se_receive (void *conn) {
   SeConnection *s = conn;
   HttpConnection *h = conn;
@@ -267,7 +268,7 @@ int se_receive (void *conn) {
       print_http_status (h);
       if (h->media_range)
         s->media = select_media (h->media_range);
-      if (h->body) {
+      if (h->body) {  //如果在HEADER中指示存在body部分数据的
         if (se_parse_init (s)) s->state++;
         else {
           code = 415;
@@ -290,13 +291,12 @@ int se_receive (void *conn) {
         parser_rebuffer (p, data, length);  //重新指定新的待解析的数据的开始地址，待后面解析。
         if( parse_doc (p, &type) ) {
           s->state = SE_START;
-          printf("se_receive:return method,s->state=SE_START\n");
           return method;
         } else if (!http_complete (h)) {
           http_rebuffer (h, p->ptr);
-        } else {  //如果遇到这个错误，通常是由于服务器返回的消息中，包含了客户端无法识别的SE名称。
+        } else {  //如果遇到这个错误，通常是由于服务器返回的消息中，包含了客户端无法识别的SE类型值，此时要修改sep.xsd文档，将新的类型值加入进去。
           printf ("parse error in message body\n");
-          print_parse_stack (p);
+          print_parse_stack (p);  //解析失败后，将已经解析成功的内容打印出来，以便分析
           code = 400;
           goto error;
         }

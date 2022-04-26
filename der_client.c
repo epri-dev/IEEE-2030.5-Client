@@ -75,15 +75,15 @@ void print_event_schedule (DerDevice *d) {
 
 -   provides an event polling function `der_poll` that handles events such as
     schedule updates, and resource polling updates.
-
+1）检查DER设备是否需要作状态更新，资源数据获取等操作。2）执行 dnssd 客户端查询函数 client_poll 。
 */
 
 int der_poll (void **any, int timeout) {
   Schedule *s;
   int event;
-  while (event = next_event (any)) {  // 查询下一个event是否已经到来
+  while (event = next_event (any)) {  // 查询下一个event是否已经到来。这里的event指的是系统中自定义的一些事件，由即值排在EVENT_NEW之后的event。
     switch (event) {
-    case SCHEDULE_UPDATE: //调度器中设定的调度时刻到了，将调用update_schedule函数（这个函数中又会自己设置下次启动事件），就这样持续循环。
+    case SCHEDULE_UPDATE: //调度器中设定的调度时刻到了，将调用 update_schedule 函数（这个函数中又会自己设置下次启动事件），就这样持续循环。
       s = *any;
       update_schedule (s);
       if (!s->active) {

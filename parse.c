@@ -125,7 +125,7 @@ struct _ParserDriver;
 
 typedef struct _Parser {
   void *obj;  //用于存放这个数据对象的存储空间地址？？应该是解析后的对象。
-  int type;   // completed object and type 完成解析后的数据对象和类型
+  int type;   // completed object and type 完成解析后的SE对象的类型
   struct _XmlParser *xml; //xml解析器。这个是底层接口。
   ElementStack stack;
   const Schema *schema;
@@ -221,6 +221,7 @@ void *add_element (StackItem *t) {
 
 /*
 const ParserDriver xml_parser={xml_start,xml_next,xml_end,xml_sequence,parse_value,parse_text_value,parse_done,xml_rebuffer};
+参数中的 type，就是在parse成功之后，判断到的se_types.h中定义的基本类型值。
 */
 
 void *parse_doc (Parser *p, int *type) {
@@ -341,6 +342,8 @@ parse_error:
   return NULL;
 }
 
+
+//新建一个Parser
 Parser *parser_new () {
   return calloc (1, sizeof (Parser));
 }

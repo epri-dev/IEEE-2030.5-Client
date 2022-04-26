@@ -321,7 +321,7 @@ typedef struct _HttpConnection {
   int length; // the amount of data in buffer   在bufer中存放的数据的总大小。指向最后一个字符（不是'\0'）
   int content_length; // from the Content-Length header 在Header中的Content-Length值。
   uint8_t state, method, request_method;  //request_method：请求的方法，比如是GET还是POST
-  unsigned body : 1;    // response or request has a body 是否包含一个body 
+  unsigned body : 1;    // response or request has a body 回复的HTTP包中是否包含一个body 
   unsigned close : 1;   // close signaled in last request/response 
   unsigned client : 1;  // true for client connection 如果本对象是一个客户端连接的时候用到的，则置位1
   unsigned debug : 1;   //设置是否打印调试信息
@@ -349,7 +349,7 @@ int http_status (void *conn) {
   return http_field (conn, status);
 }
 int http_method (void *conn) {
-  return http_field (conn, request_method);
+  return http_field (conn, request_method); //刚刚发出的请求的 method 的类型
 }
 char *http_path (void *conn) {
   return http_field (conn, uri.path);

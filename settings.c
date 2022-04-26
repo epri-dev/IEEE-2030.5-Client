@@ -13,14 +13,14 @@ typedef struct {
 void load_settings (const char *name, void *ctx) {
   Settings *ds = ctx;
   char *buffer = file_read (name, NULL),
-        *data = utf8_start (buffer);
+        *data = utf8_start (buffer);  //取得第一个utf8字符。
   Parser *p = parser_new ();  //  导入一个XML的 Parser
   void *obj;
   int type;
   
   //初始化解析器
   parse_init (p, &se_schema, data);
-  obj = parse_doc (p, &type);
+  obj = parse_doc (p, &type); //将对象解析出来。
   
   if (parse_error (p)) {
     printf ("load_device_setting: error parsing XML file %s\n", name);

@@ -7,6 +7,9 @@
 
 #ifndef HEADER_ONLY
 
+
+//读取文件，将读取到的内容刚到一个buffer中然后返回buffer。
+
 char *file_read (const char *name, int *length) {
   FILE *f = fopen (name, "rb");
   char *buffer;
