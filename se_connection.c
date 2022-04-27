@@ -6,6 +6,9 @@
 
     An SeConnection extends an HttpConnection and provides support for the
     IEEE 2030.5 media types "application/sep+xml" and "application/sep-exi".
+    
+    这个文件中的函数基本上是跟SE服务器之间的交互过程的API。
+
     @{
 */
 
@@ -34,17 +37,29 @@ enum SeMediaType {SE_EXI, SE_XML, APPLICATION_XML};
 //向服务器发送各种HTTP格式数据
 #define se_post(conn, data, type, href)		\
   se_send (conn, data, type, href, HTTP_POST)
+
+//将SE类型值为type的data对象，PUT到href指定的位置（在服务器中的文件位置）上去
 #define se_put(conn, data, type, href)		\
   se_send (conn, data, type, href, HTTP_PUT)
+
+
+/*
+以method的HTTP方法发送一个Link类型的数据（对象名中包含了Link字样的类型的数据）。
+该项数据的SE类型类type。数据存放在data地址指向的空间中。该data属于obj对象。
+*/
+
 #define link_send(conn, obj, data, type, method)			\
   if ((data) && se_exists (obj, type##Link))				\
     se_send (conn, data, SE_##type, (obj)->type##Link.href, method)
+    
+//在conn连接中输出一个obj对象中高的data数据，这个数据的SE基本类型是type。HTTP方法是PUT方法。
 #define link_put(conn, obj, data, type)		\
   link_send (conn, obj, data, type, HTTP_PUT)
+  
 #define link_post(conn, obj, data, type)		\
   link_send (conn, obj, data, type, HTTP_POST)
 
-/** @brief PUT or POST an IEEE 2030.5 object to a server.
+/** @brief PUT or POST an IEEE 2030.5 object to a server. 
 
     Use the conn parameter to send the object if the host address matches the
     server specified in the the href parameter, otherwise attempt a new
@@ -89,7 +104,7 @@ const char *se_content_type (void *conn, int *type);
     If @ref se_receive returns an HTTP method or an HTTP response, this
     function returns the HTTP message body as an IEEE 2030.5 object if any
     were present or NULL to indicate the message body was empty. Caller is
-    responsible for freeing the object with @ref free_se_object.
+    responsible for freeing the object with @ref free_se_object.  如果返回的是NULL，则说明HTTP消息体是空的。
     @param conn is a pointer to an SeConnection
     @param type is a pointer to the returned type of IEEE 2030.5 object  type是指向返回的对象的类型
     @returns an IEEE 2030.5 object present in the HTTP message body (if any),
@@ -97,15 +112,18 @@ const char *se_content_type (void *conn, int *type);
 */
 void *se_body (void *conn, int *type);
 
-/** @brief Free the IEEE 2030.5 object parsed from the HTTP message 释放掉从HTTP返回的消息中解析出来的对象IEEE 2030.5中
+/** @brief Free the IEEE 2030.5 object parsed from the HTTP message
     body (if any).
+    
+    释放掉从HTTP返回的消息中解析出来的对象IEEE 2030.5
+
     @param conn is a pointer to an SeConnection
 */
 void free_se_body (void *conn);
 
 /** @brief Receive an IEEE 2030.5 message. 接收一个 IEEE 2030.5 消息
     @param conn is a pointer to a SeConnection
-    @returns the HTTP method on success (see @ref http_receive)
+    @returns the HTTP method on success (see @ref http_receive) 返回HTTP类型如果接收是成功的话。
 
     SE_INCOMPLETE to indicate an incomplete message SE_INCOMPLETE 表示这个是一个不完整的消息体
 
@@ -375,7 +393,8 @@ void *se_accept (Acceptor *a, int secure) {
 }
 
 /*
-新建连接并且发送数据。这个函数是上述几个函数的总和。
+新建连接并且发送数据。在发送的时刻，构建待发送的数据的内容。
+这个函数是上述几个函数的总和。
 */
 void *se_send (void *conn, void *data, int type,
                char *href, int method) {
@@ -390,8 +409,8 @@ void *se_send (void *conn, void *data, int type,
     int length, header;
     header = http_send (conn, buffer, uri->path, method);
     se_output_init (&o, buffer + header, 4096 - header, c->media);
-    length = output_doc (&o, data, type);
-    set_content_length (buffer, length);
+    length = output_doc (&o, data, type); //数据构建成xml格式文本。
+    set_content_length (buffer, length);  //
     length += header;
     printf ("se_send:\n");
     http_write (conn, buffer, length);

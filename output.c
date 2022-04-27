@@ -160,6 +160,7 @@ int output_complete (Output *o) {
   return o->state == OUTPUT_COMPLETE;
 }
 
+//将一个SE类型（type指定）的数据base，转化成一个xml字符串序列。
 int output_doc (Output *o, void *base, int type) {
   ElementStack *stack = &o->stack;
   StackItem *t;

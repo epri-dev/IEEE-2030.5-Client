@@ -9,7 +9,19 @@ typedef struct {
   SE_DERStatus_t *ders;
 } Settings;
 
-//导入“settings”目录下的文件
+/*
+导入“settings”目录下的文件，解析，并且通过ctx传输出去。
+在本工程中，本函数作为process_dir的参数传入，在process_dir中，将对settings目录下的每个文件都一次调用本函数。
+然后将结果记录下来。
+
+xml文件：
+
+DERAvailability.xml
+DERCapability.xml
+DERSettings.xml
+DERStatus.xml
+
+*/
 void load_settings (const char *name, void *ctx) {
   Settings *ds = ctx;
   char *buffer = file_read (name, NULL),
@@ -18,7 +30,7 @@ void load_settings (const char *name, void *ctx) {
   void *obj;
   int type;
   
-  //初始化解析器
+  //初始化解析器，将解析settings目录下的xml文件。
   parse_init (p, &se_schema, data);
   obj = parse_doc (p, &type); //将对象解析出来。
   
@@ -27,6 +39,8 @@ void load_settings (const char *name, void *ctx) {
     print_parse_stack (p);
     exit (0);
   }
+  
+  //每次都导入一个对象类型。
   switch (type) {
   case SE_DERAvailability:
     ds->dera = obj;

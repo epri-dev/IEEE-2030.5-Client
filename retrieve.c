@@ -52,7 +52,8 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   time_t poll_next; ///< is the next time to poll the resource 下次需要检索的数据的时间
   int16_t poll_rate; ///< is the poll rate for the resource 这个资源应当执行的查询频率
   unsigned complete : 1; ///< marks the Stub as complete  
-  /*表示这个stub已近查询( retrieve ) 或者填充完毕了。包含子级的Stub数据。当有新的子级资源与该本级Stub建立依赖关系后，该值将标记为0。*/
+  /*表示这个stub已近查询( retrieve ) 或者填充完毕了。包含子级的Stub数据。当有新的子级资源与该本级Stub建立依赖关系后，该值将标记为0。
+  如果还有未完成的数据待获取，则标记为1*/
   unsigned subscribed : 1;
   //下面两个flag数据的用法，详见 new_dep 这个函数 
   uint32_t flag; ///< is the marker for this resource in its dependents 
@@ -64,8 +65,8 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   uint32_t all; ///< is the total number of list items  List的总量
   struct _Stub *moved; ///< is a pointer to the new resource 这个moved是什么意思？？
   List *list; ///< is a list of old requirements for updates
-  List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的子层级的 Stub 。 应该是父级对象。
-  List *reqs; ///< is a list of requirements 需求：就是子级对象，当前Stub所需要的子级对象List 。 List中的data对象就是子级Stub。
+  List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的父层级的 Stub 。 这个是子级Stub指向父级Stub的链接。
+  List *reqs; ///< is a list of requirements 需求：就是子级对象，当前Stub所需要的子级对象List。List中的data对象就是子级Stub。这个是父级Stub指向子级Stub的链接。
   union {
     void *context; ///< is a user defined completion context
     List *schedules; //< is a list of schedules for event resources 
@@ -243,7 +244,7 @@ Stub *new_dep (Stub *r, Stub *d, int flag) {
   return d;
 }
 
-//移除 requirements?
+//在Stub r中移除Stub s 这个父级的dep资源。 
 void remove_req (Stub *s, Stub *r) {
   r->deps = list_delete (r->deps, s);
   if (!r->deps) insert_event (r, RESOURCE_REMOVE, 0); //异步调用
@@ -255,14 +256,18 @@ void remove_reqs (Stub *s, List *reqs) {
   free_list (reqs);
 }
 
-//这个不知道什么意思
+/*函数功能：在“各个”父级Stub中移除本Stub资源（链接）。父级Stub对于子级Stub来说就是 dependent
+所以函数名 remove_deps 的意思是：从所有原本“req”本Stub的Stub中移除链接。
+
+参数中的deps在实际调用的时候，通常是s对象中的那个deps。
+*/
 void remove_deps (Stub *s, List *deps) {
   List *l;
-  foreach (l, deps) { //
+  foreach (l, deps) { //遍历每一个依赖对象，即父级Stub
     Stub *t = l->data;//依赖对象，即父级Stub
     if (t->status < 0)  //准备将要去更新的？
-      t->list = list_delete (t->list, s); //  移除掉这个 Stub
-    else t->reqs = list_delete (t->reqs, s);  //从父级Stub中移除本Stub。
+      t->list = list_delete (t->list, s);     //在父级Stub中的list中移除本Stub。
+    else t->reqs = list_delete (t->reqs, s);  //从父级Stub中的reqs列表中移除本Stub。reqs是父级Stub中记录的“需要”的子级stub的一张表。
   }
   free_list (deps);
 }
@@ -339,16 +344,16 @@ void delete_stub (Stub *s) {
 /* 看起来是将一个Stub填充到其父级中去？？ */
 void dep_complete (Stub *s) {
   List *l;
-  if (s->completion && !s->complete)
+  if (s->completion && !s->complete)  //complete设置为0，表示已经完成了数据的获取。
     s->completion (s);
   s->complete = 1;
   foreach (l, s->deps) {
-    Stub *d = l->data;  //d这里是父级，s这里是子级。
+    Stub *d = l->data;  //d这里是父级，s这里是子级。后面的代码，都是站在父级Stub的角度对当前的这个Stub来操作。
     int complete = 0; //0表示未完成。
     if (d->base.info) { //如果这个父级含有List类型的数据
       d->reqs = insert_stub (d->reqs, s, d->base.info); //
-      complete = list_length (d->reqs) == d->all;
-    } else {  //如果仅仅是一个单一的类型的数据
+      complete = list_length (d->reqs) == d->all; //看是否已经完成了。
+    } else {  //否则，如果仅仅是一个单一的类型的数据
       d->reqs = insert_unique (d->reqs, s);
       d->flags &= ~s->flag; //将父级的表示 “dep”的flags中的，用来表示“自己是否存在”的标志位清零。
       complete = !d->flags; //如果父级中的flags有任何一个bit置位了，则 complete =0，即表示没有完成。
@@ -396,7 +401,7 @@ void *get_subordinate (Stub *s, int type) {
   foreach (l, s->reqs) {
     Stub *t = l->data;
     if (resource_type (t) == type)
-      return t->moved ? t->moved : t;
+      return t->moved ? t->moved : t; //如果moved存在就使用moved资源，否则返回原来的？？（不知道什么意思）
   }
   return NULL;
 }

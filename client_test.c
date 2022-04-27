@@ -47,11 +47,13 @@ void usage () {
 test记录了需要测试的内容，用bit位占位表示
 secure的值表示是否是加密了连接
 path就是dnssd参数中的/path
+pin:在pIN测试中输入的pin值。
 */
 
 int server = 0, test = 0, secure = 0, interval = 5 * 60, primary = 0, pin = 0;
 
-Stub *edevs;
+Stub *edevs;  //在本测试代码中，获取到的EndDevice设备数据对象。
+
 char *path = NULL;  //注意这里是一个全局变量。是在<subtype[:1][/path]       | URI>中的path值。可能为空。
 uint64_t delete_sfdi;
 
@@ -362,7 +364,10 @@ void alarm_dep (Stub *r) {
   generic_alarm (r->deps->data);
 }
 
-/*上传一个DER设备的设置参数*/
+/*
+通过PUT方法，上传一个DER设备的设置参数
+这些参数放在本工程的“setting”下，由xml文件来描述。在本代码启动的时候，已经对这些数据作了解析。
+*/
 void put_der_settings (void *conn, Settings *ds, SE_DER_t *der) {
   link_put (conn, der, ds->dera, DERAvailability);
   link_put (conn, der, ds->dercap, DERCapability);
@@ -434,7 +439,7 @@ void der_program (Stub *d) {
     get_dep (d, dp, DefaultDERControl); // 获取从属于dp的DefaultDERControl资源。
     if (cl = get_list_dep (d, dp, DERControlList)) {  //获取从属于dp的DERControlList资源。
       cl->poll_rate = active_poll_rate;
-      poll_resource (cl);
+      poll_resource (cl); //获取到这些controlList
     }
     get_list_dep (d, dp, DERCurveList);
   }
@@ -448,10 +453,11 @@ void poll_derpl (Stub *r) {
   poll_resource (r);
 }
 
-// select the highest priority DERProgram from a DERProgramList
-//
+//select the highest priority DERProgram from a DERProgramList
+
+//按照前面的注释来看，意思是第一个的DERProgram的优先级（priority）最高？
 void der_program_list (Stub *r) {
-  if (primary && r->reqs) der_program (r->reqs->data);  //意思是第一个的DERProgram的优先级（priority）最高？
+  if (primary && r->reqs) der_program (r->reqs->data);  //
 }
 
 
@@ -483,9 +489,9 @@ void get_edev_subs (Stub *edevs) {
     SE_EndDevice_t *e = resource_data (s);
     if (test & INVERTER_CLIENT && e->sFDI != device_sfdi) continue;
     s->completion = edev_complete;
-    get_list_dep (s, e, DERList);
+    get_list_dep (s, e, DERList); //获取到 EndDevice 下面的 DERList。
     if (test & GET_FSA) {
-      if ((s = get_list_dep (s, e, FunctionSetAssignmentsList)) && primary)
+      if ((s = get_list_dep (s, e, FunctionSetAssignmentsList)) && primary) //获取到 EndDevice 下面的 FunctionSetAssignmentsList
         s->completion = fsa_list;
     }
   }
@@ -512,9 +518,9 @@ void end_device (Stub *r) {
     if (test & REGISTER_TEST) {
       if (se_exists (e, RegistrationLink)) {
         if (test & PUT_PIN) {
-          SE_Registration_t reg = {0};
-          reg.dateTimeRegistered = se_time ();
-          reg.pIN = pin;
+          SE_Registration_t reg = {0};  
+          reg.dateTimeRegistered = se_time ();  //看起来是只要填充下面这两项数据就够了。
+          reg.pIN = pin;  //这个pin的意思不是很清楚。
           se_put (r->conn, &reg, SE_Registration, e->RegistrationLink.href);
           test &= ~REGISTER_TEST;
           if (edevs) get_edev_subs (edevs);
