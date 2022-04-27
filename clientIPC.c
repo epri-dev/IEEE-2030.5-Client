@@ -1,6 +1,9 @@
 // Client side C/C++ program to demonstrate Socket
 // programming
-//https://stackoverflow.com/questions/57730441/sockets-programming-sending-and-receiving-different-data-to-different-clients-i
+/*
+https://stackoverflow.com/questions/57730441/sockets-programming-sending-and-receiving-different-data-to-different-clients-i;
+*/
+// derived from https://www.geeksforgeeks.org/socket-programming-cc/
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,7 +32,9 @@ char* msg="<DERControlList href=\"/sep2/A1/derp/1/derc\" subscribable=\"1\" all=
 			</DERControlList>";*/
 int socket_verify(int sock, struct sockaddr_in serv_addr);
 
-int socket_send(int sock, char* hello, char *buffer,int valread);
+int socket_send(int sock, char* msg);
+
+char* socket_receive(int sock, int valread, char *buffer);
 
 int main(int argc, char const* argv[])
 {
@@ -45,15 +50,26 @@ int main(int argc, char const* argv[])
 	int sv=socket_verify(sock, serv_addr);
 
 	//sends the message to the server
-	int sendResult=socket_send(sock, msg, buffer, valread);
+	int sendResult=socket_send(sock, msg);
+
+	//should have something that continuously listen to server 
+	while(1) {
+		char* recvMsg=socket_receive(sock, valread, buffer);
+		printf("%s\n", recvMsg);
+	}
 	return 0;
 }
 
-int socket_send(int sock, char* msg, char *buffer, int valread) {
+char* socket_receive(int sock, int valread, char *buffer) {
+	valread = read(sock, buffer, 1024);
+	return buffer;
+};
+
+int socket_send(int sock, char* msg) {
 	send(sock, msg, strlen(msg), 0);
 	printf("client message sent\n");
-	valread = read(sock, buffer, 1024);
-	printf("%s\n", buffer);
+	//valread = read(sock, buffer, 1024);
+	//printf("%s\n", buffer);
 }
 
 int socket_verify(int sock, struct sockaddr_in serv_addr) {
