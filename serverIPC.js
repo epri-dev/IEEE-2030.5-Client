@@ -7,7 +7,7 @@ require('net').createServer(function (socket) {
         console.log(data.toString());
     });
     //socket.connect(8080);
-    socket.write('Server say Hello');
+    socket.write('Server accepted');
 })
 
 .listen(8080);

@@ -7,7 +7,26 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #define PORT 8080
-
+/*
+char* msg="<DERControlList href=\"/sep2/A1/derp/1/derc\" subscribable=\"1\" all=\"1\" results=\"1\" xmlns=\"urn:ieee:std:2030.5:ns\">
+				<DERControl href=\"/sep2/A1/derp/1/derc/1\" replyTo=\"/rsps/1/rsp\" responseRequired=\"03\">
+					<mRID>D0000001</mRID>
+					<description>Scheduled DERC</description>
+					<creationTime>1514838000</creationTime>
+					<EventStatus> 
+						<currentStatus>0</currentStatus>
+						<dateTime>1514838000</dateTime>
+						<potentiallySuperseded>false</potentiallySuperseded>
+					</EventStatus>
+					<interval>
+						<duration>3600</duration>
+						<start>1514926800</start>
+					</interval> 
+					<DERControlBase> 
+						<opModMaxLimW>9500</opModMaxLimW> 
+					</DERControlBase> 
+				</DERControl>
+			</DERControlList>";*/
 int socket_verify(int sock, struct sockaddr_in serv_addr);
 
 int socket_send(int sock, char* hello, char *buffer,int valread);
@@ -16,7 +35,7 @@ int main(int argc, char const* argv[])
 {
 	int sock = 0, valread; //initialize sock and valread
 	struct sockaddr_in serv_addr;
-	char* hello = "Client say hello"; // message to be sent
+	char* msg = "Client<place holder for der control plain text>"; // message to be sent
 	char buffer[1024] = { 0 };
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -26,7 +45,7 @@ int main(int argc, char const* argv[])
 	int sv=socket_verify(sock, serv_addr);
 
 	//sends the message to the server
-	int sendResult=socket_send(sock, hello, buffer, valread);
+	int sendResult=socket_send(sock, msg, buffer, valread);
 	return 0;
 }
 
