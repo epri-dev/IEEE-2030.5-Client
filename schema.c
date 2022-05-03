@@ -44,7 +44,7 @@ typedef struct _Schema {
 
 int se_is_a (const SchemaElement *se, int base, const Schema *schema);
 
-/** @brief Is a type derived from another type within a schema? 判断一个类型是否是由另外一个属于schema中的类派生而来
+/** @brief Is a type derived from another type within a schema ?  判断一个类型是否是由另外一个属于schema中的类派生而来
     @param type is the derived type  派生类型
     @param base is a base type  基础类型
     @param schema is a pointer to a Schema

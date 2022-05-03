@@ -20,7 +20,7 @@
             "program": "/home/vmuser/IEEE-2030.5-Client/build/client_test",
             "stopOnEntry": true,
             //"programArgs": "eth0 http://192.168.1.13:8088/dcap edev",
-            "programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 all",
+            "programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary",
             "cwd": "${workspaceFolder}"
         }   //使用vscode的智能提示功能，来得知该工具中使用那个参数来表示“arguments”：输入一个双引号然后观察给出的提示，选择一个合理的
     ]

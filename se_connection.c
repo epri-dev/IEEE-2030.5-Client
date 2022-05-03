@@ -169,7 +169,7 @@ void *get_conn (Address *addr);
 #ifndef HEADER_ONLY
 
 typedef struct _SeConnection {
-  HttpConnection http;
+  HttpConnection http;  //HttpConnection 这个结构放在SeConnection的开头位置，这样不同的两个结构体数据可以共享一个地址了。
   Address host;
   Parser parser;
   int state, media; //这里的state只有 SE_START 和 SE_DATA 两种状态。
@@ -249,7 +249,7 @@ void free_se_body (void *conn) {
 }
 
 
-//取出se回复的数据中的对象部分，也就是前面HTTP回复中的body部分。
+//取出se回复的数据中的解析后的对象部分，也就是前面HTTP回复中的body部分。
 void *se_body (void *conn, int *type) {
   SeConnection *s = conn;
   void *body;
@@ -343,7 +343,7 @@ void *new_conn (int client) {
   http_init (c, client, accept, media);
   c->media = se_media;
   c->next = connections;  //下一个连接
-  connections = c;  //connections存放首个连接对象
+  connections = c;  // connections 存放首个连接对象，从 connections 出发，就可以遍历到每一个 SeConnection 。
   return c;
 }
 
@@ -372,7 +372,7 @@ void *se_connect (Address *addr, int secure) {
   address_copy (&c->host, addr);
   if (net_status (c) == Closed)
     conn_connect (c, addr, secure);
-  if (conn_session (c)) http_flush (c);
+  if (conn_session (c)) http_flush (c); //如果当前就是已经连接着的，那么仅仅是flush这个通道。
   return c;
 }
 
@@ -381,7 +381,7 @@ void *se_connect (Address *addr, int secure) {
 */
 void *se_connect_uri (Uri *uri) {
   int secure = streq (uri->scheme, "https");
-  return se_connect (uri->host, secure);
+  return se_connect (uri->host, secure);  //连接网络
 }
 
 

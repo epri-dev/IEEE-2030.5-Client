@@ -138,7 +138,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 		 (obj)->type##Link.all) : NULL)
 
 /** 
-    获取一个下一层的 resource Stub并且让父级resource变成一个“依赖”，即子级Stub依赖于父级Stub。
+    获取一个下一层的 resource Stub 并且让父级resource变成一个“依赖”，即子级Stub依赖于父级Stub。
 
     Get a subordinate resource Stub and make the parent resource a dependent （依赖），即
     父层resource将构建一个bit位表示法来代表对于下层资源的需求，如果这些资源被满足，
@@ -193,6 +193,9 @@ typedef void (*DepFunc) (Stub *s);
     store the resource and process it with the dependency function to retrieve
     any subordinate resources and create the requirement/dependency
     relationship.
+    
+    对于每一个已经被检索到的，且匹配之前已经存在的Stub的资源，存储这个资源并处理使用dependency函数来检索任意一个子层资源并创建“需求/依赖”关系。
+
     @param conn is a pointer to an SeConnection
     @param dep is a pointer to a DepFunc
  */
@@ -466,17 +469,17 @@ Stub *get_path (Service *s, int secure) {
   return get_resource (conn, type, path, count);
 }
 
-
+//在收到服务器的数据之后，更新掉这个数据。
 void update_existing (Stub *s, void *obj, DepFunc dep) {
   Resource *r = &s->base;
   List *l;
-  if (!r->data) r->data = obj;
-  else if (se_event (r->type)) {
+  if (!r->data) r->data = obj;  //如果该项数据原先不存在，那么就直接填充。
+  else if (se_event (r->type)) {  //如果不为空，且类型为 SE_Event
     SE_Event_t *ex = r->data, *ev = obj;
     memcpy (&ex->EventStatus, &ev->EventStatus,
-            sizeof (SE_EventStatus_t));
+            sizeof (SE_EventStatus_t));//如果是一个已经存在的 SE_Event 类型的数据，那么仅仅更新Status数据就够了。
     free_se_object (obj, r->type);
-  } else replace_se_object (r->data, obj, r->type);
+  } else replace_se_object (r->data, obj, r->type); //其他的类型的数据如果已经存在的话，就直接替换。
   dep (s);
   if (!s->flags) dep_complete (s);
 }
@@ -513,8 +516,8 @@ int list_object (Stub *s, void *obj, DepFunc dep) {
   List **list = se_list_field (obj, r->info), *input, *l; //获取到对象中的List域
   input = *list;
   *list = NULL;
-  if (!r->data) r->data = obj;
-  else replace_se_object (r->data, obj, r->type);
+  if (!r->data) r->data = obj;  //如果之前是空的，那么就新建
+  else replace_se_object (r->data, obj, r->type); //如果之前已经存在的，那么就替换。
   dep (s);
   foreach (l, input) {
     Uri128 buf;
@@ -541,7 +544,7 @@ Stub *find_target (void *conn) {
 
 //当前的Stub是否跟之前请求的Stub对应的上。
 Stub *match_request (void *conn, void *data, int type) {
-  Stub *s = http_context (conn);  //找出前面发送的那个Stub。
+  Stub *s = http_context (conn);  //找出前面发送的那个Stub，以Stub作为context对象。
   Uri128 buf;
   char *path = object_path (&buf, conn, data);
   if (path && streq (resource_name (s), path)) {
@@ -558,13 +561,13 @@ void process_response (void *conn, int status, DepFunc dep) {
   void *obj;
   int type, count = 0;
   switch (http_method (conn)) { //请求类型
-  case HTTP_GET:
+  case HTTP_GET:  //对GET请求的处理。GET请求将获取到一个或者多个SE数据，其中可能包含了 List 性质的数据。
     if (obj = se_body (conn, &type)) {
       print_se_object (obj, type);
       printf ("\n");
-      if (s = match_request (conn, obj, type)) {
-        s->base.time = time (NULL); //获取到该项数据，或者说最后更新该项数据的时间。
-        if (s->base.info)
+      if (s = match_request (conn, obj, type)) {  //如果现在服务器回复的数据是之前刚刚发出的请求的数据，那么就对应上了。
+        s->base.time = time (NULL); //刷新该项数据获取到的时间，注意用的是系统本地时间。
+        if (s->base.info) //如果是一个list类型的数据。
           count = list_object (s, obj, dep);
         else update_existing (s, obj, dep);
         if (!count) s->status = status;
@@ -581,7 +584,7 @@ void process_response (void *conn, int status, DepFunc dep) {
     }
     break;
   case HTTP_DELETE:
-    remove_stub (http_context (conn));
+    remove_stub (http_context (conn));  // 如果是移除一个资源，那么就在本地删除之。
     break;
   }
 }
@@ -608,18 +611,18 @@ void process_redirect (void *conn, int status) {
   free_se_body (conn);
 }
 
-//处理HTTP回复的数据（看起来像是面向服务器端写的程序）
+//处理HTTP回复的数据（看起来像是面向服务器端写的程序）这个程序是是一个收到数据后的统一处理程序。
 int process_http (void *conn, DepFunc dep) {
   int status;
   Stub *s;
-  switch (se_receive (conn)) {  //正常情况下，收到数据并解析
+  switch (se_receive (conn)) {  //正常情况下，收到数据并解析成SE对象。
   case HTTP_RESPONSE:
     switch (status = http_status (conn)) {
     case 200:
     case 201:
     case 204:
       printf("process_http: se_receive return HTTP_RESPONSE,http_status return status:%d\n",status);
-      process_response (conn, status, dep); //如果成功回复，则将执行dep函数
+      process_response (conn, status, dep); //如果服务器成功回复，则将执行dep函数
       return status;
     case 300:
     case 301:

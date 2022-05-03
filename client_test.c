@@ -44,7 +44,9 @@ void usage () {
 #define INVERTER_CLIENT (1<<17)
 
 /*
-test记录了需要测试的内容，用bit位占位表示
+test记录了需要测试的内容，用bit位占位表示。
+凡是有任意一个bit置位了，则将执行dcap的获取动作。
+
 secure的值表示是否是加密了连接
 path就是dnssd参数中的/path
 pin:在pIN测试中输入的pin值。
@@ -96,7 +98,7 @@ int subtype_query (char *arg, char *name) {
 
 /* retrieval ： n. 找回，取回；（计算机系统信息的）检索；恢复，挽回 
 
-解析URI字符串，得到字符串包含的URI各个要素。
+解析URI字符串，得到字符串包含的URI各个要素。在完成解析URL地址后，将尝试连接到服务器。
 
 */
 int uri_retrieval (char *arg) {
@@ -114,7 +116,7 @@ int uri_retrieval (char *arg) {
 
   printf("Connecting to host...\n");
   
-  conn = se_connect_uri (uri);
+  conn = se_connect_uri (uri);  //连接到服务器
   if (uri->query && !parse_query (&q, uri->query)) {  //解析查询参数。
     printf ("error parsing URI query \"%s\"\n", uri->query);
     exit (0);
@@ -149,10 +151,15 @@ client_test interface [device_cert ca_certs..] <subtype[:1][/path] | URI>  [comm
 测试edev，测试软件调整到core 009
 client_test eth0 http://192.168.1.13:8088/dcap edev
 
+client_test eth0 http://192.168.1.13:8088/dcap primary
+
 使用gdb调试步骤：
 1） 编译的时候使用 ./build debug，即以带gdb功能方式编译。
 2）进入到./build目录，然后启动gdb，输入 file client_test。
 3）如果直接运行，则带上该程序运行参数：run eth0 http://192.168.1.13:8088/dcap edev
+
+
+IEEE model : https://zepben.github.io/evolve/docs/2030-5/
 
 在vscode启用gdb调试工具的配置中，配置如下：
 
@@ -200,10 +207,10 @@ void options (int argc, char **argv) {
   while (i < argc) { //前面i的值是2，所以从[device_cert ca_certs..] 开始检查参数
     printf("[options] now dealing arg[%d]:%s\n",i,argv[i]);
     DerDevice *d;
-    /*这里的意思是，选择其中一种方式来获取到数据，对应到前面的 <subtype[:1][/path] | URI> 这个参数项。
-    尖括号表示"必须的选项"的意思，"|"表示“或”的意思。
-    */
-    if (subtype_query (argv[i], name)	|| uri_retrieval (argv[i])) { //获取到参数中所标注的这些资源
+  
+    /* 这里的意思是，选择其中一种方式来获取到数据，对应到前面的 <subtype[:1][/path] | URI> 这个参数项。
+    尖括号表示"必须的选项"的意思，"|"表示“或”的意思。*/
+    if (subtype_query (argv[i], name)	|| uri_retrieval (argv[i])) { //获取到参数中所标注的这些资源（将开始连接到服务器并且发送GET请求）
       printf("break;\n");
       i++;
       break; //如果参数中的存在这两项中的一项，解析下一个参数。
@@ -233,7 +240,7 @@ void options (int argc, char **argv) {
   
   printf("[options] process tests \n");
   
-  // process tests，应该是指令中的[commands]部分。这一段是直接操作
+  // process tests，应该是指令中的 [commands] 部分。这一段是直接操作
   while (i < argc) {
     uint64_t sfdi;
     const char *const commands[] = {
@@ -433,10 +440,10 @@ void edev_complete (Stub *r) {
 
 /*获取所有的 DERProgram 下面的 DefaultDERControl和 DERControlList 和 DERCurveList 资源。*/
 void der_program (Stub *d) {
-  if (test & GET_DERC) {
+  if (test & GET_DERC) {  //如果要测试DERC
     Stub *cl; //ControlList
     SE_DERProgram_t *dp = resource_data (d);
-    get_dep (d, dp, DefaultDERControl); // 获取从属于dp的DefaultDERControl资源。
+    get_dep (d, dp, DefaultDERControl); // 获取从属于dp的 DefaultDERControl 资源。
     if (cl = get_list_dep (d, dp, DERControlList)) {  //获取从属于dp的DERControlList资源。
       cl->poll_rate = active_poll_rate;
       poll_resource (cl); //获取到这些controlList
@@ -672,8 +679,8 @@ void self_device (Stub *r) {
 }
 
 
-/*这里相当于列举出了各个重要的于服务器交互的内容
-这个函数是 process_http中  的   DepFunc 函数，应用于*/
+/*
+这个函数是 process_http中  的   DepFunc 函数，当完整的获取到一个SE对象数据的时候，此时调用该函数对该对象作定制化处理*/
 void test_dep (Stub *r) {
   switch (resource_type (r)) {
   case SE_Time:

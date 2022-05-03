@@ -9,6 +9,8 @@ typedef struct {
   SE_DERStatus_t *ders;
 } Settings;
 
+
+
 /*
 导入“settings”目录下的文件，解析，并且通过ctx传输出去。
 在本工程中，本函数作为process_dir的参数传入，在process_dir中，将对settings目录下的每个文件都一次调用本函数。

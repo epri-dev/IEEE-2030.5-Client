@@ -436,7 +436,7 @@ void queue_request (HttpConnection *c, int method, const char *uri) {
   strcpy (r->uri, uri);
   queue_add (&c->request, r);
 }
-
+//将“请求（含GET和PUT等方式）”的context记录下来，等到后面的服务器的数据来的时候，用于判定
 void set_request_context (void *conn, void *context) {
   HttpConnection *c = conn;
   HttpRequest *r;
