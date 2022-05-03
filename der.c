@@ -124,6 +124,8 @@ void device_certs (char *path) {
 #define copy_boolean(a, b, field) \
   if (se_true (b, field)) se_set_true (a, field)
 
+/*这个函数只有在下面的 update_der 函数中被用到，修改了不影响整体。
+但是最新的sep.xsd文件中描述的数据结构跟现在这个函数不符，后续要用到的话需要对这个函数作一下修改。*/
 void copy_der_base (SE_DERControlBase_t *a,
                     SE_DERControlBase_t *b, uint32_t mask) {
   uint32_t flags = b->_flags;
@@ -131,7 +133,7 @@ void copy_der_base (SE_DERControlBase_t *a,
   a->_flags |= mask;
   copy_boolean (a, b, opModConnect);
   copy_boolean (a, b, opModEnergize);
-  copy_field (a, b, opModFixedPF);
+  //copy_field (a, b, opModFixedPF);  //在最新的sep.xsd文件中，是不存在这个参数项的，而所以手动将其屏蔽掉。详见本次修改中的sep.xsd文件变化内容。
   copy_field (a, b, opModFixedVar);
   copy_field (a, b, opModFixedW);
   copy_field (a, b, opModFreqDroop);
@@ -149,7 +151,8 @@ void copy_der_base (SE_DERControlBase_t *a,
   copy_field (a, b, rampTms);
   b->_flags = flags;
 }
-/*
+
+/* 这个函数看起来像是一份“孤儿函数”，注释掉之后不影响整个编译。
 void update_der (EventBlock *eb, int event) {
   Device *d = eb->info; int flags;
   SE_DERControl_t *c = resource_data (eb->event);

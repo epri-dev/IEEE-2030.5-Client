@@ -51,14 +51,14 @@
     <multiplier>0</multiplier>
     <value>3600</value>
   </setMaxWh>
-  <setMinPF>
+  <setMinPFOverExcited>
     <displacement>9</displacement>
     <multiplier>-1</multiplier>
-  </setMinPF>
-  <setMinPFNeg>
+  </setMinPFOverExcited>
+  <setMinPFUnderExcited>
     <displacement>1</displacement>
     <multiplier>0</multiplier>
-  </setMinPFNeg>
+  </setMinPFUnderExcited>
   <setSoftGradW>0</setSoftGradW>
   <setVRef>
     <multiplier>0</multiplier>

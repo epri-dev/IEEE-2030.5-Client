@@ -407,7 +407,8 @@ void process_schema (SchemaDoc *doc, Element *root) {
 }
 
 //用来生成几个“工具”文件的一个工具代码。
-//在执行这个功能的时候，如果出现 segmentation fault (core dumped) 错误，则需要
+//在执行这个功能的时候，如果出现 segmentation fault (core dumped) 错误。
+//如果使用debug方式单步执行各个动作，是可以正常执行的。下次如果直接运行失败的情况下，就试试这种方式。
 int main () { 
   Graph graph;
   List *sorted;
