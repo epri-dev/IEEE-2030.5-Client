@@ -12,7 +12,7 @@
 
 /** @brief Linked List structure */
 typedef struct _List {
-  struct _List *next; ///< is a pointer to the next List item
+  struct _List *next; ///< is a pointer to the next List item 首个元素就是指向下一个元素的地址值。所以访问某一个元素的值的时候，就是得到下一个元素的地址。
   void *data;         ///< is a pointer to a data element
 } List;
 
@@ -201,7 +201,7 @@ void *list_remove (void *list, void *link) {
     }
     prev = l;
   }
-  return list;
+  return list;//返回首个元素。代表了这个list。
 }
 
 //排序插入

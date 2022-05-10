@@ -14,7 +14,7 @@
 void parse_init (Parser *p, const Schema *schema, char *data);
 
 /** @} */
-
+#include "debug_log.h"
 #include "xml_token.c"
 
 #ifndef HEADER_ONLY
@@ -49,14 +49,14 @@ int parse_token (Parser *p) {
   switch ((p->token = xml_token (p->xml))) {
   case XML_INVALID:
     p->state = PARSE_INVALID;
-    printf("parse_token:PARSE_INVALID\n");
+    PRINT_XML(LOG_D("parse_token:PARSE_INVALID\n"));
     return XML_INVALID;
   case XML_INCOMPLETE:
     p->ptr = (uint8_t *)p->xml->content;
-    printf("parse_token:XML_INCOMPLETE\n");
+    PRINT_XML(LOG_W("parse_token:XML_INCOMPLETE\n"));
     return XML_INCOMPLETE;
   default:
-    if(p->token == START_TAG) printf("parse_token:succeed,token name:%s\n",p->xml->name); //add by lewis
+    if(p->token == START_TAG) PRINT_XML(LOG_I("parse_token:succeed,token name:%s\n",p->xml->name)); //add by lewis
     p->need_token = 0;
     return p->token;
   }
@@ -72,7 +72,7 @@ int parse_text (Parser *p) {
     p->ptr = "";
     break;
   default:
-    printf("parse_text:default return 0\n");
+    PRINT_XML(LOG_D("parse_text:default return 0\n"));
     return 0;
   }
   return 1;
@@ -107,7 +107,7 @@ int parse_value (Parser *p, void *value) {
   switch (type & 0xf) {
   case XS_STRING:
     if (n) {
-      if (strlen (data) > n - 1){printf("parse_value:XS_STRING length error\n");return 0;}
+      if (strlen (data) > n - 1){LOG_W("parse_value:XS_STRING length error\n");return 0;}
       strcpy (value, data);
     } else *(char **)(value) = strdup (data);
     return 1;
@@ -141,7 +141,7 @@ int parse_value (Parser *p, void *value) {
   case XS_UBYTE:
     return pack_unsigned ((uint8_t *)value, ux, data);
   }
-  printf("parse_value:return 0 at end\n");
+  LOG_W("parse_value:return 0 at end\n");
   return 0;
 }
 
@@ -183,7 +183,7 @@ int end_tag (Parser *p, const SchemaElement *se) {
       return 1;
     }
   }
-  printf("end_tag:return 0,token:%d\n",token);
+  PRINT_XML(LOG_W("end_tag:return 0,token:%d\n",token));
   return 0;
 }
 
@@ -218,7 +218,7 @@ int xml_start (Parser *p) {
       p->se = &p->schema->elements[p->type];//在 elements 数组中的位置
       p->empty = p->token;
       p->need_token = !p->empty;
-      printf("xml_start:succeed to parse a tag,name:%s\n",p->xml->name);
+      PRINT_XML(LOG_I("xml_start:succeed to parse a tag,name:%s\n",p->xml->name));
       return 1;
     case XML_INCOMPLETE:
       return 0;
@@ -228,7 +228,7 @@ int xml_start (Parser *p) {
   }
 invalid:
   p->state = PARSE_INVALID;
-  printf("xml_start:PARSE_INVALID,tag name:%s,return 0\n",p->xml->name);
+  PRINT_XML(LOG_W("xml_start:PARSE_INVALID,tag name:%s,return 0\n",p->xml->name));
   return 0;
 }
 /*基本原理是：从某个se对象的第一个成员开始，逐行往下，对之前xml文本中解析出来的内容执行匹配，如果匹配到，那么*/
@@ -240,16 +240,16 @@ int xml_next (Parser *p) {
     else if (se->attribute) { //如果这行SE表示的是一个属性，即在数组中.attribute的值为1。
       const char *name = se_name (se, p->schema);//printf("xml_next:attribute se name:%s\n",name);  //如果se的名字在之前所解析到的attr中，那么就解析该对象到se对象中。
       if ((p->ptr = attr_value (p->xml->attr, name))){  //如果该se的名字出现在刚获取到的文本中...
-        printf("xml_next:find a attribute:\"%s\",value:%s\n",name,p->ptr);
+        PRINT_XML(LOG_I("xml_next:find a attribute:\"%s\",value:%s\n",name,p->ptr));
         p->state = PARSE_ELEMENT; //如果命中其中的一个属性，则需要对该属性做SE层面的解析。
       }
     } else if (!p->empty) {
       if (start_tag (p, se)){ //比较se->xml->name是否当前选中的se一样。如果一样，就表示“命中”了。
-        printf("xml_next:find a new tag:%s\n",p->xml->name);
+        PRINT_XML(LOG_I("xml_next:find a new tag:%s\n",p->xml->name));
         p->state = PARSE_ELEMENT;  //如果解析到一个tag名字，则意味着需要继续解析该tag。
       }
       else if (p->token == XML_INCOMPLETE) {
-        printf("xml_next:XML_INCOMPLETE,return 0\n");
+        PRINT_XML(LOG_W("xml_next:XML_INCOMPLETE,return 0\n"));
         return 0;
       }
     } else if (se->min) p->state = PARSE_INVALID;

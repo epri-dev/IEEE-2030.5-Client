@@ -60,10 +60,10 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   /*当本Stub作为一个子级Stub，对于一个子级资源（Stub）来说，这个flag表示的是自己是否存在的一个特定标志。
   通常以 SE_##type##Link_exists 这个宏来表达，type是全部资源类型名（在se_types.h中定义）*/
   uint32_t flags; ///< is a bitwise requirements checklist 
-  /*一个bit位表示的对下级资源的“需求”表示，置位则表示有需求，一旦该资源从服务器上获取到了，则清除。*/
+  /*一个bit位表示的对下级资源的“需求”表示，置位则表示还缺这个bit代表的资源，一旦该资源从服务器上获取到了，则清除。*/
   uint32_t offset; ///< is the offset used for list paging 对于List类型的数据元素来说，offset表示本Stub在整个List中的序号
   uint32_t all; ///< is the total number of list items  List的总量
-  struct _Stub *moved; ///< is a pointer to the new resource 这个moved是什么意思？？
+  struct _Stub *moved; ///< is a pointer to the new resource 这个可能跟资源的重定向有关
   List *list; ///< is a list of old requirements for updates
   List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的父层级的 Stub 。 这个是子级Stub指向父级Stub的链接。
   List *reqs; ///< is a list of requirements 需求：就是子级对象，当前Stub所需要的子级对象List。List中的data对象就是子级Stub。这个是父级Stub指向子级Stub的链接。
@@ -117,7 +117,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 
 /** @brief Get a subordinate %List resource given a parent object. 在给出父级Stub之后，通过网络访问来获取到子级Stub（List类型的）
 
-    在给出了一个父级的对象后，获取到一个下层的List资源。跟上面的get_root不同，这里是带有“List的资源”
+    在给出了一个父级的对象后，获取到一个下层的 List 资源。跟上面的get_root不同，这里是带有“List的资源”
     
     The same as @ref get_root but for subordinate %List resources. Links to
     %List resources include the "all" parameter, this indicates the number of
@@ -225,13 +225,13 @@ void get_seq (Stub *s, int offset, int count) {
 void add_dep (Stub *r, Stub *d) {
   d->deps = insert_unique (d->deps, r); //对d->deps作了更新，保证r资源被插入。通过deps这个表，能够找到每一个父级Stub。
   d->poll_rate = min (d->poll_rate, r->poll_rate);  //设定好子级 Stub 更新频率
-  r->complete = 0;  //一个新加入的Stub由于目前还未被查询过，所以此时complete的值表示“未完成”。
+  r->complete = 0;  //一个新加入的Stub由于目前还未被查询过以及没有被执行过completion函数，所以，此时complete的值表示“未完成”。
 }
 
 
 /*
 新建一个 dependency。
-Stub *r是父层级资源，Stub *d是下一层级资源。flag用来标志代表d自己的唯一标识。
+Stub *r是父层级资源，Stub *d是下一层级资源。 flag用来标志代表d自己的唯一标识。
 flag 通常是 SE_##type##Link_exists 形式的。
 这个函数主要作用是在父级Stub中的flag上做一个标记--将某一个bit置位，来表示父级Stub需要某一个特定的子级Stub来填充，
 以便后面通过请求该资源来填充到该资源。
@@ -322,6 +322,10 @@ void remove_stub (Stub *s) {
   free_resource (s);
 }
 
+/*
+参数中的 info 用于下面的比较函数，用于确定数据插入的位置。
+函数功能：在list中插入List性质的s对象，以info数据作为排序依据。
+*/
 void *insert_stub (List *list, Stub *s, ListInfo *info) {
   List *prev = NULL, *l = list, *n;
   void *data = resource_data (s);
@@ -341,57 +345,58 @@ void *insert_stub (List *list, Stub *s, ListInfo *info) {
 /*发送消息到服务器，要求删除该资源*/
 void delete_stub (Stub *s) {
   http_delete (s->conn, resource_name (s));
-  set_request_context (s->conn, s);
+  set_request_context (s->conn, s); //凡是服务器需要回复的，都要先设置好context。
 }
 
 /* 看起来是将一个Stub填充到其父级中去？？ */
 void dep_complete (Stub *s) {
   List *l;
-  if (s->completion && !s->complete)  //complete设置为0，表示已经完成了数据的获取。
-    s->completion (s);
+  if (s->completion && !s->complete)  //complete设置为0，表示之前是不“齐备”的，也就是之前还没有执行过 completion 函数。
+    s->completion (s);  //如果completion函数之前设置过（现在存在），且数据也都获取成功了（complete为0表示不需要再获取什么东西了），则执行completion函数。
   s->complete = 1;
   foreach (l, s->deps) {
     Stub *d = l->data;  //d这里是父级，s这里是子级。后面的代码，都是站在父级Stub的角度对当前的这个Stub来操作。
     int complete = 0; //0表示未完成。
-    if (d->base.info) { //如果这个父级含有List类型的数据
-      d->reqs = insert_stub (d->reqs, s, d->base.info); //
+    if (d->base.info) { //如果这个父级是一个List类型的数据
+      d->reqs = insert_stub (d->reqs, s, d->base.info); //那么本Stub数据作为reqs成员的一员，插入到reqs表中。
       complete = list_length (d->reqs) == d->all; //看是否已经完成了。
-    } else {  //否则，如果仅仅是一个单一的类型的数据
+    } else {  //否则，表示父级资源不是一个List性质的资源，那么就查看各个子级资源是否已经齐备。
       d->reqs = insert_unique (d->reqs, s);
-      d->flags &= ~s->flag; //将父级的表示 “dep”的flags中的，用来表示“自己是否存在”的标志位清零。
-      complete = !d->flags; //如果父级中的flags有任何一个bit置位了，则 complete =0，即表示没有完成。
+      d->flags &= ~s->flag; //将父级的表示 “dep” 的flags中的，用来表示“自己是否存在”的标志位清零。某一个bit置位表示还缺该bit代表的资源。
+      complete = !d->flags; //如果父级中的flags有任何一个bit置位了，则 complete =0，即表示没有完成。如果全部bit都清除掉了，则表示全部获取到了。
     }
     if (complete) {
       if (d->list) {
         remove_reqs (d, list_subtract (d->list, d->reqs));
         d->list = NULL;
       }
-      dep_complete (d);
+      dep_complete (d); //如果父级在本Stub补充上去之后变得齐备了，那么继续往上追溯。
     }
   }
 }
 
+/*这个函数名的意思是，从“dep”对象中，将本Stub的连接断开，同时再往上迭代。*/
 void dep_reset (Stub *s) {
   List *l;
   s->complete = 0;
-  foreach (l, s->deps) {  //取出 deps 子层级中的Stub
+  foreach (l, s->deps) {  //对每一个父级Stub执行操作。
     Stub *d = l->data;    //
-    if (d->base.info) //如果数据存在
-      d->reqs = list_delete (d->reqs, s); //将d->reqs中的包含s数据的项目删除并释放内存占用
-    else d->flags |= s->flag; //??
+    if (d->base.info) //如果父级Stub是一个List性质的Stub对象，那么
+      d->reqs = list_delete (d->reqs, s); //从父级的reqs表中删除本Stub
+    else d->flags |= s->flag; //如果不是List性质的Stub对象，那么就直接将表示该资源的bit位置位，表示需求该资源。
     dep_reset (d);    //迭代
   }
 }
 
-/*通过网络访问来更新某一个资源*/
+/* 通过网络访问来更新某一个资源 */
 void update_resource (Stub *s) {
   if (s->status >= 0) { //is the HTTP status, 0 for a new Stub, -1 for an update
     if (s->all) s->offset = 0;
     s->list = s->reqs;
     s->reqs = NULL;
-    if (s->status && !se_event (resource_type (s)))
+    if (s->status && !se_event (resource_type (s))) //如果s->status大于0(前面已经判断过大于等于0了)，且Stub对象不是一个event对象，那么就执行下面的dep_reset函数。
       dep_reset (s);
-    else s->complete = 0;
+    else s->complete = 0; //？？
     s->status = -1;
     get_seq (s, 0, s->all); //发生网络访问
   }
@@ -432,6 +437,7 @@ poll资源，主要是针对 SE_Event_t 数据 。
 */
 
 void poll_resource (Stub *s) {
+  LOG_I("in function poll_resource\n");
   time_t now = se_time ();
   time_t next = now + s->poll_rate;
   
@@ -589,6 +595,8 @@ void process_response (void *conn, int status, DepFunc dep) {
   }
 }
 
+
+/*暂时还不懂这个函数的意思*/
 void get_moved (Stub *s, char *location) {
   if (location) {
     Stub *t = get_resource (s->conn, resource_type (s), location, s->all);
@@ -613,6 +621,7 @@ void process_redirect (void *conn, int status) {
 
 //处理HTTP回复的数据（看起来像是面向服务器端写的程序）这个程序是是一个收到数据后的统一处理程序。
 int process_http (void *conn, DepFunc dep) {
+  LOG_I("in function process_http\n");
   int status;
   Stub *s;
   switch (se_receive (conn)) {  //正常情况下，收到数据并解析成SE对象。

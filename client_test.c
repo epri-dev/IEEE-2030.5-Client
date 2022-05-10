@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 
+#include "debug_log.h"
 #include "der_client.c"
 #include "query.c"
 
@@ -387,7 +388,10 @@ void edev_complete (Stub *r) {
   Stub *s, *t;
   SE_EndDevice_t *edev = resource_data (r);
   DerDevice *d = get_device (edev->sFDI);
-  printf ("edev %s complete\n", edev->href);
+  LOG_I("in function edev_complete\n");
+  LOG_D("edev %s complete\n", edev->href);
+
+  /*如果之前测试的时候有设定要做“PUT_SETTINGS”操作，那么就在这里执行*/
   if (test & PUT_SETTINGS) {
     s = get_subordinate (r, SE_DERList);
     if (s && s->reqs) {
@@ -395,6 +399,7 @@ void edev_complete (Stub *r) {
       put_der_settings (s->conn, &d->settings, resource_data (t));
     }
   }
+  
   if (s = get_subordinate (r, SE_FunctionSetAssignmentsList)) {
     SE_FunctionSetAssignmentsList_t *fsal = resource_data (s);
     if (test & FSA_SUBSCRIBE) {
@@ -412,6 +417,7 @@ void edev_complete (Stub *r) {
       r->completion = schedule_der;
     }
   }
+  
   if (edev->sFDI == device_sfdi) {
     if (test & METER_TEST) {
       List *rds = NULL;
@@ -440,14 +446,17 @@ void edev_complete (Stub *r) {
 
 /*获取所有的 DERProgram 下面的 DefaultDERControl和 DERControlList 和 DERCurveList 资源。*/
 void der_program (Stub *d) {
+  LOG_I("in function der_program\n");
   if (test & GET_DERC) {  //如果要测试DERC
     Stub *cl; //ControlList
     SE_DERProgram_t *dp = resource_data (d);
+    LOG_I("in function der_program,get_dep DefaultDERControl\n");
     get_dep (d, dp, DefaultDERControl); // 获取从属于dp的 DefaultDERControl 资源。
     if (cl = get_list_dep (d, dp, DERControlList)) {  //获取从属于dp的DERControlList资源。
       cl->poll_rate = active_poll_rate;
-      poll_resource (cl); //获取到这些controlList
+      poll_resource (cl); //获取到这些ControlList
     }
+    LOG_I("in function der_program,get_list_dep,DERCurveList\n");
     get_list_dep (d, dp, DERCurveList);
   }
 }
@@ -455,8 +464,9 @@ void der_program (Stub *d) {
 
 /*仅仅是查询DERProgramList资源操作，主要作用函数是 poll_resource */
 void poll_derpl (Stub *r) {
+  LOG_I("in function poll_derpl\n");
   SE_DERProgramList_t *derpl = resource_data (r);
-  r->poll_rate = se_exists (derpl, pollRate) ? derpl->pollRate : 900;
+  r->poll_rate = se_exists (derpl, pollRate) ? derpl->pollRate : 900; //如果pollRate属性不不存在，那么就设定该值为900。
   poll_resource (r);
 }
 
@@ -470,7 +480,8 @@ void der_program_list (Stub *r) {
 
 /* 测试中获取到FSA资源 */
 int fsa (Stub *r) {
-  if (test & GET_DERP) {
+  LOG_I("in function fsa\n");
+  if (test & GET_DERP) {    
     SE_FunctionSetAssignments_t *fsa = resource_data (r);
     Stub *d = get_list_dep (r, fsa, DERProgramList);//获取到 DERProgramList 资源 
     if (d && primary) {
@@ -505,6 +516,7 @@ void get_edev_subs (Stub *edevs) {
 }
 
 void check_registration (Stub *r) {
+  LOG_I("in function check_registration\n");
   SE_Registration_t *reg = resource_data (r);
   if (reg->pIN == 111115) {
     printf ("registration succeeded\n");
@@ -514,6 +526,7 @@ void check_registration (Stub *r) {
 }
 
 void end_device (Stub *r) {
+  LOG_I("in function end_device\n");
   SE_EndDevice_t *e = resource_data (r);
   if (test & DELETE_DEVICE && e->sFDI == delete_sfdi) {
     delete_stub (r);
@@ -574,6 +587,7 @@ void edev_list (Stub *r) {
 
 
 void dcap (Stub *r) {
+  LOG_I("in function dcap\n");
   SE_DeviceCapability_t *dcap = resource_data (r);
   if (test & GET_TIME) {
     if (!get_root (r->conn, dcap, Time))  //获取到dcap中的Time资源。
@@ -596,6 +610,7 @@ void dcap (Stub *r) {
 
 //请求时间同步
 void time_sync (Stub *s) {
+  LOG_I("in function time_sync\n");
   SE_Time_t *tm = resource_data (s);  //获取到时间资源
   s->poll_rate = se_exists (tm, pollRate) ? tm->pollRate : 900; //默认是900秒来获取一次数据。
   poll_resource (s);  //添加一个异步请求
@@ -603,6 +618,7 @@ void time_sync (Stub *s) {
 }
 
 void update_mup (Stub *s) {
+  LOG_I("in function update_mup\n");
   SE_MirrorUsagePoint_t *mup = resource_data (s);
   uint64_t sfdi = sfdi_gen (mup->deviceLFDI);
   DerDevice *d = find_device (&sfdi);
@@ -671,6 +687,7 @@ void log_event (Stub *log) {
 }
 
 void self_device (Stub *r) {
+  LOG_I("in function self_device\n");
   SE_SelfDevice_t *self = resource_data (r);
   r = get_list_dep (r, self, LogEventList);
   r->poll_rate = 30;
@@ -682,6 +699,7 @@ void self_device (Stub *r) {
 /*
 这个函数是 process_http中  的   DepFunc 函数，当完整的获取到一个SE对象数据的时候，此时调用该函数对该对象作定制化处理*/
 void test_dep (Stub *r) {
+  LOG_I("in function test_dep\n");
   switch (resource_type (r)) {
   case SE_Time:
     time_sync (r);  //时间同步？
@@ -710,6 +728,7 @@ void test_dep (Stub *r) {
   case SE_SelfDevice:
     self_device (r);
   }
+  LOG_D("exit function test_dep\n");
 }
 
 
@@ -720,6 +739,8 @@ int main (int argc, char **argv) {
   void *any;  //这个any是一个void类型的指针，即意思为任意类型的数据。这些数据类型的确定，由当时新增该事件的时候的type所决定。所以此时已知晓type之后，就可以正常处理了。
   version ();
   platform_init ();
+  
+  LOG_I("client test started\n");
 
   options (argc, argv);
 

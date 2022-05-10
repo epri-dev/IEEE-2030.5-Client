@@ -72,7 +72,7 @@ char *number (int *x, char *data) {
 
 /*将一个表示一个数字的文本转换成一个10进制数字
 参数
-x：返回的1进制数字
+x：返回的10进制数字
 data：传入的文本的首地址
 */
 char *number64 (uint64_t *x, char *data) {

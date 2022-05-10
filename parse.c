@@ -300,7 +300,7 @@ parse_value:
         d->parse_done (p);
         p->state = PARSE_START;
         *type = p->type;
-        printf("parse_doc:succeed\n");
+        //printf("parse_doc:succeed\n");
         return p->obj;
       }
       break;

@@ -94,7 +94,7 @@ IEEE 2030.5 resources are defined by an XML schema (sep.xsd文件，在这个目
 processed to extract（n. 选段，引文；提取物，汁） C type definitions (se_types.h) and a table (se_schema.c)
 which can be used to transform 2030.5 resources from their XML or EXI
 representation into a C object representation. 将2030.5的以XML或者EXI形式表示的资源数据转换成C对象表示。The process can also be
-reversed, transforming a C object into an XML or EXI representation这个过程当然是可以互反的，即将C数据转换成XML或者EXI表示. The
+reversed, transforming a C object into an XML or EXI representation 这个过程当然是可以互反的，即将C数据转换成XML或者EXI表示. The
 @ref schema module provides basic types for representing schemas in table form,
 and methods for querying the schema table and performing operations on schema
 based objects.

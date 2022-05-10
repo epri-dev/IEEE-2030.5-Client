@@ -28,6 +28,7 @@ Included with `der_client.c` is the module `der.c` that provides:
 #define DEVICE_METERING (EVENT_NEW+12)  //读取设备数据并且上传
 #define DEFAULT_CONTROL (EVENT_NEW+13)  //
 
+#include "debug_log.h"
 #include "settings.c"
 
 
@@ -191,7 +192,7 @@ void schedule_der (Stub *edev) {
   Stub *fsa = NULL, *s, *t;
   List *l, *m, *derpl = NULL;
   SE_DefaultDERControl_t *dderc = NULL;
-  printf ("schedule_der\n");
+  LOG_I("in function schedule_der\n");
   if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) return; //获取这个edev下面的FSA数据
   // add the lFDI if not provided by the server
   if (!se_exists (e, lFDI)) {

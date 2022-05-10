@@ -17,6 +17,7 @@
 #define SE_ERROR (HTTP_RESPONSE+1)
 #define SE_INCOMPLETE (HTTP_RESPONSE+2)
 
+#include "debug_log.h"
 
 //回复给服务器的有关Event的状态变化的类型。
 
@@ -273,15 +274,15 @@ int se_receive (void *conn) {
   http_flush (h);
   switch (method = http_receive (h)) {
   case HTTP_NONE:
-    printf("se_receive:HTTP_NONE\n");
+    PRINT_HTTP(LOG_D("se_receive:HTTP_NONE\n"));
     break;
   case HTTP_ERROR:
-    printf("se_receive:HTTP_ERROR\n");
+    PRINT_HTTP(LOG_E("se_receive:HTTP_ERROR\n"));
     return SE_ERROR;
   default:
     switch (s->state) {
     case SE_START:
-      printf("se_receive:SE_START\n");
+      PRINT_HTTP(LOG_I("se_receive:SE_START\n"));
       p->obj = NULL;
       print_http_status (h);
       if (h->media_range)

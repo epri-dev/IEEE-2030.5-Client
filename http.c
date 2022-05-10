@@ -327,7 +327,7 @@ typedef struct _HttpConnection {
   unsigned debug : 1;   //设置是否打印调试信息
   int status, error, header;
   void *context; // request context
-  Queue send, request;  //数据发送Queue，和请求Queue??发出一个请求，就往这个队列里面加入这个请求实体。
+  Queue send, request;  //request 用来存储在发送的时候的context以便在下次接收到数据的时候，找到前面的context内容。数据的发送和接收是异步操作。
   char target[256]; 
   Uri uri; // request target
   char buffer[BUFFER_SIZE]; //用来存放回复或者发送的数据的一个buffer。

@@ -396,15 +396,15 @@ void delete_blocks (Stub *event) {
 
 /*
 
-这个程序通常用作event对象的 completion 函数。在获取完毕服务器上的某一个资源 Stub / Resource 的全部数据之后，执行这个动作。
+这个程序通常用作event对象(Stub)的 completion 函数。在获取完毕服务器上的某一个资源 Stub / Resource 的全部数据之后，执行这个动作。
 
 */
 void event_update (Stub *event) {
   int64_t now;
   static int64_t sync_time = 0;
-  printf ("event_update\n");
+  LOG_I ("in function event_update\n");
   switch (event_status (event)) {
-  case Scheduled:
+  case Scheduled: //进入到调度状态
     /* The client's clock is ahead of the server's clock, attempt to
        synchronize by setting the clock (time offset) backward, also retry
        the event retrieval in another second. */
@@ -495,6 +495,7 @@ void schedule_init (Schedule *s) {
 
 /*  检查当前active表中的EventBlock是否已经执行完毕了。 */
 void update_schedule (Schedule *s) {
+  LOG_I("in function update_schedule\n");
   EventBlock *eb = s->active, *next;
   int64_t now = se_time (), last = 0;
   while (eb) {  //检查是否有已经结束了的。
