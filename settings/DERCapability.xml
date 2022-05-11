@@ -1,50 +1,65 @@
-<DERCapability xmlns="http://ieee.org/2030.5">
-  <modesSupported>01fffd</modesSupported>
-  <rtgAbnormalCategory>1</rtgAbnormalCategory>
-  <rtgMaxA>
-    <multiplier>0</multiplier>
-    <value>10</value>
-  </rtgMaxA>
-  <rtgMaxAh>
-    <multiplier>0</multiplier>
-    <value>20</value>
-  </rtgMaxAh>
-  <rtgMaxChargeRateVA>
-    <multiplier>0</multiplier>
-    <value>2000</value>
-  </rtgMaxChargeRateVA>
-  <rtgMaxChargeRateW>
-    <multiplier>0</multiplier>
-    <value>2000</value>
-  </rtgMaxChargeRateW>
-  <rtgMaxDischargeRateVA>
-    <multiplier>0</multiplier>
-    <value>2000</value>
-  </rtgMaxDischargeRateVA>
-  <rtgMaxDischargeRateW>
-    <multiplier>0</multiplier>
-    <value>2000</value>
-  </rtgMaxDischargeRateW>
-  <rtgMaxVA>
-    <multiplier>0</multiplier>
-    <value>2000</value>
-  </rtgMaxVA>
-  <rtgMaxW>
-    <multiplier>0</multiplier>
-    <value>2000</value>
-  </rtgMaxW>
-  <rtgMaxWh>
-    <multiplier>0</multiplier>
-    <value>4000</value>
-  </rtgMaxWh>
-  <rtgMinPFOverExcited>
-    <displacement>9</displacement>
-    <multiplier>-1</multiplier>
-  </rtgMinPFOverExcited>
-  <rtgMinPFUnderExcited>
-    <displacement>1</displacement>
-    <multiplier>0</multiplier>
-  </rtgMinPFUnderExcited>
-  <rtgNormalCategory>2</rtgNormalCategory>
-  <type>4</type>
+
+<DERCapability xmlns="urn:ieee:std:2030.5:ns">
+
+    <modesSupported>01900260</modesSupported>
+
+    <rtgMaxA>
+
+        <multiplier>-2</multiplier>
+
+        <value>2083</value>
+
+    </rtgMaxA>
+
+    <rtgMaxVA>
+
+        <multiplier>0</multiplier>
+
+        <value>5000</value>
+
+    </rtgMaxVA>
+
+    <rtgMaxVar>
+
+        <multiplier>0</multiplier>
+
+        <value>5000</value>
+
+    </rtgMaxVar>
+
+    <rtgMaxVarNeg>
+
+        <multiplier>0</multiplier>
+
+        <value>-5000</value>
+
+    </rtgMaxVarNeg>
+
+    <rtgMaxW>
+
+        <multiplier>0</multiplier>
+
+        <value>5000</value>
+
+    </rtgMaxW>
+
+    <rtgMinPFOverExcited>
+
+        <displacement>750</displacement>
+
+        <multiplier>-3</multiplier>
+
+    </rtgMinPFOverExcited>
+
+    <rtgMinPFUnderExcited>
+
+        <displacement>750</displacement>
+
+        <multiplier>-3</multiplier>
+
+    </rtgMinPFUnderExcited>
+
+    <type>4</type>
+
 </DERCapability>
+
