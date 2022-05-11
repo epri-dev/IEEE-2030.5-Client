@@ -7,13 +7,13 @@
 #include "query.c"
 
 #define VERSION "0.2.11"
-
+//print client version
 void version () {
   printf("IEEE 2030.5 client test version %s -- compiled: %s\n",
 	 VERSION, __DATE__);
   fflush (stdout);
 }
-
+//print user interface 
 void usage () {
   printf ("usage: client_test interface [device_cert ca_certs..]\n"
 	  "                   <subtype[:1][/path] | URI> [commands] \n\n");
@@ -104,7 +104,7 @@ void options (int argc, char **argv) {
       printf ("options: certificate file or directory %s does not exist\n",
 	      argv[i]); exit (0);
     } i++;
-  }
+  } //load certificate
   if (!secure) {
     printf ("options: warning, no device certificate specified, "
 	    "TLS library will be uninitialized\n");
@@ -464,7 +464,7 @@ void log_event (Stub *log) { List *l;
     }
   }
 }
-
+//get LogEventList and poll resource
 void self_device (Stub *r) {
   SE_SelfDevice_t *self = resource_data (r);
   r = get_list_dep (r, self, LogEventList);
@@ -489,8 +489,11 @@ void test_dep (Stub *r) {
 
 int main (int argc, char **argv) {
   Service *s; void *any;
+  //print client version
   version ();
+  //initiate teh platform
   platform_init ();
+  //client test application commands
   options (argc, argv);
   while (1) {
     switch (der_poll (&any, -1)) {
@@ -498,6 +501,7 @@ int main (int argc, char **argv) {
       print_service (s);
       if (test) get_dcap (s, secure);
       else if (path)
+      //get server resource
 	get_resource (service_connect (s, secure), -1, path, 0);
       else get_path (s, secure); break;
     case TCP_ACCEPT:
