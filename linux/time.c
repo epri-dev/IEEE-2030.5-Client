@@ -2,7 +2,7 @@
 // author: Mark Slicker <mark.slicker@gmail.com>
 
 #include <time.h>
-
+#include <stdint.h>
 int dst_time (char *buffer, uint64_t t) {
   struct tm *tm = localtime ((time_t *)&t);
   return sprintf (buffer, "%d", tm->tm_yday);
