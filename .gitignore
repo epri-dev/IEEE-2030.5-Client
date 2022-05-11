@@ -1,6 +1,1 @@
-build/se_core.o
-build/.args
-build/csip_test
-build/schema_gen
-build/se_core.o
-build/client_test
+build/

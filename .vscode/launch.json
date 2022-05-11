@@ -7,22 +7,23 @@
         {
             "type": "by-gdb",
             "request": "launch",
+            "name": "client_test",
+            "program": "/home/vmuser/IEEE-2030.5-Client/build/client_test",
+            "stopOnEntry": true,
+            //"programArgs": "eth0 http://192.168.1.13:8088/dcap edev",
+            "programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary",
+            //"programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary | tee debug.log", 
+            //如果按照上述方式，在后面加上 | tee 指令，将导致dbg工具无法正常执行断点操作，而只能停止、开始。
+            "cwd": "${workspaceFolder}"
+        },   //使用vscode的智能提示功能，来得知该工具中使用那个参数来表示“arguments”：输入一个双引号然后观察给出的提示，选择一个合理的
+        {
+            "type": "by-gdb",
+            "request": "launch",
             "name": "schema_gen",
             "program": "/home/vmuser/IEEE-2030.5-Client/build/schema_gen",
             "programArgs": "",
             "stopOnEntry": true,
             "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "by-gdb",
-            "request": "launch",
-            "name": "client_test",
-            "program": "/home/vmuser/IEEE-2030.5-Client/build/client_test",
-            "stopOnEntry": true,
-            //"programArgs": "eth0 http://192.168.1.13:8088/dcap edev",
-            //"programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary",
-            "programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary | tee debug.log",
-            "cwd": "${workspaceFolder}"
-        }   //使用vscode的智能提示功能，来得知该工具中使用那个参数来表示“arguments”：输入一个双引号然后观察给出的提示，选择一个合理的
+        }        
     ]
 }

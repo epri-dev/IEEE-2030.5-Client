@@ -49,7 +49,7 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   Resource base; ///< is a container for the resource  这个Stub所要代表的数据本身，一个数据容器
   void *conn; ///< is a pointer to an SeConnection 这个Stub的关联的连接
   int status; ///< is the HTTP status, 0 for a new Stub, -1 for an update
-  time_t poll_next; ///< is the next time to poll the resource 下次需要检索的数据的时间
+  time_t poll_next; ///< is the next time to poll the resource 下次需要检索数据的时间。通常是需要访问网络的。初始值总是0。
   int16_t poll_rate; ///< is the poll rate for the resource 这个资源应当执行的查询频率
   unsigned complete : 1; ///< marks the Stub as complete  
   /*表示这个stub已近查询( retrieve ) 或者填充完毕了。包含子级的Stub数据。当有新的子级资源与该本级Stub建立依赖关系后，该值将标记为0。
@@ -247,7 +247,7 @@ Stub *new_dep (Stub *r, Stub *d, int flag) {
   return d;
 }
 
-//在Stub r中移除Stub s 这个父级的dep资源。 
+//在Stub r中移除Stub s 这个父级的dep资源。所以，移除“依赖”需要从“父级”那边的链接开始，移除父级指向子级的链接。 
 void remove_req (Stub *s, Stub *r) {
   r->deps = list_delete (r->deps, s);
   if (!r->deps) insert_event (r, RESOURCE_REMOVE, 0); //异步调用
@@ -417,6 +417,7 @@ void *get_subordinate (Stub *s, int type) {
 
 //从服务器获取一个资源。先连接到服务器，然后再获取stub资源。count的值有些情况下可以设置成0。
 Stub *get_resource (void *conn, int type, const char *href, int count) {
+  LOG_I("in function get_resource,href:%s\n",href);
   Stub *s;
   Uri128 buf;
   Uri *uri = &buf.uri;
@@ -432,10 +433,9 @@ Stub *get_resource (void *conn, int type, const char *href, int count) {
 
 /*
 poll资源，主要是针对 SE_Event_t 数据 。
-这个函数添加了一个异步操作：insert_event (s, RESOURCE_POLL, next);
-看起来他并没有去做向服务器Poll的动作。这里仅仅是添加了一个事件，且建在该资源设定时间点上去查询。
+这个函数添加了一个延时执行任务：insert_event (s, RESOURCE_POLL, next);
+看起来他并没有去做向服务器Poll的动作。这里仅仅是添加了一个事件，且建在该资源设定时间点上去执行。
 */
-
 void poll_resource (Stub *s) {
   LOG_I("in function poll_resource\n");
   time_t now = se_time ();
@@ -449,16 +449,19 @@ void poll_resource (Stub *s) {
   }
   
   //如果现在时间已经超过预定要执行轮询的时间了（poll_next），则放到event poll queue中，将会异步的执行一次轮训。
+  //对于一个Stub来说，poll_next值通常是0，所以首次获取到该数据之后通常是满足的下面的判断条件的。
   if (s->poll_next <= now) {
     s->poll_next = next;
     //这里的类型RESOURCE_POLL，跟在der_poll中调用这个函数的时候的case值严格一致了。
-    insert_event (s, RESOURCE_POLL, next);  //添加一个异步事件，在主程序中被响应并且执行后续的数据获取动作。
+    LOG_I("poll_resource:insert_event RESOURCE_POLL\n");
+    insert_event (s, RESOURCE_POLL, next);  //添加一个“延迟执行”的任务，将在next时刻到了之后执行。
   }
 }
 
 
 /*获取dcap资源*/
 Stub *get_dcap (Service *s, int secure) {
+  LOG_I("in function get_dcap\n");
   void *conn = service_connect (s, secure);
   return get_resource (conn, SE_DeviceCapability, service_dcap (s), 0);
 }
@@ -517,6 +520,7 @@ char *object_path (Uri128 *buf, void *conn, void *data) {
 
 // process list object with dependency function    使用"dependency"函数，处理"列表"对象 
 int list_object (Stub *s, void *obj, DepFunc dep) {
+  LOG_I("list_object\n");
   Resource *r = &s->base;
   int count = list_seq (s, obj);
   List **list = se_list_field (obj, r->info), *input, *l; //获取到对象中的List域
@@ -568,6 +572,7 @@ void process_response (void *conn, int status, DepFunc dep) {
   int type, count = 0;
   switch (http_method (conn)) { //请求类型
   case HTTP_GET:  //对GET请求的处理。GET请求将获取到一个或者多个SE数据，其中可能包含了 List 性质的数据。
+    LOG_I("function process_response:case HTTP_GET\n");
     if (obj = se_body (conn, &type)) {
       print_se_object (obj, type);
       printf ("\n");
@@ -581,6 +586,7 @@ void process_response (void *conn, int status, DepFunc dep) {
     }
     break;
   case HTTP_POST:
+    LOG_I("function process_response:case HTTP_POST\n");
     if (s = find_target (conn)) {
       if (s->base.info) {
         char *location = http_location (conn);
@@ -590,6 +596,7 @@ void process_response (void *conn, int status, DepFunc dep) {
     }
     break;
   case HTTP_DELETE:
+    LOG_I("function process_response:case HTTP_DELETE\n");
     remove_stub (http_context (conn));  // 如果是移除一个资源，那么就在本地删除之。
     break;
   }
@@ -626,6 +633,7 @@ int process_http (void *conn, DepFunc dep) {
   Stub *s;
   switch (se_receive (conn)) {  //正常情况下，收到数据并解析成SE对象。
   case HTTP_RESPONSE:
+    LOG_I("process_http:case HTTP_RESPONESE\n");
     switch (status = http_status (conn)) {
     case 200:
     case 201:
@@ -638,7 +646,7 @@ int process_http (void *conn, DepFunc dep) {
       process_redirect (conn, status);
       break;
     default:  // 如果是访问资源但是回复的数据不是上述表示成功的情况，则表示该资源（看起来）已经被删除了，所以要再本地也同样的删除掉。
-      printf("process_http: se_receive default\n");
+      LOG_I("process_http:case default\n");
       if (http_method (conn) == HTTP_GET
           && (s = find_target (conn))) {
         s->status = status;

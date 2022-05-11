@@ -275,7 +275,7 @@ void insert_block (Schedule *s, EventBlock *eb) {
   s->scheduled = insert_sorted (s->scheduled, eb, compare_start); //插入到队列中去。
 }
 
-int active_poll_rate = 300;
+int active_poll_rate = 30; //这个意思是：活跃的DER Control Event的轮询周期。可以修改。CORE中的测试要求在60秒之内。
 
 void activate_block (Schedule *s, EventBlock *eb) {
   Stub *event = eb->event;

@@ -1,5 +1,5 @@
-client_test.o: client_test.c der_client.c se_core.h se_core.c pack.c \
- util.c list.c queue.c platform.c linux/platform.c linux/../bsd.c \
+client_test.o: client_test.c debug_log.h der_client.c se_core.h se_core.c \
+ pack.c util.c list.c queue.c platform.c linux/platform.c linux/../bsd.c \
  linux/../file.c parse.c schema.c xml_parse.c xml_token.c utf8.c \
  exi_parse.c output.c xml_output.c exi_output.c se_types.h se_object.c \
  sha256.c openssl.c security.c connection.c uri.c http.c se_connection.c \

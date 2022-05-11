@@ -44,7 +44,7 @@ typedef struct _Event {
   int64_t time; //（发生的？）时刻？
 } Event;
 
-Event *cur_event = NULL;  // 表示当前已近记录了的event，但是还没到执行时间。
+Event *cur_event = NULL;  // 表示当前已近记录了的event，但是还没到执行时间。“往后”要执行的任务，都放在这个队列中。
 Queue im_event = {0};     //（立即）要执行的Event的Queue。
 
 //比较两个event的时间差。

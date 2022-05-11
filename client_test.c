@@ -31,7 +31,7 @@ void usage () {
 #define GET_TIME (1<<4)
 #define GET_ALL (GET_EDEV|GET_FSA|GET_DERP|GET_DERC|GET_TIME)
 #define GET_SELF (1<<5)
-#define REGISTER_TEST (1<<6)
+#define REGISTER_TEST (1<<6)  //注册测试。
 #define SCHEDULE_TEST (1<<7)
 #define METER_TEST (1<<8)
 #define INCLUDE_READINGS (1<<9)
@@ -100,7 +100,7 @@ int subtype_query (char *arg, char *name) {
 /* retrieval ： n. 找回，取回；（计算机系统信息的）检索；恢复，挽回 
 
 解析URI字符串，得到字符串包含的URI各个要素。在完成解析URL地址后，将尝试连接到服务器。
-
+连接到服务器之后，
 */
 int uri_retrieval (char *arg) {
   Uri128 buf = {0};
@@ -115,13 +115,14 @@ int uri_retrieval (char *arg) {
     return 0;
   }
 
-  printf("Connecting to host...\n");
+  LOG_I("Connecting to host...\n");
   
   conn = se_connect_uri (uri);  //连接到服务器
   if (uri->query && !parse_query (&q, uri->query)) {  //解析查询参数。
     printf ("error parsing URI query \"%s\"\n", uri->query);
     exit (0);
   }
+  
   get_resource (conn, -1, uri->path, q.limit);  //获取这个资源，通常是dcap路径下的资源。
   return 1;
 }
@@ -269,7 +270,7 @@ void options (int argc, char **argv) {
       test |= GET_EDEV | REGISTER_TEST | PUT_SETTINGS;
       device_settings (device_sfdi, "settings");
       break;
-    case 4: // pin
+    case 4: // pin 将执行 PUT 操作。
       test |= PUT_PIN;
       if (++i == argc || !number (&pin, argv[i])) {
         printf ("pin command expects number argument\n");
@@ -277,7 +278,7 @@ void options (int argc, char **argv) {
       }
       break;
     case 5: // primary
-      primary = 1;
+      primary = 1;  //注意这里是没有break的，将跟下面的联合
     case 6: // all
       test |= GET_ALL | REGISTER_TEST | SCHEDULE_TEST | PUT_SETTINGS;
       device_settings (device_sfdi, "settings");
@@ -377,6 +378,7 @@ void alarm_dep (Stub *r) {
 这些参数放在本工程的“setting”下，由xml文件来描述。在本代码启动的时候，已经对这些数据作了解析。
 */
 void put_der_settings (void *conn, Settings *ds, SE_DER_t *der) {
+  LOG_I("put_der_settings\n");
   link_put (conn, der, ds->dera, DERAvailability);
   link_put (conn, der, ds->dercap, DERCapability);
   link_put (conn, der, ds->derg, DERSettings);
@@ -389,9 +391,9 @@ void edev_complete (Stub *r) {
   SE_EndDevice_t *edev = resource_data (r);
   DerDevice *d = get_device (edev->sFDI);
   LOG_I("in function edev_complete\n");
-  LOG_D("edev %s complete\n", edev->href);
+  LOG_I("edev %s complete\n", edev->href);
 
-  /*如果之前测试的时候有设定要做“PUT_SETTINGS”操作，那么就在这里执行*/
+  /*如果之前测试的时候有设定要做“PUT_SETTINGS”操作，那么就在这里执行。这里执行的是上传DER的所有设置参数操作。*/
   if (test & PUT_SETTINGS) {
     s = get_subordinate (r, SE_DERList);
     if (s && s->reqs) {
@@ -498,8 +500,9 @@ void fsa_list (Stub *r) {
   foreach (l, r->reqs) if (fsa (l->data)) break;
 }
 
-//
+//获取EndDevice的子层资源。
 void get_edev_subs (Stub *edevs) {
+  LOG_I("get_edev_subs\n");
   List *l;
   if (test & REGISTER_TEST) return; // wait for registration
   foreach (l, edevs->reqs) {
@@ -515,6 +518,7 @@ void get_edev_subs (Stub *edevs) {
   }
 }
 
+//在获取到了 Registration 数据之后，执行检查动作。
 void check_registration (Stub *r) {
   LOG_I("in function check_registration\n");
   SE_Registration_t *reg = resource_data (r);
@@ -525,13 +529,20 @@ void check_registration (Stub *r) {
   } else test_fail ("registration", "pIN does not match 111115");
 }
 
+
+//在获取到了EndDeviceList之后执行的操作。
+
 void end_device (Stub *r) {
   LOG_I("in function end_device\n");
   SE_EndDevice_t *e = resource_data (r);
+  
+  //如果要执行删除设备操作
   if (test & DELETE_DEVICE && e->sFDI == delete_sfdi) {
     delete_stub (r);
     test &= ~DELETE_DEVICE;
   }
+  
+  //
   if (e->sFDI == device_sfdi) {
     test |= CLIENT_FOUND;
     if (device_sfdi == delete_sfdi) return;
@@ -544,7 +555,7 @@ void end_device (Stub *r) {
           se_put (r->conn, &reg, SE_Registration, e->RegistrationLink.href);
           test &= ~REGISTER_TEST;
           if (edevs) get_edev_subs (edevs);
-        } else get_root (r->conn, e, Registration);
+        } else get_root (r->conn, e, Registration); //如果测试条件中不需要PUT测试，那么就直接获取一下 Registration 数据。
       } else test_fail ("registration",
                           "EndDevice does not contain RegistrationLink.");
     }
@@ -585,7 +596,7 @@ void edev_list (Stub *r) {
   r->completion = NULL;
 }
 
-
+//在收到了完整的dcap数据之后的处理程序。这个就跟整个test程序的逻辑有关。在获取到了dcap资源后，通常仅仅去获取time和EndDeviceList两种资源。
 void dcap (Stub *r) {
   LOG_I("in function dcap\n");
   SE_DeviceCapability_t *dcap = resource_data (r);
@@ -594,15 +605,15 @@ void dcap (Stub *r) {
       test_fail ("time", "no TimeLink in DeviceCapability");
   }
   if (test & GET_EDEV) {  
-    if (r = get_list_root (r->conn, dcap, EndDeviceList)) // 获取
+    if (r = get_list_root (r->conn, dcap, EndDeviceList)) // 获取 EndDeviceList 资源
       r->completion = edev_list;
     else test_fail ("edev", "no EndDeviceListLink in DeviceCapability");
   }
-  if (test & GET_SELF) {
+  if (test & GET_SELF) {  //在SE中，通常没有看到 SelfDevice 
     if (!get_root (r->conn, dcap, SelfDevice))
       test_fail ("self", "no SelfDevice in DeviceCapability");
   }
-  if (test & METER_TEST) {
+  if (test & METER_TEST) {  //通常也没有 MirrorUsagePointList 
     if (!(dcap_mup = get_list_root (r->conn, dcap, MirrorUsagePointList)))
       test_fail ("meter", "no MirrorUsagePointLink in DeviceCapability");
   }
@@ -613,8 +624,8 @@ void time_sync (Stub *s) {
   LOG_I("in function time_sync\n");
   SE_Time_t *tm = resource_data (s);  //获取到时间资源
   s->poll_rate = se_exists (tm, pollRate) ? tm->pollRate : 900; //默认是900秒来获取一次数据。
-  poll_resource (s);  //添加一个异步请求
-  set_time (tm);  //？？不知道为什么这里需要重新设置一下时间。
+  poll_resource (s);  //添加一个异步请求。首次获取到数据之后，将进入这种自动循环模式。
+  set_time (tm);  //在获取到服务器时间后，同步一下本地时间，保持于服务器时间一致。
 }
 
 void update_mup (Stub *s) {
@@ -695,12 +706,14 @@ void self_device (Stub *r) {
   poll_resource (r);
 }
 
+extern const char * const se_names[];
 
 /*
 这个函数是 process_http中  的   DepFunc 函数，当完整的获取到一个SE对象数据的时候，此时调用该函数对该对象作定制化处理*/
 void test_dep (Stub *r) {
-  LOG_I("in function test_dep\n");
-  switch (resource_type (r)) {
+  int res_type = resource_type (r);
+  LOG_I("in function test_dep,resource_type:%d(%s)\n",res_type,se_names[res_type]);
+  switch (res_type) {
   case SE_Time:
     time_sync (r);  //时间同步？
     break;
@@ -740,13 +753,14 @@ int main (int argc, char **argv) {
   version ();
   platform_init ();
   
-  LOG_I("client test started\n");
+  LOG_I("client test started1\n");
 
   options (argc, argv);
 
   while (1) {
     switch (der_poll (&any, -1)) {  //这个函数的执行结果是由内部的 client_poll 提供的
     case SERVICE_FOUND: //主要针对DNSSD的
+      LOG_I("in branch SERVICE_FOUND\n");
       s = any;
       print_service (s);
       if (test) get_dcap (s, secure); //test中任意一个bit置位的，则必须先查询到dcap资源
