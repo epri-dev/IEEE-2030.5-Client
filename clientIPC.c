@@ -9,7 +9,12 @@ https://stackoverflow.com/questions/57730441/sockets-programming-sending-and-rec
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <time.h>
 #define PORT 8080
+
+
+
+
 /*
 char* msg="<DERControlList href=\"/sep2/A1/derp/1/derc\" subscribable=\"1\" all=\"1\" results=\"1\" xmlns=\"urn:ieee:std:2030.5:ns\">
 				<DERControl href=\"/sep2/A1/derp/1/derc/1\" replyTo=\"/rsps/1/rsp\" responseRequired=\"03\">
@@ -38,6 +43,12 @@ char* socket_receive(int sock, int valread, char *buffer);
 
 int main(int argc, char const* argv[])
 {
+	time_t start=0;
+	time_t end=0;
+	time_t elapsed=0;
+
+	start= time(NULL);
+
 	int sock = 0, valread; //initialize sock and valread
 	struct sockaddr_in serv_addr;
 	char* msg = "Client<place holder for der control plain text>"; // message to be sent
@@ -54,8 +65,11 @@ int main(int argc, char const* argv[])
 
 	//should have something that continuously listen to server 
 	while(1) {
+		end=time(NULL);
+		elapsed=start-end;
 		char* recvMsg=socket_receive(sock, valread, buffer);
 		printf("%s\n", recvMsg);
+		printf("%ld seconds \n", elapsed);
 	}
 	return 0;
 }
