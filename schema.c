@@ -309,6 +309,7 @@ void free_object (void *obj, int type, const Schema *schema) {
   free (obj);
 }
 
+//更新数据库中的某一个资源（Stub）的数据，直接替换。
 void replace_object (void *dest, void *src, int type, const Schema *schema) {
   free_object_elements (dest, type, schema);
   memcpy (dest, src, object_size (type, schema));

@@ -323,7 +323,7 @@ int se_receive (void *conn) {
       set_timeout (s);
     }
   }
-  printf("se_receive:return SE_INCOMPLETE\n");
+  //printf("se_receive:return SE_INCOMPLETE\n");
   return SE_INCOMPLETE;
 error:
   if (h->method == HTTP_RESPONSE) http_close (h);

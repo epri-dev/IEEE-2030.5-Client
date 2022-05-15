@@ -21,6 +21,9 @@
     @{
 */
 
+extern const char * const se_names[];
+
+
 #define RESOURCE_POLL (EVENT_NEW+6)
 #define RESOURCE_UPDATE (EVENT_NEW+7)
 #define RESOURCE_REMOVE (EVENT_NEW+8)
@@ -48,7 +51,7 @@ typedef  long  time_t;
 typedef struct _Stub {  /* ... the local representation of a resource（在der_client.md文档中定义） */
   Resource base; ///< is a container for the resource  这个Stub所要代表的数据本身，一个数据容器
   void *conn; ///< is a pointer to an SeConnection 这个Stub的关联的连接
-  int status; ///< is the HTTP status, 0 for a new Stub, -1 for an update
+  int status; ///< is the HTTP status, 0 for a new Stub, -1 for an update。除了0和-1之外，剩下的就是常规的HTTP状态数据，比如200。
   time_t poll_next; ///< is the next time to poll the resource 下次需要检索数据的时间。通常是需要访问网络的。初始值总是0。
   int16_t poll_rate; ///< is the poll rate for the resource 这个资源应当执行的查询频率
   unsigned complete : 1; ///< marks the Stub as complete  
@@ -60,11 +63,12 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   /*当本Stub作为一个子级Stub，对于一个子级资源（Stub）来说，这个flag表示的是自己是否存在的一个特定标志。
   通常以 SE_##type##Link_exists 这个宏来表达，type是全部资源类型名（在se_types.h中定义）*/
   uint32_t flags; ///< is a bitwise requirements checklist 
-  /*一个bit位表示的对下级资源的“需求”表示，置位则表示还缺这个bit代表的资源，一旦该资源从服务器上获取到了，则清除。*/
+  /*一个bit位表示的对下级资源的“需求”表示，置位则表示还缺这个bit代表的资源，一旦该资源从服务器上获取到了，则清除。0表示全部满足了。
+  每次在向服务器获取数据之前，函数new_dep都会在某个bit上标记一下（每一个成员都有一个特定的bit位来表达自己），如果*/
   uint32_t offset; ///< is the offset used for list paging 对于List类型的数据元素来说，offset表示本Stub在整个List中的序号
   uint32_t all; ///< is the total number of list items  List的总量
   struct _Stub *moved; ///< is a pointer to the new resource 这个可能跟资源的重定向有关
-  List *list; ///< is a list of old requirements for updates
+  List *list; ///< is a list of old requirements for updates 之前需要准备区获取的数据。list长度于前面的flags中的置位的bit位个数一致。
   List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的父层级的 Stub 。 这个是子级Stub指向父级Stub的链接。
   List *reqs; ///< is a list of requirements 需求：就是子级对象，当前Stub所需要的子级对象List。List中的data对象就是子级Stub。这个是父级Stub指向子级Stub的链接。
   union {
@@ -178,6 +182,10 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
     @param obj is a pointer to an IEEE 2030.5 object
     @param type is the type name of the subordinate resource
     @returns a pointer to the subordinate resource Stub
+    
+
+    这个函数名可以理解成 get list resource depends on <r> , converter to <obj> , which type is <tpye>
+    
 */
 #define get_list_dep(r, obj, type)				\
   new_dep (r, get_list_root ((r)->conn, obj, type), SE_##type##Link_exists)
@@ -242,7 +250,8 @@ Stub *new_dep (Stub *r, Stub *d, int flag) {
     d->flag = flag; //标记本Stub数据，是一个唯一标记。
     r->flags |= flag; 
     /*在父级Stub中标记上，表明父级Stub（参数中的r）要用到该子级Stub(参数中的d)资源（某个bit位置位）。
-      后续将通过网络请求来获取到这项数据。目前仅仅是标记了一下。在获取到之后，则将标记清零*/
+      后续将通过网络请求来获取到这项数据。目前仅仅是标记了一下。在获取到之后，在dep_complete函数中将标记清零。
+      一个数据项目的定义的成员，往往是要多于实际的成员，所以这里相当于是建立一个需求，然后再去满足。*/
   }
   return d;
 }
@@ -348,34 +357,42 @@ void delete_stub (Stub *s) {
   set_request_context (s->conn, s); //凡是服务器需要回复的，都要先设置好context。
 }
 
-/* 看起来是将一个Stub填充到其父级中去？？ */
+/* 看起来是将一个Stub填充到其父级中去。其中又分两种情况：一种是父级是一个List类型的数据；一种不是List类型。处理方式不同。
+这里的complete的意思不是全部的成员都“到齐”了，而是之前主动请求的成员此时全部到齐了。那些之前没有主动去请求的，显然不会自己来。
+每一个资源都需要之前在代码中主动去请求。
+*/
 void dep_complete (Stub *s) {
   List *l;
-  if (s->completion && !s->complete)  //complete设置为0，表示之前是不“齐备”的，也就是之前还没有执行过 completion 函数。
+  LOG_I("dep_complete,resource:%d(%s)\n",((Resource*)s)->type,se_names[((Resource*)s)->type]);
+  if (s->completion && !s->complete){  //complete设置为0，表示之前是不“齐备”的，也就是之前还没有执行过 completion 函数。
+    LOG_I("dep_complete:excuting completion function\n");
     s->completion (s);  //如果completion函数之前设置过（现在存在），且数据也都获取成功了（complete为0表示不需要再获取什么东西了），则执行completion函数。
+  }
   s->complete = 1;
   foreach (l, s->deps) {
-    Stub *d = l->data;  //d这里是父级，s这里是子级。后面的代码，都是站在父级Stub的角度对当前的这个Stub来操作。
+    Stub *d = l->data;  //d这里是父级，s这里是子级（传输的s对象）。 后面的代码，都是站在父级Stub的角度对当前的这个Stub来操作。
     int complete = 0; //0表示未完成。
     if (d->base.info) { //如果这个父级是一个List类型的数据
       d->reqs = insert_stub (d->reqs, s, d->base.info); //那么本Stub数据作为reqs成员的一员，插入到reqs表中。
       complete = list_length (d->reqs) == d->all; //看是否已经完成了。
-    } else {  //否则，表示父级资源不是一个List性质的资源，那么就查看各个子级资源是否已经齐备。
+    } else {  //否则，表示insert_unique父级资源不是一个List性质的资源，那么就查看各个子级资源是否已经齐备。
       d->reqs = insert_unique (d->reqs, s);
-      d->flags &= ~s->flag; //将父级的表示 “dep” 的flags中的，用来表示“自己是否存在”的标志位清零。某一个bit置位表示还缺该bit代表的资源。
+      d->flags &= ~s->flag; //将父级的表示 “dep” 的flags中的，用来表示“自己是否存在”的标志位清零。某一个bit置位表示还缺该bit代表的资源，或者说前面已经去向服务器获取了，在new_dep函数中。
       complete = !d->flags; //如果父级中的flags有任何一个bit置位了，则 complete =0，即表示没有完成。如果全部bit都清除掉了，则表示全部获取到了。
     }
     if (complete) {
-      if (d->list) {
+      LOG_I("dep_complete:complete=1,excute dep_complete recursivly\n");
+      if (d->list) {  //list中存储的应该是之前准备要去更新的内容，而现在由于本数据到位了，所以从这个表中移除。 
         remove_reqs (d, list_subtract (d->list, d->reqs));
-        d->list = NULL;
+        d->list = NULL; //前面的flags数据全部清零了，表示需要的dep已经全部被满足了。
       }
-      dep_complete (d); //如果父级在本Stub补充上去之后变得齐备了，那么继续往上追溯。
+      dep_complete (d); //如果父级在本Stub补充上去之后变得齐备了，那么继续往上追溯。比如当前是EndDevice对象，接下去是EndDeviceList对象。
     }
   }
+  LOG_D("dep_complete exit,resource:%d(%s)\n",((Resource*)s)->type,se_names[((Resource*)s)->type]);
 }
 
-/*这个函数名的意思是，从“dep”对象中，将本Stub的连接断开，同时再往上迭代。*/
+/* 这个函数名的意思是，从“dep”对象中，将本Stub的连接断开，同时再往上迭代。 */
 void dep_reset (Stub *s) {
   List *l;
   s->complete = 0;
@@ -478,25 +495,26 @@ Stub *get_path (Service *s, int secure) {
   return get_resource (conn, type, path, count);
 }
 
-//在收到服务器的数据之后，更新掉这个数据。
+//在收到服务器的数据之后，首次填充或者更新掉这个数据。
 void update_existing (Stub *s, void *obj, DepFunc dep) {
   Resource *r = &s->base;
+  LOG_I("update_existing:type:%d(%s)\n",r->type,se_names[r->type]);
   List *l;
   if (!r->data) r->data = obj;  //如果该项数据原先不存在，那么就直接填充。
   else if (se_event (r->type)) {  //如果不为空，且类型为 SE_Event
     SE_Event_t *ex = r->data, *ev = obj;
     memcpy (&ex->EventStatus, &ev->EventStatus,
-            sizeof (SE_EventStatus_t));//如果是一个已经存在的 SE_Event 类型的数据，那么仅仅更新Status数据就够了。
+            sizeof (SE_EventStatus_t));//如果是一个已经存在的 SE_Event 类型的数据，那么仅仅更新Status数据就够了。应该是对于SE_Event_t，数据更新的只有Status。
     free_se_object (obj, r->type);
   } else replace_se_object (r->data, obj, r->type); //其他的类型的数据如果已经存在的话，就直接替换。
-  dep (s);
-  if (!s->flags) dep_complete (s);
+  dep (s);  //dep函数都要执行一遍。但是未必对这个数据执行什么操作。
+  if (!s->flags) dep_complete (s);  //如果flags等于0，表示该Stub的所有“需求”都满足了。此时执行dep_complete函数。
 }
 
 // update paging and return number of items needed 返回目前还需要的list对象中的“个数”
 int list_seq (Stub *s, void *obj) {
   int results;
-  if (se_type_is_a (s->base.type, SE_SubscribableList)) { //判断s->base.type的基类是否是 SE_SubscribableList
+  if (se_type_is_a (s->base.type, SE_SubscribableList)) { //判断s->base.type的基类是否是 SE_SubscribableList。现在我们用到的List基本上是这个（根据IEEE文档）
     SE_SubscribableList_t *sl = obj;
     s->all = sl->all;
     results = sl->results;
@@ -507,43 +525,52 @@ int list_seq (Stub *s, void *obj) {
   }
   // printf ("list_seq %d %d %d\n", s->offset, results, s->all);
   s->offset += results;
-  return s->all - s->offset;  //返回省下还有多少个没有
+  return s->all - s->offset;  //返回还有多少个没有获取到
 }
 
 //每一个对象都有一个唯一的路径。取出该对象绑定的那个路径。
 char *object_path (Uri128 *buf, void *conn, void *data) {
-  SE_Resource_t *sr = data;
+  SE_Resource_t *sr = data; 
+  /*SE数据类型的定义总是遵循一个原则：flag和href总是定义在一个数据的最开始位置，
+  所以，这里不用管具体的传入的类型，也可以直接定位到flag和href的地址。href是一个数据指针。*/
   if (sr->href && http_parse_uri (buf, conn, sr->href, 127))
     return buf->uri.path;
   return NULL;
 }
 
-// process list object with dependency function    使用"dependency"函数，处理"列表"对象 
+extern const char * const se_names[];
+// process list object with dependency function    使用"dependency"函数，处理"列表"对象，构建与父级之间的依赖连接关系。 
 int list_object (Stub *s, void *obj, DepFunc dep) {
-  LOG_I("list_object\n");
   Resource *r = &s->base;
-  int count = list_seq (s, obj);
-  List **list = se_list_field (obj, r->info), *input, *l; //获取到对象中的List域
-  input = *list;
+  int count = list_seq (s, obj);  //得到还剩下多少个没有获取到
+  LOG_I("list_object:left count:%d\n",count);
+  List **list = se_list_field (obj, r->info), *input, *l; //获取到对象中的List域，通过info这个用来指示List结构的数据。
+  input = *list;  //有可能这个list是一个空的，下面的foreach不会执行。
   *list = NULL;
+  LOG_I("list_object:resource type:%d(%s)\n",r->type,se_names[r->type]);
   if (!r->data) r->data = obj;  //如果之前是空的，那么就新建
-  else replace_se_object (r->data, obj, r->type); //如果之前已经存在的，那么就替换。
-  dep (s);
-  foreach (l, input) {
+  else replace_se_object (r->data, obj, r->type); // 如果之前已经存在的，那么就替换。
+  dep (s);  //这个List作为一个整体对象，执行一遍对这个List的dep函数。在我们的本demoe代码中，没有执行EndDeviceList的操作。
+  foreach (l, input) {  //接下去是对每一个List成员执行操作。
     Uri128 buf;
     char *path;
-    if (path = object_path (&buf, s->conn, l->data)) {
-      Stub *d = get_stub (path, r->info->type, s->conn);
-      add_dep (s, d);
+    if (path = object_path (&buf, s->conn, l->data)) {  //取出URL路径
+      LOG_I("list_object:list member path:%s\n",path);
+      Stub *d = get_stub (path, r->info->type, s->conn); //这个函数的内在逻辑是：如果这个对象不存在，则新建一个。名字有点迷惑。
+      add_dep (s, d); 
+      /*增加依赖关系。s是List对象，是父级，而d是其中的一个子级对象。
+      比如EndDeviceList和EndDevice之间的关系，就是s和d之间的关系。刚刚收到并且解析出来的数据，仅仅是无逻辑联系的空白数据而已，
+      这里给他加入了逻辑关联。*/
       update_existing (d, l->data, dep);
     } else {
       // subordinate resource with no href or invalid href
+      LOG_W("list_object:subordinate resource with no href or invalid href\n");
       free_se_object (l->data, r->info->type);
     }
   }
-  free_list (input);
-  if (count > 0) get_seq (s, s->offset, count);
-  else if (!s->all) dep_complete (s);
+  free_list (input);  //之前解析的时候，是动态申请的，所以这里释放掉。
+  if (count > 0) get_seq (s, s->offset, count); //将剩下的没有获取到的再继续获取一下。有可能不需要这个步骤。
+  else if (!s->all) dep_complete (s); //如果这个list对象的长度是0，那么此时收到的是一个空的list，也就到此结束了，不用继续再去获取了。
   return count;
 }
 
@@ -572,17 +599,17 @@ void process_response (void *conn, int status, DepFunc dep) {
   int type, count = 0;
   switch (http_method (conn)) { //请求类型
   case HTTP_GET:  //对GET请求的处理。GET请求将获取到一个或者多个SE数据，其中可能包含了 List 性质的数据。
-    LOG_I("function process_response:case HTTP_GET\n");
+    LOG_I("process_response:case HTTP_GET\n");
     if (obj = se_body (conn, &type)) {
       print_se_object (obj, type);
       printf ("\n");
       if (s = match_request (conn, obj, type)) {  //如果现在服务器回复的数据是之前刚刚发出的请求的数据，那么就对应上了。
         s->base.time = time (NULL); //刷新该项数据获取到的时间，注意用的是系统本地时间。
         if (s->base.info) //如果是一个list类型的数据。
-          count = list_object (s, obj, dep);
-        else update_existing (s, obj, dep);
+          count = list_object (s, obj, dep);  //如果是一个List对象，则处理这个list。
+        else update_existing (s, obj, dep);   //如果是一个单体对象（非List），那么就更新数据库。
         if (!count) s->status = status;
-      } else free_se_object (obj, type);
+      } else free_se_object (obj, type);      //如果来的数据不是之前我们请求的数据，则直接放弃。
     }
     break;
   case HTTP_POST:

@@ -31,7 +31,7 @@ void usage () {
 #define GET_TIME (1<<4)
 #define GET_ALL (GET_EDEV|GET_FSA|GET_DERP|GET_DERC|GET_TIME)
 #define GET_SELF (1<<5)
-#define REGISTER_TEST (1<<6)  //注册测试。
+#define REGISTER_TEST (1<<6)  //注册测试。在某一次测试完毕后，就不用再次测试了。所以这个mask同时用来作为一个flag使用。
 #define SCHEDULE_TEST (1<<7)
 #define METER_TEST (1<<8)
 #define INCLUDE_READINGS (1<<9)
@@ -41,7 +41,7 @@ void usage () {
 #define PUT_SETTINGS (1<<13)
 #define PUT_PIN (1<<14)
 #define DELETE_DEVICE (1<<15)
-#define CLIENT_FOUND (1<<16)
+#define CLIENT_FOUND (1<<16)  //这个只是一个标记位，并不是一个测试项目标记。
 #define INVERTER_CLIENT (1<<17)
 
 /*
@@ -55,7 +55,7 @@ pin:在pIN测试中输入的pin值。
 
 int server = 0, test = 0, secure = 0, interval = 5 * 60, primary = 0, pin = 0;
 
-Stub *edevs;  //在本测试代码中，获取到的EndDevice设备数据对象。
+Stub *edevs;  //在本测试代码中，获取到的EndDeviceList设备数据对象，包含了List和各个EndDevice。
 
 char *path = NULL;  //注意这里是一个全局变量。是在<subtype[:1][/path]       | URI>中的path值。可能为空。
 uint64_t delete_sfdi;
@@ -385,16 +385,15 @@ void put_der_settings (void *conn, Settings *ds, SE_DER_t *der) {
   link_put (conn, der, ds->ders, DERStatus);
 }
 
-/*作为edev的 completion 函数*/
+/*作为 edev 的 completion 函数*/
 void edev_complete (Stub *r) {
   Stub *s, *t;
   SE_EndDevice_t *edev = resource_data (r);
   DerDevice *d = get_device (edev->sFDI);
-  LOG_I("in function edev_complete\n");
-  LOG_I("edev %s complete\n", edev->href);
+  LOG_I("in function edev_complete,path:%s\n",edev->href);
 
   /*如果之前测试的时候有设定要做“PUT_SETTINGS”操作，那么就在这里执行。这里执行的是上传DER的所有设置参数操作。*/
-  if (test & PUT_SETTINGS) {
+  if (test & PUT_SETTINGS) {//在all和primary中存在该测试项目
     s = get_subordinate (r, SE_DERList);
     if (s && s->reqs) {
       Stub *t = s->reqs->data;
@@ -410,11 +409,12 @@ void edev_complete (Stub *r) {
       && fsal->subscribable)
       subscribe (s, edev->SubscriptionListLink.href);
       */
-    } else {
+    } else {//在all和primary中走这个路径
       s->poll_rate = se_exists (fsal, pollRate) ? fsal->pollRate : 900;
-      poll_resource (s);
+      poll_resource (s);  //这个测试逻辑思维：遇到一个EndDevice，就去poll一下FSAList
     }
-    if (test & SCHEDULE_TEST) {
+    
+    if (test & SCHEDULE_TEST) { //在all和primary中存在该测试项目
       schedule_der (r);
       r->completion = schedule_der;
     }
@@ -449,7 +449,8 @@ void edev_complete (Stub *r) {
 /*获取所有的 DERProgram 下面的 DefaultDERControl和 DERControlList 和 DERCurveList 资源。*/
 void der_program (Stub *d) {
   LOG_I("in function der_program\n");
-  if (test & GET_DERC) {  //如果要测试DERC
+  if (test & GET_DERC) {  ////在all和primary中都存在该测试项目
+    LOG_I("der_program:test GET_DERC\n");
     Stub *cl; //ControlList
     SE_DERProgram_t *dp = resource_data (d);
     LOG_I("in function der_program,get_dep DefaultDERControl\n");
@@ -474,16 +475,18 @@ void poll_derpl (Stub *r) {
 
 //select the highest priority DERProgram from a DERProgramList
 
-//按照前面的注释来看，意思是第一个的DERProgram的优先级（priority）最高？
+/*按照前面的注释来看，意思是第一个的DERProgram的优先级（priority）最高？
+这个函数是FSA的completion函数 */
 void der_program_list (Stub *r) {
   if (primary && r->reqs) der_program (r->reqs->data);  //
 }
 
 
-/* 测试中获取到FSA资源 */
+/* 测试中获取到FSA资源 
+这个函数是*/
 int fsa (Stub *r) {
   LOG_I("in function fsa\n");
-  if (test & GET_DERP) {    
+  if (test & GET_DERP) {  //在all和primary中都存在该测试项目  
     SE_FunctionSetAssignments_t *fsa = resource_data (r);
     Stub *d = get_list_dep (r, fsa, DERProgramList);//获取到 DERProgramList 资源 
     if (d && primary) {
@@ -494,24 +497,31 @@ int fsa (Stub *r) {
   return 0;
 }
 
+
 // select the highest priority FSA that has a DERProgramList
+
+/*这个函数作为 FunctionSetAssignmentsList 资源的 completion 函数，处理List中的每一个FSA资源对象。 */
 void fsa_list (Stub *r) {
   List *l;
   foreach (l, r->reqs) if (fsa (l->data)) break;
 }
 
-//获取EndDevice的子层资源。
+//获取EndDevice的子层资源。参数edevs通常是 EndDeviceList 类型对象。
 void get_edev_subs (Stub *edevs) {
   LOG_I("get_edev_subs\n");
   List *l;
-  if (test & REGISTER_TEST) return; // wait for registration
-  foreach (l, edevs->reqs) {
+  if (test & REGISTER_TEST){
+    LOG_W("get_edev_subs:register test not excuted,return\n");
+    return; // wait for registration 之前如果还没有验证过了register测试，就先不往下做。
+  }
+  LOG_I("get_edev_subs:register test excuted,continue\n");
+  foreach (l, edevs->reqs) {  //对每一个 EndDeviceList 的子级对象，就是EndDevice作处理。
     Stub *s = l->data;
     SE_EndDevice_t *e = resource_data (s);
-    if (test & INVERTER_CLIENT && e->sFDI != device_sfdi) continue;
-    s->completion = edev_complete;
-    get_list_dep (s, e, DERList); //获取到 EndDevice 下面的 DERList。
-    if (test & GET_FSA) {
+    if (test & INVERTER_CLIENT && e->sFDI != device_sfdi) continue; //如果test中的INVERTER_CLIENT置位，且当前的EndDevice于指令中的不符，则不执行下面的动作。我们现在的测试中通常往下走。
+    s->completion = edev_complete;  //将为每一个EndDevice赋予该执行函数。
+    get_list_dep (s, e, DERList); //获取到 EndDevice 下面的 DERList。通常 href:/edev/edev0/der
+    if (test & GET_FSA) { //在all和primary中都存在该测试项目
       if ((s = get_list_dep (s, e, FunctionSetAssignmentsList)) && primary) //获取到 EndDevice 下面的 FunctionSetAssignmentsList
         s->completion = fsa_list;
     }
@@ -522,10 +532,10 @@ void get_edev_subs (Stub *edevs) {
 void check_registration (Stub *r) {
   LOG_I("in function check_registration\n");
   SE_Registration_t *reg = resource_data (r);
-  if (reg->pIN == 111115) {
-    printf ("registration succeeded\n");
+  if (reg->pIN == 111115) { //这个111115是这个程序程序所公用的一个值。
+    LOG_D("registration succeeded\n");
     test &= ~REGISTER_TEST;
-    if (edevs) get_edev_subs (edevs);
+    if (edevs) get_edev_subs (edevs); //edevs 在函数 edev_list 中被填充。
   } else test_fail ("registration", "pIN does not match 111115");
 }
 
@@ -544,11 +554,13 @@ void end_device (Stub *r) {
   
   //
   if (e->sFDI == device_sfdi) {
-    test |= CLIENT_FOUND;
+    LOG_I("end_device:e->sFDI == device_sfdi,%ld\n",device_sfdi);
+    test |= CLIENT_FOUND; //可能表示该操作已经执行过了，后面不要再执行。
     if (device_sfdi == delete_sfdi) return;
-    if (test & REGISTER_TEST) {
+    if (test & REGISTER_TEST) { //如果是测试了primary，那么这个项是测试的。
       if (se_exists (e, RegistrationLink)) {
         if (test & PUT_PIN) {
+          LOG_I("end_device:test & PUT_PIN == true\n");
           SE_Registration_t reg = {0};  
           reg.dateTimeRegistered = se_time ();  //看起来是只要填充下面这两项数据就够了。
           reg.pIN = pin;  //这个pin的意思不是很清楚。
@@ -562,17 +574,19 @@ void end_device (Stub *r) {
   }
 }
 
-/* 作为 dcap 对象的 completion 函数 */
+/* 作为 EndDeviceList 对象的 completion 函数 */
 void edev_list (Stub *r) {
+  LOG_I("edev_list\n");
   edevs = r;
   if (test & DELETE_DEVICE) {
     test_fail ("delete device", "client EndDevice instance not found");
   }
-  if (!(test & CLIENT_FOUND)) {
-    if (test & GET_EDEV) {
+  if (!(test & CLIENT_FOUND)) { //表示的意思是：如果client还是没有被找到，那么执行下面的指令。
+    if (test & GET_EDEV) {  //在测试指令all和primary中将测试到该GET_EDEV项目。
+      LOG_I("edev_list:CLIENT_FOUND is false,POST EndDevice\n");
       SE_EndDevice_t edev = {0};
       edev.sFDI = device_sfdi;
-      se_post (r->conn, &edev, SE_EndDevice, r->base.name); //POST
+      se_post (r->conn, &edev, SE_EndDevice, r->base.name); //POST 如果没有这个设备，那么就放上去一个？？
     }
     if (test & DEVICE_TEST)
       test_fail ("device test", "client EndDevice instance not found");
@@ -593,26 +607,30 @@ void edev_list (Stub *r) {
     }
     get_edev_subs (r);
   }
-  r->completion = NULL;
+  r->completion = NULL; //看起来 EndDeviceList数据只能获取单次，后面就不需要了，所以自己结束掉。
 }
 
 //在收到了完整的dcap数据之后的处理程序。这个就跟整个test程序的逻辑有关。在获取到了dcap资源后，通常仅仅去获取time和EndDeviceList两种资源。
 void dcap (Stub *r) {
   LOG_I("in function dcap\n");
   SE_DeviceCapability_t *dcap = resource_data (r);
-  if (test & GET_TIME) {
+  
+  if (test & GET_TIME) {  //当指令为all或者primary的时候，该测试项目都将被包含。
     if (!get_root (r->conn, dcap, Time))  //获取到dcap中的Time资源。
       test_fail ("time", "no TimeLink in DeviceCapability");
   }
-  if (test & GET_EDEV) {  
+  
+  if (test & GET_EDEV) {  //该项目在all和primary指令中都将被包含。执行获取EndDeviceList数据。
     if (r = get_list_root (r->conn, dcap, EndDeviceList)) // 获取 EndDeviceList 资源
       r->completion = edev_list;
     else test_fail ("edev", "no EndDeviceListLink in DeviceCapability");
   }
+  
   if (test & GET_SELF) {  //在SE中，通常没有看到 SelfDevice 
     if (!get_root (r->conn, dcap, SelfDevice))
       test_fail ("self", "no SelfDevice in DeviceCapability");
   }
+  
   if (test & METER_TEST) {  //通常也没有 MirrorUsagePointList 
     if (!(dcap_mup = get_list_root (r->conn, dcap, MirrorUsagePointList)))
       test_fail ("meter", "no MirrorUsagePointLink in DeviceCapability");
@@ -712,13 +730,13 @@ extern const char * const se_names[];
 这个函数是 process_http中  的   DepFunc 函数，当完整的获取到一个SE对象数据的时候，此时调用该函数对该对象作定制化处理*/
 void test_dep (Stub *r) {
   int res_type = resource_type (r);
-  LOG_I("in function test_dep,resource_type:%d(%s)\n",res_type,se_names[res_type]);
+  LOG_I("test_dep:resource type:%d(%s)\n",res_type,se_names[res_type]);
   switch (res_type) {
   case SE_Time:
     time_sync (r);  //时间同步？
     break;
   case SE_DERProgram:
-    if (!primary) der_program (r);  //获取 DERProgram 下面的三个主要资源。
+    if (!primary) der_program (r);  //获取 DERProgram 下面的三个主要资源。在primary指令情况下，不会执行到这里。在primary指令下，通过EndDevice路径来执行。
     break;
   case SE_DERProgramList:
     poll_derpl (r);
@@ -741,7 +759,7 @@ void test_dep (Stub *r) {
   case SE_SelfDevice:
     self_device (r);
   }
-  LOG_D("exit function test_dep\n");
+  LOG_D("test_dep:exit function\n");
 }
 
 

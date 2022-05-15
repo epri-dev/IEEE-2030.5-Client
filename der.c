@@ -185,6 +185,7 @@ void remove_programs (Schedule *s, List *derpl) {
   free_list (derpl);
 }
 
+//对一个DER安排调度
 void schedule_der (Stub *edev) {
   SE_EndDevice_t *e = resource_data (edev);
   DerDevice *device = get_device (e->sFDI);
@@ -194,22 +195,27 @@ void schedule_der (Stub *edev) {
   SE_DefaultDERControl_t *dderc = NULL;
   LOG_I("in function schedule_der\n");
   if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) return; //获取这个edev下面的FSA数据
+
   // add the lFDI if not provided by the server
   if (!se_exists (e, lFDI)) {
     se_set (e, lFDI);
     memcpy (e->lFDI, device->lfdi, 20);
   }
+  
   // collect all DERPrograms for the device (sorted by primacy) 收集所有的 DERPrograms 并且排序
   foreach (l, fsa->reqs)
   if (s = get_subordinate (l->data, SE_DERProgramList)) //收集所有的 SE_DERProgramList
     foreach (m, s->reqs)
-    derpl = insert_stub (derpl, m->data, s->base.info); //derpl 
+    derpl = insert_stub (derpl, m->data, s->base.info); //derpl 得到了所有的 DERProgram 构成一个List
+    
   // handle program removal
   remove_programs (schedule, list_subtract (device->derpl, derpl));
+    
   /* event block schedule might change as a result of program removal and
      primacy change so clear the block lists */
   schedule->scheduled = schedule->active = schedule->superseded = NULL;
   schedule->device = edev;
+  
   // insert DER Control events into the schedule
   foreach (l, derpl) {
     s = l->data;
@@ -217,7 +223,7 @@ void schedule_der (Stub *edev) {
     if (t = get_subordinate (s, SE_DERControlList))
       foreach (m, t->reqs) {
       EventBlock *eb;
-      eb = schedule_event (schedule, m->data, derp->primacy);
+      eb = schedule_event (schedule, m->data, derp->primacy); //将这个任务放到调度队列中去。
       eb->program = s;
       eb->context = device;
     }

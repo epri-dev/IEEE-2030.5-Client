@@ -156,5 +156,8 @@ and the associated DERCurveLists and DERControlLists are retrieved.
     subordinate resources for the EndDevice instance with an SFDI matching the
     client's computed SFDI. An aggregator client will retrieve the subordinate
     resources and perform scheduling for every EndDevice managed by the
-    aggregator client.
+    aggregator client.仅仅作为一个逆变器来测试，而不是一个“集中器”来测试。
+    如果是作为集中器来测试，那么将对这个集中器下面的每一个EndDevice执行调度操作。
+
+    我的笔记：通常我们不测试该项目。
 

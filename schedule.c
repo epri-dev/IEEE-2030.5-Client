@@ -39,13 +39,13 @@ enum EventStatus {Scheduled, Active, Canceled, CanceledRandom,
 typedef struct _EventBlock {
   struct _EventBlock *next; ///< is a pointer to the next EventBlock  对于一个设备 (EndDevice) 来说，可能会拥有多个EventBlock，所以这里构建了一个链表
   void *event; ///< is a pointer to the Event Stub 一个指向EventStub的指针。应该可以通过这个指针来获取到具体的Event数据。
-  void *program; ///< is a pointer to the DERProgram for DERControls 
-  void *context; //< is a pointer to device specific information
-  uint8_t status; ///< the schedule event status 当前的任务状态。
+  void *program; ///< is a pointer to the DERProgram for DERControls 对于DERControl来说，就是一个指向所属的DERProgram对象的指针
+  void *context; //< is a pointer to device specific information 对于DERContrrol来说，就是所属的 EndDevice 对象数据
+  uint8_t status; ///< the schedule event status 当前的任务状态，由枚举型 EventStatus 来定义。
   uint8_t primacy;  ///< associated event primacy 权重（primacy）
   uint32_t der; ///< bitmask of active DER controls 
-  int64_t start; ///< the effective start time
-  int64_t end; ///< the effective end time
+  int64_t start; ///< the effective start time  该任务开始时间
+  int64_t end; ///< the effective end time  该任务结束时间
 } EventBlock;
 
 /** @brief A Schedule organizes the events of a particular function set for an
@@ -396,7 +396,8 @@ void delete_blocks (Stub *event) {
 
 /*
 
-这个程序通常用作event对象(Stub)的 completion 函数。在获取完毕服务器上的某一个资源 Stub / Resource 的全部数据之后，执行这个动作。
+这个程序通常用作event对象(Stub)的 completion 函数。
+在获取完毕服务器上的某一个资源 Stub / Resource 的全部数据之后，执行这个动作。
 
 */
 void event_update (Stub *event) {
@@ -415,7 +416,7 @@ void event_update (Stub *event) {
     insert_event (event, RESOURCE_UPDATE, now + 1);
     break;
   case Active:
-    activate_blocks (event);  //激活
+    activate_blocks (event);  //看起来像是提前激活
     break;
   case Canceled:
   case CanceledRandom:  //取消
@@ -435,31 +436,33 @@ void block_update (EventBlock *eb, int status) {
   eb->status = status;
 }
 
-/*
 
+/*
+大意是，将一个Event对象加入到调度器中
 */
 EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
-  EventBlock *eb;
+  LOG_I("schedule_event\n");
+  EventBlock *eb; //这个是本代码内部定义的一个Event对象，专门用来做调度的
   SE_Event_t *ev = resource_data (event);
   int status = event_status (event);
-  if (eb = hash_get (s->blocks, ev->mRID)) {
+  if (eb = hash_get (s->blocks, ev->mRID)) {  //如果已经存在于hash表中
     eb->primacy = primacy;
-  } else {
+  } else {  //如果不存在，则添加一个新的
     event->schedules = insert_unique (event->schedules, s); //在这个list中插入这个 Schedule
     event->completion = event_update;
     eb = new_block (event, primacy);
     hash_put (s->blocks, eb);
-    device_response (s->device, event, EventReceived);
-    if (eb->end <= se_time ()) {
+    device_response (s->device, event, EventReceived);  //回复给服务器说已经收到了该Event。
+    if (eb->end <= se_time ()) {  //如果该Event中的结束时间已经过了，那么就不用去执行了，直接告诉服务器该事件已经结束。
       // specified end time is in the past
       eb->status = Completed;
-      device_response (s->device, event, EventExpired);
+      device_response (s->device, event, EventExpired); //回复给服务器。
       return eb;
     }
   }
-  if (in_range (eb->status, Canceled, Completed)) return eb;
+  if (in_range (eb->status, Canceled, Completed)) return eb;  //如果已经取消或者执行成功了，那么就不用再放到调度器中去了，直接返回。
   // eb->status: Scheduled, Active, ActiveWait, ScheduleSuperseded
-  switch (status) {
+  switch (status) { //否则，再执行调度。
   case Scheduled:
     if (eb->status != ActiveWait) {
       insert_block (s, eb);
