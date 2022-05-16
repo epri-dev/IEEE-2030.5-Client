@@ -39,9 +39,9 @@ void usage () {
 #define DEVICE_TEST (1<<11)
 #define FSA_SUBSCRIBE (1<<12)
 #define PUT_SETTINGS (1<<13)
-#define PUT_PIN (1<<14)
+#define PUT_PIN (1<<14) //通过PUT指令来向服务器注册一个DER，PIN值为用户在测试指令中通过“pin xxxxxx”来指定的一个PIN值。
 #define DELETE_DEVICE (1<<15)
-#define CLIENT_FOUND (1<<16)  //这个只是一个标记位，并不是一个测试项目标记。
+#define CLIENT_FOUND (1<<16)  //这个只是一个标记位，并不是一个测试项目标记。这里的CLINET的意思就是DER Client，且Pin值为111115的DER Client。
 #define INVERTER_CLIENT (1<<17)
 
 /*
@@ -415,6 +415,7 @@ void edev_complete (Stub *r) {
     }
     
     if (test & SCHEDULE_TEST) { //在all和primary中存在该测试项目
+      LOG_I("edev_complete:call schedule_der() on edev %s\n",r->base.name);
       schedule_der (r);
       r->completion = schedule_der;
     }
@@ -483,13 +484,13 @@ void der_program_list (Stub *r) {
 
 
 /* 测试中获取到FSA资源 
-这个函数是*/
+这个函数是test_dep中的 FunctionSetAssignments 的case*/
 int fsa (Stub *r) {
-  LOG_I("in function fsa\n");
+  LOG_I("fsa:resource href:%s\n",r->base.name);
   if (test & GET_DERP) {  //在all和primary中都存在该测试项目  
     SE_FunctionSetAssignments_t *fsa = resource_data (r);
-    Stub *d = get_list_dep (r, fsa, DERProgramList);//获取到 DERProgramList 资源 
-    if (d && primary) {
+    Stub *d = get_list_dep (r, fsa, DERProgramList);//获取到 DERProgramList 资源 。d 是 DERProgramList 资源（对象）
+    if (d && primary) { //只要测试指令中包含了 primary 命令，则将调用该回调函数。
       d->completion = der_program_list;
       return 1;
     }
@@ -502,8 +503,13 @@ int fsa (Stub *r) {
 
 /*这个函数作为 FunctionSetAssignmentsList 资源的 completion 函数，处理List中的每一个FSA资源对象。 */
 void fsa_list (Stub *r) {
+  LOG_I("fas_list\n");
   List *l;
-  foreach (l, r->reqs) if (fsa (l->data)) break;
+  foreach (l, r->reqs) 
+    if (fsa (l->data)){ 
+      LOG_W("fsa_list:call fsa() on %s returns 1 , break\n",((Stub*)l->data)->base.name);
+      break;  //看起来问题出在这里：只要fsa()返回1，就跳出。这样执行到第一个fsa。
+    }
 }
 
 //获取EndDevice的子层资源。参数edevs通常是 EndDeviceList 类型对象。
@@ -517,11 +523,13 @@ void get_edev_subs (Stub *edevs) {
   LOG_I("get_edev_subs:register test excuted,continue\n");
   foreach (l, edevs->reqs) {  //对每一个 EndDeviceList 的子级对象，就是EndDevice作处理。
     Stub *s = l->data;
+    //LOG_I("get_edev_subs:dealing %s\n",s->base->name);
     SE_EndDevice_t *e = resource_data (s);
     if (test & INVERTER_CLIENT && e->sFDI != device_sfdi) continue; //如果test中的INVERTER_CLIENT置位，且当前的EndDevice于指令中的不符，则不执行下面的动作。我们现在的测试中通常往下走。
-    s->completion = edev_complete;  //将为每一个EndDevice赋予该执行函数。
-    get_list_dep (s, e, DERList); //获取到 EndDevice 下面的 DERList。通常 href:/edev/edev0/der
+    s->completion = edev_complete;  //将为每一个 EndDevice 赋予该执行函数。
+    get_list_dep (s, e, DERList); // 获取到 EndDevice 下面的 DERList。通常 href:/edev/edev0/der
     if (test & GET_FSA) { //在all和primary中都存在该测试项目
+    LOG_I("get_edev_subs:getting FSA on %s\n",s->base.name);
       if ((s = get_list_dep (s, e, FunctionSetAssignmentsList)) && primary) //获取到 EndDevice 下面的 FunctionSetAssignmentsList
         s->completion = fsa_list;
     }
@@ -533,9 +541,9 @@ void check_registration (Stub *r) {
   LOG_I("in function check_registration\n");
   SE_Registration_t *reg = resource_data (r);
   if (reg->pIN == 111115) { //这个111115是这个程序程序所公用的一个值。
-    LOG_D("registration succeeded\n");
-    test &= ~REGISTER_TEST;
-    if (edevs) get_edev_subs (edevs); //edevs 在函数 edev_list 中被填充。
+    LOG_D("registration succeeded,register test passed,clear REGISTER_TEST bit\n");
+    test &= ~REGISTER_TEST; //在primary或者all指令的测试指令下，该bit初始值是置位的。这里一旦执行过了，就清除。
+    if (edevs) get_edev_subs (edevs); //edevs 在函数 edev_list 中被初始化填充。所以基本逻辑是，先执行edev_list，然后再执行到这里，然后再执行一次get_edev_subs。
   } else test_fail ("registration", "pIN does not match 111115");
 }
 
@@ -554,12 +562,16 @@ void end_device (Stub *r) {
   
   //
   if (e->sFDI == device_sfdi) {
-    LOG_I("end_device:e->sFDI == device_sfdi,%ld\n",device_sfdi);
-    test |= CLIENT_FOUND; //可能表示该操作已经执行过了，后面不要再执行。
+    LOG_I("end_device:find target device_sfdi,%ld\n",device_sfdi);
+    test |= CLIENT_FOUND; //可能表示该操作已经执行过了，后面不要再执行。这个bit表示是否已经找到了这个DER了。
     if (device_sfdi == delete_sfdi) return;
-    if (test & REGISTER_TEST) { //如果是测试了primary，那么这个项是测试的。
+    /*果是测试了primary，那么这个项是测试的。
+    在check_registration函数中，如果遇到了PIN 11115之后， REGISTER_TEST 将被清除。
+    意思就是前面在遍历每一个EndDevice的时候，如果发现了已经存在该PIN的设备，那么后面这里的注册过程就可以省掉了。
+    这个pin的设备是测试流程中规定必须存在的。*/
+    if (test & REGISTER_TEST) {
       if (se_exists (e, RegistrationLink)) {
-        if (test & PUT_PIN) {
+        if (test & PUT_PIN) { //如果用户没有指定 "pin xxxxxx" 指令，则该项操作不会执行。
           LOG_I("end_device:test & PUT_PIN == true\n");
           SE_Registration_t reg = {0};  
           reg.dateTimeRegistered = se_time ();  //看起来是只要填充下面这两项数据就够了。
@@ -574,7 +586,7 @@ void end_device (Stub *r) {
   }
 }
 
-/* 作为 EndDeviceList 对象的 completion 函数 */
+/* 作为 EndDeviceList 对象的 completion 函数，就是 EndDeviceList 的子层（第一层就够了，不需要所有的层次都到齐）EndDevices到齐之后，执行的动作。*/
 void edev_list (Stub *r) {
   LOG_I("edev_list\n");
   edevs = r;
@@ -607,7 +619,7 @@ void edev_list (Stub *r) {
     }
     get_edev_subs (r);
   }
-  r->completion = NULL; //看起来 EndDeviceList数据只能获取单次，后面就不需要了，所以自己结束掉。
+  r->completion = NULL; //看起来 EndDeviceList数据只需要获取1次，后面就不需要了，所以自己结束掉。
 }
 
 //在收到了完整的dcap数据之后的处理程序。这个就跟整个test程序的逻辑有关。在获取到了dcap资源后，通常仅仅去获取time和EndDeviceList两种资源。
@@ -742,7 +754,7 @@ void test_dep (Stub *r) {
     poll_derpl (r);
     break;
   case SE_FunctionSetAssignments:
-    if (!primary) fsa (r);  //获取FSA下面的部分资源。
+    if (!primary) fsa (r);  //获取FSA下面的部分资源。但是只有在primary为0的时候才执行？？为什么
     break;
   case SE_DeviceCapability:
     dcap (r);
@@ -771,7 +783,7 @@ int main (int argc, char **argv) {
   version ();
   platform_init ();
   
-  LOG_I("client test started1\n");
+  LOG_I("client test started\n");
 
   options (argc, argv);
 

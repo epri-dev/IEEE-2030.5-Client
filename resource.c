@@ -11,7 +11,7 @@
 /** @brief Resource structure */
 typedef struct _Resource {
   struct _Resource *next; //< pointer to the next resource with the same name
-  char *name; //< name of Resource (the path component of the href) 链接命（href值），每一个链接表示了一个资源
+  char *name; //< name of Resource (the path component of the href) 链接名（href值），每一个链接表示了一个资源
   void *data; //< pointer to a 2030.5 object    表示了一个资源在内存中的地址。通过下面的type值来解释这个变量的具体结构布局和数值。
   int type; //< the schema type for the object  应该是在这个工程中定义的一个全局资源唯一标志符号，在se_types.h中定义。
   ListInfo *info; //< pointer to the ListInfo for 2030.5 List objects 一个指向了在se_list.c文件中 se_list_info 数组中的某一行的指针。如果不是List类型数据，则该项值为NULL。

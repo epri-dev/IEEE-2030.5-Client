@@ -193,9 +193,11 @@ void schedule_der (Stub *edev) {
   Stub *fsa = NULL, *s, *t;
   List *l, *m, *derpl = NULL;
   SE_DefaultDERControl_t *dderc = NULL;
-  LOG_I("in function schedule_der\n");
-  if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) return; //获取这个edev下面的FSA数据
-
+  LOG_I("schedule_der\n");
+  if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) {
+    LOG_D("No FSA on edev %s\n",edev->base.name);
+    return; //获取这个edev下面的FSA数据
+  }
   // add the lFDI if not provided by the server
   if (!se_exists (e, lFDI)) {
     se_set (e, lFDI);
@@ -204,9 +206,9 @@ void schedule_der (Stub *edev) {
   
   // collect all DERPrograms for the device (sorted by primacy) 收集所有的 DERPrograms 并且排序
   foreach (l, fsa->reqs)
-  if (s = get_subordinate (l->data, SE_DERProgramList)) //收集所有的 SE_DERProgramList
-    foreach (m, s->reqs)
-    derpl = insert_stub (derpl, m->data, s->base.info); //derpl 得到了所有的 DERProgram 构成一个List
+    if (s = get_subordinate (l->data, SE_DERProgramList)) //收集所有的 SE_DERProgramList
+      foreach (m, s->reqs)
+        derpl = insert_stub (derpl, m->data, s->base.info); //derpl 得到了所有的 DERProgram 构成一个List
     
   // handle program removal
   remove_programs (schedule, list_subtract (device->derpl, derpl));

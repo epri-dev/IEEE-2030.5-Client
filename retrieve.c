@@ -121,7 +121,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
 
 /** @brief Get a subordinate %List resource given a parent object. 在给出父级Stub之后，通过网络访问来获取到子级Stub（List类型的）
 
-    在给出了一个父级的对象后，获取到一个下层的 List 资源。跟上面的get_root不同，这里是带有“List的资源”
+    在给出了一个父级的对象后，获取到一个下层的 List 资源。跟上面的get_root不同，这里是“List类型的资源”
     
     The same as @ref get_root but for subordinate %List resources. Links to
     %List resources include the "all" parameter, this indicates the number of
@@ -242,7 +242,8 @@ void add_dep (Stub *r, Stub *d) {
 Stub *r是父层级资源，Stub *d是下一层级资源。 flag用来标志代表d自己的唯一标识。
 flag 通常是 SE_##type##Link_exists 形式的。
 这个函数主要作用是在父级Stub中的flag上做一个标记--将某一个bit置位，来表示父级Stub需要某一个特定的子级Stub来填充，
-以便后面通过请求该资源来填充到该资源。
+以便后面通过请求该资源来填充到该资源，然后将flags清零。
+这个函数只有在 get_dep 和 get_list_dep 中用到，用来在向服务器请求数据之前线做好标记。
 */
 Stub *new_dep (Stub *r, Stub *d, int flag) {
   if (d) {
@@ -454,7 +455,7 @@ poll资源，主要是针对 SE_Event_t 数据 。
 看起来他并没有去做向服务器Poll的动作。这里仅仅是添加了一个事件，且建在该资源设定时间点上去执行。
 */
 void poll_resource (Stub *s) {
-  LOG_I("in function poll_resource\n");
+  LOG_I("in function poll_resource,type:%d(%s)\n",((Resource*)s)->type,se_names[((Resource*)s)->type]);
   time_t now = se_time ();
   time_t next = now + s->poll_rate;
   
@@ -507,8 +508,9 @@ void update_existing (Stub *s, void *obj, DepFunc dep) {
             sizeof (SE_EventStatus_t));//如果是一个已经存在的 SE_Event 类型的数据，那么仅仅更新Status数据就够了。应该是对于SE_Event_t，数据更新的只有Status。
     free_se_object (obj, r->type);
   } else replace_se_object (r->data, obj, r->type); //其他的类型的数据如果已经存在的话，就直接替换。
+  LOG_I("update_existing:dep(s)...\n");
   dep (s);  //dep函数都要执行一遍。但是未必对这个数据执行什么操作。
-  if (!s->flags) dep_complete (s);  //如果flags等于0，表示该Stub的所有“需求”都满足了。此时执行dep_complete函数。
+  if (!s->flags) dep_complete (s);  //如果flags等于0，表示该Stub的所有之前向服务器发出的“需求”都被满足了(仅仅是发出的，未必是全部的成员)。此时执行dep_complete函数。
 }
 
 // update paging and return number of items needed 返回目前还需要的list对象中的“个数”
@@ -543,13 +545,14 @@ extern const char * const se_names[];
 int list_object (Stub *s, void *obj, DepFunc dep) {
   Resource *r = &s->base;
   int count = list_seq (s, obj);  //得到还剩下多少个没有获取到
-  LOG_I("list_object:left count:%d\n",count);
+  //LOG_I("list_object:left count:%d\n",count);
   List **list = se_list_field (obj, r->info), *input, *l; //获取到对象中的List域，通过info这个用来指示List结构的数据。
   input = *list;  //有可能这个list是一个空的，下面的foreach不会执行。
   *list = NULL;
   LOG_I("list_object:resource type:%d(%s)\n",r->type,se_names[r->type]);
   if (!r->data) r->data = obj;  //如果之前是空的，那么就新建
   else replace_se_object (r->data, obj, r->type); // 如果之前已经存在的，那么就替换。
+  LOG_I("list_object:dep(s)...\n");
   dep (s);  //这个List作为一个整体对象，执行一遍对这个List的dep函数。在我们的本demoe代码中，没有执行EndDeviceList的操作。
   foreach (l, input) {  //接下去是对每一个List成员执行操作。
     Uri128 buf;

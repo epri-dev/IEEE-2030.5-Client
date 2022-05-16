@@ -113,7 +113,7 @@ device settings to the links provided in the DER instance.
     server the PIN of the client EndDevice.
 
 -   `delete SFDI` - Perform retrieval on the EndDeviceList and perform a DELETE
-    request on the EndDevice instance with a matching SFDI.
+    request on the EndDevice instance with a matching SFDI. 通过该指令来删除一个设备
 
 执行一个“注册”的任务，然后 retrieve 跟这个设备相关的FunctionSetAssignmentsList。
 决定最高优先级，执行与前面的FSA相关联的DERProgramList，然后获取到DERCurveList和DERControlList。

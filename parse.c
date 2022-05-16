@@ -90,6 +90,8 @@ void parser_rebuffer (Parser *p, void *data, int length);
 #include <stdint.h>
 #include <stdio.h>
 
+#include "debug_log.h"
+
 #include "string_table.c"
 
 //Parser的几个状态
@@ -261,7 +263,7 @@ void *parse_doc (Parser *p, int *type) {
             p->flag += bit_count (t->diff);
         }
       } else {
-        printf("Error in PARSE_ELEMENT,goto parse_error\n");
+        LOG_E("Error in PARSE_ELEMENT,goto parse_error\n");
         goto parse_error;
       }
 parse_element:
@@ -314,13 +316,13 @@ parse_value:
         else if (t->count < se->max)
           p->base += t->size;
         else{
-          printf("Error in PARSE_SEQUENCE,goto parse_error\n");
+          LOG_E("Error in PARSE_SEQUENCE,goto parse_error\n");
           goto parse_error;
         }
         p->flag++;
         goto parse_element;
       } else if (p->state == PARSE_SEQUENCE){
-        printf("p->state == PARSE_SEQUENCE,return NULL\n");
+        LOG_W("p->state == PARSE_SEQUENCE,return NULL\n");
         return NULL;
       }
       break;
@@ -332,12 +334,12 @@ parse_value:
       p->state = PARSE_NEXT;
       break;
     case PARSE_INVALID:
-      printf("Parser:PARSE_INVALID\n");
+      LOG_E("Parser:PARSE_INVALID\n");
       return NULL;
     }
   }
 parse_error:
-  printf("Parser:PARSE_INVALID,exit\n");
+  LOG_E("Parser:PARSE_INVALID,exit\n");
   p->state = PARSE_INVALID;
   return NULL;
 }
