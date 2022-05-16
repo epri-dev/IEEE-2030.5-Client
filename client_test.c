@@ -505,11 +505,15 @@ int fsa (Stub *r) {
 void fsa_list (Stub *r) {
   LOG_I("fas_list\n");
   List *l;
-  foreach (l, r->reqs) 
+  foreach (l, r->reqs)
+    #if 0 //这个是原始代码版本
     if (fsa (l->data)){ 
       LOG_W("fsa_list:call fsa() on %s returns 1 , break\n",((Stub*)l->data)->base.name);
       break;  //看起来问题出在这里：只要fsa()返回1，就跳出。这样执行到第一个fsa。
     }
+    #else //这个是修改后的版本
+    fsa (l->data);
+    #endif
 }
 
 //获取EndDevice的子层资源。参数edevs通常是 EndDeviceList 类型对象。
