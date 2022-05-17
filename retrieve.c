@@ -128,7 +128,7 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
     items contained in the %List resource and is used as a query parameter in
     the HTTP GET request.
     
-    通过提供在GET请求中的all参数，可以获取到一个list中的全部资源。
+    通过提供在GET请求中的all参数，可以获取到一个list中的全部资源。在前面的get_root中，该all的值是0，而这里总是大于0。
     
     @param conn is a pointer to an SeConnection
     @param obj is a pointer to an IEEE 2030.5 object
@@ -151,6 +151,8 @@ Stub *get_resource (void *conn, int type, const char *href, int count);
     创建一个双路的链接，连接父级和子级资源。
     父级资源存储了一个bit位表示的“需求”，代表了对子级资源的需求。如果对某一个子级存在需求，则将
     该bit位置位。当该子级资源被获取到之后，则将该bit位清零。
+
+    本函数基于前面的get_root函数，增加了建立依赖功能（ 参考 der_client.md 文档中的说明 ）
     
     Creates a two way link between the subordinate and parent resources, the
     parent stores a bit representing the requirement for the subordinate
@@ -435,15 +437,15 @@ void *get_subordinate (Stub *s, int type) {
 
 //从服务器获取一个资源。先连接到服务器，然后再获取stub资源。count的值有些情况下可以设置成0。
 Stub *get_resource (void *conn, int type, const char *href, int count) {
-  LOG_I("in function get_resource,href:%s\n",href);
+  LOG_I("get_resource:href:%s\n",href);
   Stub *s;
   Uri128 buf;
   Uri *uri = &buf.uri;
   if (!http_parse_uri (&buf, conn, href, 127)) return NULL;
   if (uri->host) conn = se_connect_uri (uri); //首先是连接到服务器
-  s = get_stub (uri->path, type, conn);
+  s = get_stub (uri->path, type, conn);   //无论这个Stub是否已经存在，这个函数总是会返回一个Stub对象（有可能是空的）
   if ((time (NULL) - s->base.time) > s->poll_rate) {  /*如果当前时间已经超过了poll_rate，即表示这个资源需要更新了，发出异步请求更新一次。*/
-    s->all = count;
+    s->all = count;   //如果Stub之前是不存在即使新建的（空的），那么 s->base.time 就是 0 。
     update_resource (s);  //在这个函数中去获取到资源（将访问网络），获取到之后，填充到哈希表中去。但是这个操作是异步访问网络。
   }
   return s;
@@ -455,7 +457,7 @@ poll资源，主要是针对 SE_Event_t 数据 。
 看起来他并没有去做向服务器Poll的动作。这里仅仅是添加了一个事件，且建在该资源设定时间点上去执行。
 */
 void poll_resource (Stub *s) {
-  LOG_I("in function poll_resource,type:%d(%s)\n",((Resource*)s)->type,se_names[((Resource*)s)->type]);
+  LOG_I("poll_resource:type:%d(%s)\n",((Resource*)s)->type,se_names[((Resource*)s)->type]);
   time_t now = se_time ();
   time_t next = now + s->poll_rate;
   

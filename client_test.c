@@ -503,7 +503,7 @@ int fsa (Stub *r) {
 
 /*这个函数作为 FunctionSetAssignmentsList 资源的 completion 函数，处理List中的每一个FSA资源对象。 */
 void fsa_list (Stub *r) {
-  LOG_I("fas_list\n");
+  LOG_I("fsa_list\n");
   List *l;
   foreach (l, r->reqs)
     #if 0 //这个是原始代码版本
@@ -590,13 +590,21 @@ void end_device (Stub *r) {
   }
 }
 
-/* 作为 EndDeviceList 对象的 completion 函数，就是 EndDeviceList 的子层（第一层就够了，不需要所有的层次都到齐）EndDevices到齐之后，执行的动作。*/
+
+/*
+作为 EndDeviceList 对象的 completion 函数，
+就是 EndDeviceList 的子层（第一层就够了，不需要所有的层次都到齐）EndDevices到齐之后，执行的动作。
+在dcap资源获取到之后，主动指定该函数。
+*/
+
 void edev_list (Stub *r) {
   LOG_I("edev_list\n");
   edevs = r;
+
   if (test & DELETE_DEVICE) {
     test_fail ("delete device", "client EndDevice instance not found");
   }
+  
   if (!(test & CLIENT_FOUND)) { //表示的意思是：如果client还是没有被找到，那么执行下面的指令。
     if (test & GET_EDEV) {  //在测试指令all和primary中将测试到该GET_EDEV项目。
       LOG_I("edev_list:CLIENT_FOUND is false,POST EndDevice\n");
@@ -623,6 +631,14 @@ void edev_list (Stub *r) {
     }
     get_edev_subs (r);
   }
+  
+  /*由陈立飞添加，test case CORE 003 要求在获取到了该资源后，后续也要定时轮询。原始代码是没有这个的。*/
+  SE_EndDeviceList_t *el = resource_data(r);
+  r->poll_rate = se_exists (el, pollRate) ? el->pollRate : 300; //添加一个默认的值，该值可以修改。
+  LOG_I("edev_list:add EndDeviceList to poll resource routine,pollRate:%d\n",r->poll_rate);
+  poll_resource (r);  //自动轮询该资源。
+  /*陈立飞添加完毕*/
+
   r->completion = NULL; //看起来 EndDeviceList数据只需要获取1次，后面就不需要了，所以自己结束掉。
 }
 
@@ -630,7 +646,14 @@ void edev_list (Stub *r) {
 void dcap (Stub *r) {
   LOG_I("in function dcap\n");
   SE_DeviceCapability_t *dcap = resource_data (r);
-  
+
+  //陈立飞添加开始
+  /* test case CORE 003 要求在获取到了该资源后，后续也要定时轮询。原始代码是没有这个的。*/
+  r->poll_rate = se_exists (dcap, pollRate) ? dcap->pollRate : 600;//有时候这个参数是不带的，所以必须预先设定一个默认值。
+  LOG_I("dcap:add DeviceCapability to poll resource routine,pollRate:%d\n",r->poll_rate);
+  poll_resource(r); //自动轮询该资源
+  //陈立飞添加结束
+
   if (test & GET_TIME) {  //当指令为all或者primary的时候，该测试项目都将被包含。
     if (!get_root (r->conn, dcap, Time))  //获取到dcap中的Time资源。
       test_fail ("time", "no TimeLink in DeviceCapability");
@@ -651,7 +674,7 @@ void dcap (Stub *r) {
     if (!(dcap_mup = get_list_root (r->conn, dcap, MirrorUsagePointList)))
       test_fail ("meter", "no MirrorUsagePointLink in DeviceCapability");
   }
-}
+  }
 
 //请求时间同步
 void time_sync (Stub *s) {

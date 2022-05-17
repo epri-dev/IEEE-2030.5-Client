@@ -366,8 +366,11 @@ The `dcap` function demonstrates several key features of the EPRI library:
     elements of the `DeviceCapability` document as defined by 2030.5 XML schema.
     XML/EXI documents are automatically parsed and converted into their C
     object form by the function `se_recieve` called by `process_http`.
+    
     SE_DeviceCapability_t是一个C结构体对象，包含了所有可能的DeviceCapability这个对象的元素（在2030.5 XML schema中定义）。
     XML/EXI文档将被自动解析并且转换成C对象形式
+
+    se_recieve将自动解析和转换到C对象形式。
     
 -   `resource_data` is a macro to access the C object representation of a
     resource with the corresponding type (in this case `SE_DeviceCapability_t`).
@@ -418,6 +421,9 @@ resources by calling `get_dep` and `get_list_dep`. The macros `get_dep` and
 `DERProgram` and the newly created `Stubs` representing the subordinate
 resources.
 
+跟前面的get_root和get_list_root不同，这里加入了建议依赖关系的功能。
+
+
 The function `edev` gives an example of assigning a completion routine and
 setting up a polling interval for the `FunctionSetAssignmentsList` subordinate
 resource:
@@ -444,7 +450,7 @@ as the `completion` field of the `Stub` type:
 
 The following lines perform retrieval for the `FunctionSetAssignmentsList`
 subordinate resource and the set up polling for the resource:
-
+下面这个函数执行了一个检索，并且构建起一个轮询过程。
       if (r = get_list_dep (d, edev, FunctionSetAssignmentsList)) {
         r->poll_rate = 10; poll_resource (r);
       }
