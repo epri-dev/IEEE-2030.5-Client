@@ -51,12 +51,20 @@ typedef  long  time_t;
 typedef struct _Stub {  /* ... the local representation of a resource（在der_client.md文档中定义） */
   Resource base; ///< is a container for the resource  这个Stub所要代表的数据本身，一个数据容器
   void *conn; ///< is a pointer to an SeConnection 这个Stub的关联的连接
-  int status; ///< is the HTTP status, 0 for a new Stub, -1 for an update。除了0和-1之外，剩下的就是常规的HTTP状态数据，比如200。
+  /*除了0和-1之外，剩下的就是常规的HTTP状态数据，比如200。
+  标记成-1，是表示刚刚已经发出获取数据的请求，但是还未获取到数据。
+  等到HTTP回复的时候，该值将被替换成HTTP响应代码。
+  在新建Stub的时候，该status值是0，表示Stub是“空的”，还需要真实的值来填充。
+  */
+  int status; ///< is the HTTP status, 0 for a new Stub, -1 for an update。
   time_t poll_next; ///< is the next time to poll the resource 下次需要检索数据的时间。通常是需要访问网络的。初始值总是0。
   int16_t poll_rate; ///< is the poll rate for the resource 这个资源应当执行的查询频率
   unsigned complete : 1; ///< marks the Stub as complete  
-  /*表示这个stub已近查询( retrieve ) 或者填充完毕了。包含子级的Stub数据。当有新的子级资源与该本级Stub建立依赖关系后，该值将标记为0。
-  如果还有未完成的数据待获取，则标记为1*/
+  /*表示这个stub已近查询( retrieve ) 或者填充完毕了。包含子级的Stub数据。
+  当有新的子级资源与该本级Stub建立依赖关系后，该值将标记为0，表示当前子级资源还未被请求完毕，即未被满足。
+  如果后面全部从服务器侧获取到了数据，则将标记为1。
+  该值可以在 dep_reset 中清除为0。
+  在dep_complete函数中，只有在complete这flag为0的情况下，才能执行completion函数，然后立即置位。即每次资源齐备之后，只能执行一次completion函数。*/
   unsigned subscribed : 1;
   //下面两个flag数据的用法，详见 new_dep 这个函数 
   uint32_t flag; ///< is the marker for this resource in its dependents 
@@ -67,7 +75,7 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   每次在向服务器获取数据之前，函数new_dep都会在某个bit上标记一下（每一个成员都有一个特定的bit位来表达自己），如果*/
   uint32_t offset; ///< is the offset used for list paging 对于List类型的数据元素来说，offset表示本Stub在整个List中的序号
   uint32_t all; ///< is the total number of list items  List的总量
-  struct _Stub *moved; ///< is a pointer to the new resource 这个可能跟资源的重定向有关
+  struct _Stub *moved; ///< is a pointer to the new resource 这个可能跟资源的重定向有关。应该是资源重定向之后的对象位置，包含了最新的URL。
   List *list; ///< is a list of old requirements for updates 之前需要准备区获取的数据。list长度于前面的flags中的置位的bit位个数一致。
   List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的父层级的 Stub 。 这个是子级Stub指向父级Stub的链接。
   List *reqs; ///< is a list of requirements 需求：就是子级对象，当前Stub所需要的子级对象List。List中的data对象就是子级Stub。这个是父级Stub指向子级Stub的链接。
@@ -233,9 +241,12 @@ void get_seq (Stub *s, int offset, int count) {
 
 //增加一个依赖关系。Stub *r是父层级资源，Stub *d是下一层级资源。子级Stub中的deps中记录要“依赖”的父级Stub。
 void add_dep (Stub *r, Stub *d) {
+  LOG_I("add_dep : r : %s , complete flag set to 0 , d : %s\n",r->base.name,d->base.name);
   d->deps = insert_unique (d->deps, r); //对d->deps作了更新，保证r资源被插入。通过deps这个表，能够找到每一个父级Stub。
   d->poll_rate = min (d->poll_rate, r->poll_rate);  //设定好子级 Stub 更新频率
-  r->complete = 0;  //一个新加入的Stub由于目前还未被查询过以及没有被执行过completion函数，所以，此时complete的值表示“未完成”。
+  r->complete = 0;  
+  /*一个新加入的Stub由于目前还未被查询过以及没有被执行过completion函数，所以，此时complete的值表示“未完成”。
+  等到所缺少的Stub从服务器获取到了之后，则*/
 }
 
 
@@ -261,10 +272,13 @@ Stub *new_dep (Stub *r, Stub *d, int flag) {
 
 //在Stub r中移除Stub s 这个父级的dep资源。所以，移除“依赖”需要从“父级”那边的链接开始，移除父级指向子级的链接。 
 void remove_req (Stub *s, Stub *r) {
-  r->deps = list_delete (r->deps, s);
-  if (!r->deps) insert_event (r, RESOURCE_REMOVE, 0); //异步调用
+  r->deps = list_delete (r->deps, s); //本地的deps（即子级资源）将被立即就地删除数据，而不用再去发送请求到服务器。
+  if (!r->deps) insert_event (r, RESOURCE_REMOVE, 0); 
+  /*异步调用。删除当前的s之后，如果deps表变成了空表，那么就请求服务器去删除本Stub。
+  服务器也作同样的事情，即自动删除本级Stub以下的Stub和本级Stub。*/
 }
 
+/*移除本级和以下的子级Stub成员*/
 void remove_reqs (Stub *s, List *reqs) {
   List *l;
   foreach (l, reqs) remove_req (s, l->data);
@@ -280,7 +294,7 @@ void remove_deps (Stub *s, List *deps) {
   List *l;
   foreach (l, deps) { //遍历每一个依赖对象，即父级Stub
     Stub *t = l->data;//依赖对象，即父级Stub
-    if (t->status < 0)  //准备将要去更新的？
+    if (t->status < 0)  //通常此时status=-1，表示向服务器发出的数据还在路上，要等待其回来。发出请求的原因是首次请求或者更新数据。
       t->list = list_delete (t->list, s);     //在父级Stub中的list中移除本Stub。
     else t->reqs = list_delete (t->reqs, s);  //从父级Stub中的reqs列表中移除本Stub。reqs是父级Stub中记录的“需要”的子级stub的一张表。
   }
@@ -323,13 +337,13 @@ void delete_reqs (Stub *s) {
 /*建之前存储在数据库中的Stub资源删除掉？？*/
 void remove_stub (Stub *s) {
   Stub *head = find_resource (s->base.name),
-        *t = list_remove (head, s); //返回删除了s之后的list。
+        *t = list_remove (head, s); //head返回这个资源所在的哈希表的list（可能list中只有他单个成员）。t返回删除了s之后的list。
   if (t) {
     if (t != head) insert_resource (t); //这个是什么意思？？
-  } else delete_resource (head);
+  } else delete_resource (head);  //如果该list只有他一个成员，那么在前面的list_remove之后，哈希表中就不存在该成员了，要从哈希表中移除。
   if (s->moved) remove_req (s, s->moved);
   else delete_reqs (s);//删除掉相关的“依赖”和“需求”
-  remove_deps (s, s->deps);
+  remove_deps (s, s->deps); //在本地数据库或者说数据网络中删除掉该资源以及相关的依赖关系。
   remove_event (s);
   free_resource (s);
 }
@@ -360,18 +374,24 @@ void delete_stub (Stub *s) {
   set_request_context (s->conn, s); //凡是服务器需要回复的，都要先设置好context。
 }
 
-/* 看起来是将一个Stub填充到其父级中去。其中又分两种情况：一种是父级是一个List类型的数据；一种不是List类型。处理方式不同。
+/* 
+主要是为了执行completion函数，以及将本Stub于其自己或者父级构建req/dep逻辑连接关系。
+
+看起来是将一个Stub填充到其父级中去。
+其中又分两种情况：一种是父级是一个List类型的数据；一种不是List类型。处理方式不同。
 这里的complete的意思不是全部的成员都“到齐”了，而是之前主动请求的成员此时全部到齐了。那些之前没有主动去请求的，显然不会自己来。
 每一个资源都需要之前在代码中主动去请求。
 */
 void dep_complete (Stub *s) {
   List *l;
-  LOG_I("dep_complete,resource:%d(%s)\n",((Resource*)s)->type,se_names[((Resource*)s)->type]);
+  static int enter_counter=0;
+  LOG_I("dep_complete(%d) : resource:%d(%s),href:%s,completion:%ld,complete:%d\n",
+    enter_counter++,s->base.type,se_names[s->base.type],s->base.name,(int64_t)s->completion,s->complete);
   if (s->completion && !s->complete){  //complete设置为0，表示之前是不“齐备”的，也就是之前还没有执行过 completion 函数。
-    LOG_I("dep_complete:excuting completion function\n");
-    s->completion (s);  //如果completion函数之前设置过（现在存在），且数据也都获取成功了（complete为0表示不需要再获取什么东西了），则执行completion函数。
+    LOG_I("  dep_complete : ( complete=0 ) call completion function\n");
+    s->completion (s);  //如果 completion 函数之前设置过（现在存在），且数据也都获取成功了（complete为0表示不需要再获取什么东西了），则执行completion函数。
   }
-  s->complete = 1;
+  s->complete = 1;  //表示之前的请求都已经被满足了。
   foreach (l, s->deps) {
     Stub *d = l->data;  //d这里是父级，s这里是子级（传输的s对象）。 后面的代码，都是站在父级Stub的角度对当前的这个Stub来操作。
     int complete = 0; //0表示未完成。
@@ -384,7 +404,7 @@ void dep_complete (Stub *s) {
       complete = !d->flags; //如果父级中的flags有任何一个bit置位了，则 complete =0，即表示没有完成。如果全部bit都清除掉了，则表示全部获取到了。
     }
     if (complete) {
-      LOG_I("dep_complete:complete=1,excute dep_complete recursivly\n");
+      LOG_I("  dep_complete : complete=1,excute dep_complete recursivly\n");
       if (d->list) {  //list中存储的应该是之前准备要去更新的内容，而现在由于本数据到位了，所以从这个表中移除。 
         remove_reqs (d, list_subtract (d->list, d->reqs));
         d->list = NULL; //前面的flags数据全部清零了，表示需要的dep已经全部被满足了。
@@ -392,32 +412,53 @@ void dep_complete (Stub *s) {
       dep_complete (d); //如果父级在本Stub补充上去之后变得齐备了，那么继续往上追溯。比如当前是EndDevice对象，接下去是EndDeviceList对象。
     }
   }
-  LOG_D("dep_complete exit,resource:%d(%s)\n",((Resource*)s)->type,se_names[((Resource*)s)->type]);
+  LOG_D("dep_complete(%d) exit,resource:%d(%s)\n",--enter_counter,((Resource*)s)->type,se_names[((Resource*)s)->type]);
 }
 
-/* 这个函数名的意思是，从“dep”对象中，将本Stub的连接断开，同时再往上迭代。 */
+/* 
+这个函数名的意思是，在本Stub对象的父级对象中，将连接本Stub的连接断开，同时再往上迭代，直到最高层级的父级的Stub。
+本级以及往上的各个层级都设定成“不完整”。
+
+这个函数名中的reset，指的是整体复位。
+在本系统中，所有的Stub构建成一个"金字塔"形状的结构。现在中间或者底层的某个成员需要更新，则依赖该成员的所有对象，都要更新一遍。
+*/
 void dep_reset (Stub *s) {
+  static int depth=0;
+  LOG_I("dep_reset (%d): %s (%s) complete = 0\n",depth++,s->base.name,se_names[s->base.type]);
   List *l;
-  s->complete = 0;
+  s->complete = 0;  //本函数的主要目的，将本Stub标记为“不完整”
   foreach (l, s->deps) {  //对每一个父级Stub执行操作。
-    Stub *d = l->data;    //
+    Stub *d = l->data;    //父级对象。
     if (d->base.info) //如果父级Stub是一个List性质的Stub对象，那么
       d->reqs = list_delete (d->reqs, s); //从父级的reqs表中删除本Stub
-    else d->flags |= s->flag; //如果不是List性质的Stub对象，那么就直接将表示该资源的bit位置位，表示需求该资源。
-    dep_reset (d);    //迭代
+    else d->flags |= s->flag; //如果不是List性质的Stub对象，那么就直接将表示该资源的bit位置位，表示需求该资源。flags为0表示全部子级都到位了。
+    dep_reset (d);    //往父级方向迭代。最终的结果是本Stub网上的对象都设定成complete值为0，表示有资源未到位。
   }
+  LOG_D("dep_reset (%d): exit\n",--depth);
 }
 
 /* 通过网络访问来更新某一个资源 */
 void update_resource (Stub *s) {
-  if (s->status >= 0) { //is the HTTP status, 0 for a new Stub, -1 for an update
+  if (s->status >= 0) { /*
+    status =0表示这个Stub是新建的，内部的数据是空的。>0表示数据已经回复了，由HTTP状态码来对其赋值。其实还有比如200这样的表示http回复的值。
+    如果当前值是-1，则不会执行请求（请求的结果还未到达，可能还在路上）。
+    即仅仅对刚刚新建的，或者之前已经获取过的资源（旧的资源）执行请求。*/
+    LOG_I("update_resource : %s\n",s->base.name);
     if (s->all) s->offset = 0;
     s->list = s->reqs;
-    s->reqs = NULL;
-    if (s->status && !se_event (resource_type (s))) //如果s->status大于0(前面已经判断过大于等于0了)，且Stub对象不是一个event对象，那么就执行下面的dep_reset函数。
-      dep_reset (s);
-    else s->complete = 0; //？？
-    s->status = -1;
+    s->reqs = NULL; //清空"需求"对象表，也就是子级资源。
+    
+    /*如果s->status大于0(前面已经判断过大于等于0了)，
+    且Stub对象不是一个event对象，那么就执行下面的dep_reset函数。
+    意思就是说，如果对一个旧的Stub执行更新，那么将其上的所有关联Stub都设定为complete为0，表示需要等待该资源*/
+    if (s->status && !se_event (resource_type (s))){ 
+      LOG_I("  update_resource : call dep_reset\n");
+      dep_reset (s);//如果是大于0的，即该资源之前已经请求过了，现在属于更新，且不属于SE_event类型资源，那么reset一下。如果是首次，不用reset。
+    }else{  //其他情况比如说这个资源是新建的，则统一将自己这个Stub的complete标记成0，而不涉及到其他Stub。这样的话，在该资源的子级资源都到位后，将触发调用completion函数。
+      LOG_I("  update_resource : set Stub self complete flag to 0\n");
+      s->complete = 0; //标记成子级资源未到齐，将在子级资源到齐后执行completion函数并且
+    }
+    s->status = -1; //在发出数据请求的时刻，将其修改成-1，表示请求刚刚发出，还在路上。等待回来之后，将根据HTTP的状态码来赋值。
     get_seq (s, 0, s->all); //发生网络访问
   }
 }
@@ -437,7 +478,7 @@ void *get_subordinate (Stub *s, int type) {
 
 //从服务器获取一个资源。先连接到服务器，然后再获取stub资源。count的值有些情况下可以设置成0。
 Stub *get_resource (void *conn, int type, const char *href, int count) {
-  LOG_I("get_resource:href:%s\n",href);
+  LOG_I("get_resource : href:%s\n",href);
   Stub *s;
   Uri128 buf;
   Uri *uri = &buf.uri;
@@ -457,7 +498,7 @@ poll资源，主要是针对 SE_Event_t 数据 。
 看起来他并没有去做向服务器Poll的动作。这里仅仅是添加了一个事件，且建在该资源设定时间点上去执行。
 */
 void poll_resource (Stub *s) {
-  LOG_I("poll_resource:type:%d(%s)\n",((Resource*)s)->type,se_names[((Resource*)s)->type]);
+  LOG_I("poll_resource : type:%d(%s),herf:%s\n",s->base.type,se_names[s->base.type],s->base.name);
   time_t now = se_time ();
   time_t next = now + s->poll_rate;
   
@@ -473,7 +514,7 @@ void poll_resource (Stub *s) {
   if (s->poll_next <= now) {
     s->poll_next = next;
     //这里的类型RESOURCE_POLL，跟在der_poll中调用这个函数的时候的case值严格一致了。
-    LOG_I("poll_resource:insert_event RESOURCE_POLL\n");
+    LOG_I("  poll_resource : insert_event RESOURCE_POLL\n");
     insert_event (s, RESOURCE_POLL, next);  //添加一个“延迟执行”的任务，将在next时刻到了之后执行。
   }
 }
@@ -481,7 +522,7 @@ void poll_resource (Stub *s) {
 
 /*获取dcap资源*/
 Stub *get_dcap (Service *s, int secure) {
-  LOG_I("in function get_dcap\n");
+  LOG_I("get_dcap\n");
   void *conn = service_connect (s, secure);
   return get_resource (conn, SE_DeviceCapability, service_dcap (s), 0);
 }
@@ -501,7 +542,7 @@ Stub *get_path (Service *s, int secure) {
 //在收到服务器的数据之后，首次填充或者更新掉这个数据。
 void update_existing (Stub *s, void *obj, DepFunc dep) {
   Resource *r = &s->base;
-  LOG_I("update_existing:type:%d(%s)\n",r->type,se_names[r->type]);
+  LOG_I("update_existing : type:%d(%s),%s\n",r->type,se_names[r->type],r->name);
   List *l;
   if (!r->data) r->data = obj;  //如果该项数据原先不存在，那么就直接填充。
   else if (se_event (r->type)) {  //如果不为空，且类型为 SE_Event
@@ -510,9 +551,12 @@ void update_existing (Stub *s, void *obj, DepFunc dep) {
             sizeof (SE_EventStatus_t));//如果是一个已经存在的 SE_Event 类型的数据，那么仅仅更新Status数据就够了。应该是对于SE_Event_t，数据更新的只有Status。
     free_se_object (obj, r->type);
   } else replace_se_object (r->data, obj, r->type); //其他的类型的数据如果已经存在的话，就直接替换。
-  LOG_I("update_existing:dep(s)...\n");
+  LOG_I("  update_existing : call dep(s)\n");
   dep (s);  //dep函数都要执行一遍。但是未必对这个数据执行什么操作。
-  if (!s->flags) dep_complete (s);  //如果flags等于0，表示该Stub的所有之前向服务器发出的“需求”都被满足了(仅仅是发出的，未必是全部的成员)。此时执行dep_complete函数。
+  if (!s->flags) {  //如果所有的之前请求的资源都已经满足了，那么执行下面的dep_complete函数。
+    LOG_I("  update_existing:s->flags == 0,call dep_complete\n");
+    dep_complete (s);  //如果flags等于0，表示该Stub的所有之前向服务器发出的“需求”都被满足了(仅仅是发出的，未必是全部的成员)。此时执行dep_complete函数。
+  }
 }
 
 // update paging and return number of items needed 返回目前还需要的list对象中的“个数”
@@ -551,31 +595,35 @@ int list_object (Stub *s, void *obj, DepFunc dep) {
   List **list = se_list_field (obj, r->info), *input, *l; //获取到对象中的List域，通过info这个用来指示List结构的数据。
   input = *list;  //有可能这个list是一个空的，下面的foreach不会执行。
   *list = NULL;
-  LOG_I("list_object:resource type:%d(%s)\n",r->type,se_names[r->type]);
+  LOG_I("\n** list_object : resource type:%d(%s),href:%s\n",r->type,se_names[r->type],s->base.name);
   if (!r->data) r->data = obj;  //如果之前是空的，那么就新建
-  else replace_se_object (r->data, obj, r->type); // 如果之前已经存在的，那么就替换。
-  LOG_I("list_object:dep(s)...\n");
+  else replace_se_object (r->data, obj, r->type); //如果之前已经存在的，那么就替换。
+  LOG_I("  list_object : dep(s)...\n");
   dep (s);  //这个List作为一个整体对象，执行一遍对这个List的dep函数。在我们的本demoe代码中，没有执行EndDeviceList的操作。
-  foreach (l, input) {  //接下去是对每一个List成员执行操作。
+  foreach (l, input) {  //接下去是对每一个List成员执行操作。构建List对象和其下的子级资源之间的dependent关系。
     Uri128 buf;
     char *path;
     if (path = object_path (&buf, s->conn, l->data)) {  //取出URL路径
-      LOG_I("list_object:list member path:%s\n",path);
+      LOG_I("  list_object : list member path : %s,call update_existing\n",path);
       Stub *d = get_stub (path, r->info->type, s->conn); //这个函数的内在逻辑是：如果这个对象不存在，则新建一个。名字有点迷惑。
-      add_dep (s, d); 
+      add_dep (s, d);   //s是父级，d是子级，每添加一个d到s，则s的complete将被设定成0，即不完整。
       /*增加依赖关系。s是List对象，是父级，而d是其中的一个子级对象。
       比如EndDeviceList和EndDevice之间的关系，就是s和d之间的关系。刚刚收到并且解析出来的数据，仅仅是无逻辑联系的空白数据而已，
       这里给他加入了逻辑关联。*/
-      update_existing (d, l->data, dep);
+      update_existing (d, l->data, dep);  //通常会继续调用dep_complete函数，在最后一个成员到齐后，父级，就是List对象将被设定成complete为1。
     } else {
       // subordinate resource with no href or invalid href
-      LOG_W("list_object:subordinate resource with no href or invalid href\n");
+      LOG_W("  list_object : subordinate resource with no href or invalid href\n");
       free_se_object (l->data, r->info->type);
     }
   }
   free_list (input);  //之前解析的时候，是动态申请的，所以这里释放掉。
   if (count > 0) get_seq (s, s->offset, count); //将剩下的没有获取到的再继续获取一下。有可能不需要这个步骤。
-  else if (!s->all) dep_complete (s); //如果这个list对象的长度是0，那么此时收到的是一个空的list，也就到此结束了，不用继续再去获取了。
+  else if (!s->all) {
+    LOG_I("  list_object : s->all==0,call dep_complete\n");
+    dep_complete (s); //如果这个list对象的长度是0，那么此时收到的是一个空的list，也就到此结束了，不用继续再去获取了。通常不会是0。
+  }
+  LOG_I("list_object exited,href:%s\n\n",r->name);
   return count;
 }
 
@@ -611,14 +659,16 @@ void process_response (void *conn, int status, DepFunc dep) {
       if (s = match_request (conn, obj, type)) {  //如果现在服务器回复的数据是之前刚刚发出的请求的数据，那么就对应上了。
         s->base.time = time (NULL); //刷新该项数据获取到的时间，注意用的是系统本地时间。
         if (s->base.info) //如果是一个list类型的数据。
-          count = list_object (s, obj, dep);  //如果是一个List对象，则处理这个list。
+          count = list_object (s, obj, dep);  //如果是一个List对象，则处理这个list。返回的count表示还未获取到的成员数量。
         else update_existing (s, obj, dep);   //如果是一个单体对象（非List），那么就更新数据库。
-        if (!count) s->status = status;
+        if (!count) s->status = status; /*
+        count如果是0，表示list中的全部成员已经到齐，否则继续维持原来的值（0表示新建Stub，-1表示还在更新中）。
+        status存放常规的HTTP响应代码比如200,204等。*/
       } else free_se_object (obj, type);      //如果来的数据不是之前我们请求的数据，则直接放弃。
     }
     break;
   case HTTP_POST:
-    LOG_I("function process_response:case HTTP_POST\n");
+    LOG_I("  process_response : case HTTP_POST\n");
     if (s = find_target (conn)) {
       if (s->base.info) {
         char *location = http_location (conn);
@@ -628,7 +678,7 @@ void process_response (void *conn, int status, DepFunc dep) {
     }
     break;
   case HTTP_DELETE:
-    LOG_I("function process_response:case HTTP_DELETE\n");
+    LOG_I("  process_response : case HTTP_DELETE\n");
     remove_stub (http_context (conn));  // 如果是移除一个资源，那么就在本地删除之。
     break;
   }
@@ -660,17 +710,17 @@ void process_redirect (void *conn, int status) {
 
 //处理HTTP回复的数据（看起来像是面向服务器端写的程序）这个程序是是一个收到数据后的统一处理程序。
 int process_http (void *conn, DepFunc dep) {
-  LOG_I("in function process_http\n");
-  int status;
+  int status,recv_val;
   Stub *s;
-  switch (se_receive (conn)) {  //正常情况下，收到数据并解析成SE对象。
+  switch (recv_val = se_receive (conn)) {  //正常情况下，收到数据并解析成SE对象。
+  //LOG_I("process_http : se_receive:%d\n",recv_val);
   case HTTP_RESPONSE:
-    LOG_I("process_http:case HTTP_RESPONESE\n");
+    LOG_I("  process_http : HTTP_RESPONESE\n");
     switch (status = http_status (conn)) {
     case 200:
     case 201:
     case 204:
-      printf("process_http: se_receive return HTTP_RESPONSE,http_status return status:%d\n",status);
+      printf("    process_http : HTTP_RESPONSE : http_status return:%d\n",status);
       process_response (conn, status, dep); //如果服务器成功回复，则将执行dep函数
       return status;
     case 300:
@@ -678,7 +728,7 @@ int process_http (void *conn, DepFunc dep) {
       process_redirect (conn, status);
       break;
     default:  // 如果是访问资源但是回复的数据不是上述表示成功的情况，则表示该资源（看起来）已经被删除了，所以要再本地也同样的删除掉。
-      LOG_I("process_http:case default\n");
+      LOG_I("    process_http : HTTP_RESPONSE : default\n");
       if (http_method (conn) == HTTP_GET
           && (s = find_target (conn))) {
         s->status = status;

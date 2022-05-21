@@ -146,7 +146,7 @@ and the associated DERCurveLists and DERControlLists are retrieved.
     perform the DER Identification Test.
 
 -   `poll interval` - Set the poll rate for active events in seconds, the
-    default is 300 seconds or 5 minutes.
+    default is 300 seconds or 5 minutes. 
 
 -   `load sfdi directory` - Load the device settings located in `directory`
     for the EndDevice with the `sfdi` specified.
@@ -156,7 +156,8 @@ and the associated DERCurveLists and DERControlLists are retrieved.
     subordinate resources for the EndDevice instance with an SFDI matching the
     client's computed SFDI. An aggregator client will retrieve the subordinate
     resources and perform scheduling for every EndDevice managed by the
-    aggregator client.仅仅作为一个逆变器来测试，而不是一个“集中器”来测试。
+    aggregator client.
+    仅仅作为一个逆变器客户端（DER Client，但是意思不是只有“一台”逆变器）来测试，而不是一个“集中器”来测试。
     如果是作为集中器来测试，那么将对这个集中器下面的每一个EndDevice执行调度操作。
 
     我的笔记：通常我们不测试该项目。

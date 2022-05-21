@@ -113,7 +113,7 @@ void device_response (Stub *device, Stub *event, int status);
 EventBlock *schedule_event (Schedule *s, Stub *event, int primacy);
 
 /** @brief Update the schedules associated with an event. 更新跟这个event相关的调度器
-    @param event is a pointer to an event Stub 
+    @param event is a pointer to an event Stub
 */
 void event_update (Stub *event);
 
@@ -163,7 +163,7 @@ int randomize_duration (void *event) {
   return rand_bound (ev->randomizeDuration);
 }
 
-//回复服务器当前的设备的状态。
+//回复服务器当前的设备的Event状态。
 void device_response (Stub *device, Stub *event, int status) {
   SE_EndDevice_t *edev = resource_data (device);
   SE_Event_t *ev = resource_data (event);
@@ -275,11 +275,11 @@ void insert_block (Schedule *s, EventBlock *eb) {
   s->scheduled = insert_sorted (s->scheduled, eb, compare_start); //插入到队列中去。
 }
 
-int active_poll_rate = 30; //这个意思是：活跃的DER Control Event的轮询周期。可以修改。CORE中的测试要求在60秒之内。
+int active_poll_rate = 300; //这个意思是：活跃的DER Control Event的轮询周期。可以修改。CORE中的测试要求在60秒之内。
 
 void activate_block (Schedule *s, EventBlock *eb) {
   Stub *event = eb->event;
-  printf ("activate_block %s %d\n", event->base.name, eb->status);
+  printf ("activate_block href : %s , status : %d\n", event->base.name, eb->status);
   if (eb->status != Active) {
     eb->status = Active;
     insert_event (eb, EVENT_START, 0);  //将在主程序中对该类型的系统event做出响应（搜索EVENT_START）
@@ -403,7 +403,7 @@ void delete_blocks (Stub *event) {
 void event_update (Stub *event) {
   int64_t now;
   static int64_t sync_time = 0;
-  LOG_I ("in function event_update\n");
+  LOG_I ("event_update : %s\n",event->base.name);
   switch (event_status (event)) {
   case Scheduled: //进入到调度状态
     /* The client's clock is ahead of the server's clock, attempt to
@@ -413,7 +413,8 @@ void event_update (Stub *event) {
       se_time_offset--;
       sync_time = --now;
     }
-    insert_event (event, RESOURCE_UPDATE, now + 1);
+    LOG_I("  event_update : insert_event,RESOURCE_UPDATE,now+1\n");
+    insert_event (event, RESOURCE_UPDATE, now + 1); //now+1的意思是：RESOURCE_UPDATE动作的时间在后面一秒钟执行。
     break;
   case Active:
     activate_blocks (event);  //看起来像是提前激活
@@ -441,7 +442,7 @@ void block_update (EventBlock *eb, int status) {
 大意是，将一个Event对象加入到调度器中
 */
 EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
-  LOG_I("schedule_event\n");
+  LOG_I("schedule_event : %s\n",event->base.name);
   EventBlock *eb; //这个是本代码内部定义的一个Event对象，专门用来做调度的
   SE_Event_t *ev = resource_data (event);
   int status = event_status (event);
@@ -452,6 +453,8 @@ EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
     event->completion = event_update;
     eb = new_block (event, primacy);
     hash_put (s->blocks, eb);
+    /**/
+    LOG_I("  schedule_event : response to server EventReceived\n");
     device_response (s->device, event, EventReceived);  //回复给服务器说已经收到了该Event。
     if (eb->end <= se_time ()) {  //如果该Event中的结束时间已经过了，那么就不用去执行了，直接告诉服务器该事件已经结束。
       // specified end time is in the past
@@ -498,7 +501,7 @@ void schedule_init (Schedule *s) {
 
 /*  检查当前active表中的EventBlock是否已经执行完毕了。 */
 void update_schedule (Schedule *s) {
-  LOG_I("in function update_schedule\n");
+  LOG_I("update_schedule\n");
   EventBlock *eb = s->active, *next;
   int64_t now = se_time (), last = 0;
   while (eb) {  //检查是否有已经结束了的。

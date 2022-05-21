@@ -390,7 +390,7 @@ void edev_complete (Stub *r) {
   Stub *s, *t;
   SE_EndDevice_t *edev = resource_data (r);
   DerDevice *d = get_device (edev->sFDI);
-  LOG_I("in function edev_complete,path:%s\n",edev->href);
+  LOG_I("edev_complete (edev completion): %s\n",edev->href);
 
   /*如果之前测试的时候有设定要做“PUT_SETTINGS”操作，那么就在这里执行。这里执行的是上传DER的所有设置参数操作。*/
   if (test & PUT_SETTINGS) {//在all和primary中存在该测试项目
@@ -401,6 +401,7 @@ void edev_complete (Stub *r) {
     }
   }
   
+  /*如果这个edev存在 FunctionSetAssignmentsList ，那么就即将其加入到轮询中，后面要持续更新*/
   if (s = get_subordinate (r, SE_FunctionSetAssignmentsList)) {
     SE_FunctionSetAssignmentsList_t *fsal = resource_data (s);
     if (test & FSA_SUBSCRIBE) {
@@ -410,15 +411,20 @@ void edev_complete (Stub *r) {
       subscribe (s, edev->SubscriptionListLink.href);
       */
     } else {//在all和primary中走这个路径
-      s->poll_rate = se_exists (fsal, pollRate) ? fsal->pollRate : 900;
+      s->poll_rate = se_exists (fsal, pollRate) ? fsal->pollRate : 900; //通常要再poll_resource之前加入这一行，避免有些resource下发的时候没有带上pollRate数据。
+      LOG_I("  edev_complete : call poll_resource(),poll_rate=%d\n",s->poll_rate);
       poll_resource (s);  //这个测试逻辑思维：遇到一个EndDevice，就去poll一下FSAList
     }
     
-    if (test & SCHEDULE_TEST) { //在all和primary中存在该测试项目
-      LOG_I("edev_complete:call schedule_der() on edev %s\n",r->base.name);
+    if (test & SCHEDULE_TEST) { //在all和primary中存在该测试项目。如果一个EndDevice的子级资源满足了，那么就执行schedule_der。
+      LOG_I("  edev_complete : call schedule_der() on edev %s\n",r->base.name);
       schedule_der (r);
       r->completion = schedule_der;
+      /* 原先的edev的completion函数是本函数 edev_complete ，而这里如果符合执行 schedule 的条件的话，则修改成了 schedule_der 函数 。
+      后续每刷新一次 FunctionSetAssignmentsList，都会调用一次 schedule_der 。
+      每次edev的子级满足一次，则都会执行一遍schedule_der。*/
     }
+    LOG_D("edev_complete : exit\n");
   }
   
   if (edev->sFDI == device_sfdi) {
@@ -447,28 +453,29 @@ void edev_complete (Stub *r) {
   }
 }
 
-/*获取所有的 DERProgram 下面的 DefaultDERControl和 DERControlList 和 DERCurveList 资源。*/
+/*获取所有的 DERProgram 下面的 DefaultDERControl 和 DERControlList 和 DERCurveList 资源。*/
 void der_program (Stub *d) {
-  LOG_I("in function der_program\n");
+  LOG_I("der_program : %s\n",d->base.name);
   if (test & GET_DERC) {  ////在all和primary中都存在该测试项目
-    LOG_I("der_program:test GET_DERC\n");
+    //LOG_I("  der_program : test GET_DERC\n");
     Stub *cl; //ControlList
     SE_DERProgram_t *dp = resource_data (d);
-    LOG_I("in function der_program,get_dep DefaultDERControl\n");
+    LOG_I("  der_program : get_dep DefaultDERControl if exists\n");
     get_dep (d, dp, DefaultDERControl); // 获取从属于dp的 DefaultDERControl 资源。
+    LOG_I("  der_program : get_dep DERControlList if exists\n");
     if (cl = get_list_dep (d, dp, DERControlList)) {  //获取从属于dp的DERControlList资源。
       cl->poll_rate = active_poll_rate;
       poll_resource (cl); //获取到这些ControlList
     }
-    LOG_I("in function der_program,get_list_dep,DERCurveList\n");
+    LOG_I("  der_program : get_list_dep DERCurveList if exists\n");
     get_list_dep (d, dp, DERCurveList);
   }
 }
 
 
-/*仅仅是查询DERProgramList资源操作，主要作用函数是 poll_resource */
+/*将DErProgramList放到轮询队列中。作为test_dep函数中DERProgramList资源的case 函数 */
 void poll_derpl (Stub *r) {
-  LOG_I("in function poll_derpl\n");
+  LOG_I("poll_derpl : %s\n",r->base.name);
   SE_DERProgramList_t *derpl = resource_data (r);
   r->poll_rate = se_exists (derpl, pollRate) ? derpl->pollRate : 900; //如果pollRate属性不不存在，那么就设定该值为900。
   poll_resource (r);
@@ -477,21 +484,23 @@ void poll_derpl (Stub *r) {
 //select the highest priority DERProgram from a DERProgramList
 
 /*按照前面的注释来看，意思是第一个的DERProgram的优先级（priority）最高？
-这个函数是FSA的completion函数 */
+这个函数是 DERProgramList 的 completion 函数 */
 void der_program_list (Stub *r) {
-  if (primary && r->reqs) der_program (r->reqs->data);  //
+  LOG_I("der_program_list (DERProgramList completion function) : %s\n",r->base.name);
+  if (primary && r->reqs) der_program (r->reqs->data);  //看样子只是执行了第一个？？
 }
 
 
 /* 测试中获取到FSA资源 
 这个函数是test_dep中的 FunctionSetAssignments 的case*/
 int fsa (Stub *r) {
-  LOG_I("fsa:resource href:%s\n",r->base.name);
+  LOG_I("fsa : resource href:%s\n",r->base.name);
   if (test & GET_DERP) {  //在all和primary中都存在该测试项目  
     SE_FunctionSetAssignments_t *fsa = resource_data (r);
+    LOG_I("  fsa : get_list_dep DERProgramList\n");
     Stub *d = get_list_dep (r, fsa, DERProgramList);//获取到 DERProgramList 资源 。d 是 DERProgramList 资源（对象）
     if (d && primary) { //只要测试指令中包含了 primary 命令，则将调用该回调函数。
-      d->completion = der_program_list;
+      d->completion = der_program_list; //一个fsa中包含了一个program_list。
       return 1;
     }
   }
@@ -503,7 +512,7 @@ int fsa (Stub *r) {
 
 /*这个函数作为 FunctionSetAssignmentsList 资源的 completion 函数，处理List中的每一个FSA资源对象。 */
 void fsa_list (Stub *r) {
-  LOG_I("fsa_list\n");
+  LOG_I("fsa_list (FunctionSetAssignmentsList completion ) : %s\n",r->base.name);
   List *l;
   foreach (l, r->reqs)
     #if 0 //这个是原始代码版本
@@ -511,29 +520,32 @@ void fsa_list (Stub *r) {
       LOG_W("fsa_list:call fsa() on %s returns 1 , break\n",((Stub*)l->data)->base.name);
       break;  //看起来问题出在这里：只要fsa()返回1，就跳出。这样执行到第一个fsa。
     }
-    #else //这个是修改后的版本
+    #else //这个是修改后的版本。还需要继续改进：判断其中的DERProgramListLink属性all的值是否大于0。只有大于0才去查询。否则可以省掉。
     fsa (l->data);
     #endif
 }
 
-//获取EndDevice的子层资源。参数edevs通常是 EndDeviceList 类型对象。
+/*获取EndDevice的子层资源，即EndDevice。参数edevs通常是 EndDeviceList 类型对象。
+对每一个edev对象执行：
+1）获取DERList对象
+2）获取 FunctionSetAssignmentsList 对象并设定 completion 函数为 fsa_list 函数，即在EndDevice数据全部满足后，调用fsa_list函数。*/
 void get_edev_subs (Stub *edevs) {
-  LOG_I("get_edev_subs\n");
+  LOG_I("get_edev_subs : %s\n",edevs->base.name);
   List *l;
   if (test & REGISTER_TEST){
-    LOG_W("get_edev_subs:register test not excuted,return\n");
+    LOG_W("  get_edev_subs : register test not excuted,return\n");
     return; // wait for registration 之前如果还没有验证过了register测试，就先不往下做。
   }
-  LOG_I("get_edev_subs:register test excuted,continue\n");
-  foreach (l, edevs->reqs) {  //对每一个 EndDeviceList 的子级对象，就是EndDevice作处理。
-    Stub *s = l->data;
-    //LOG_I("get_edev_subs:dealing %s\n",s->base->name);
+  LOG_I("  get_edev_subs : register test excuted,go on\n");
+  foreach (l, edevs->reqs) {  //对每一个 EndDeviceList 的子级对象，就是EndDevice作处理。后面可以试试，作为DER Client的话，可以仅仅取自己pin相同的那个。
+    Stub *s = l->data;  //s是子级，就是 EndDevice 对象。
+    LOG_I("  get_edev_subs : dealing %s\n",s->base.name);
     SE_EndDevice_t *e = resource_data (s);
-    if (test & INVERTER_CLIENT && e->sFDI != device_sfdi) continue; //如果test中的INVERTER_CLIENT置位，且当前的EndDevice于指令中的不符，则不执行下面的动作。我们现在的测试中通常往下走。
+    if (test & INVERTER_CLIENT && e->sFDI != device_sfdi) continue; //作为DER Client，仅仅测试于本DER相同的EndDevice对象。通常指令中加入 inverter 指令。
     s->completion = edev_complete;  //将为每一个 EndDevice 赋予该执行函数。
     get_list_dep (s, e, DERList); // 获取到 EndDevice 下面的 DERList。通常 href:/edev/edev0/der
     if (test & GET_FSA) { //在all和primary中都存在该测试项目
-    LOG_I("get_edev_subs:getting FSA on %s\n",s->base.name);
+    LOG_I("  get_edev_subs : getting FunctionSetAssignmentsList on %s\n",s->base.name);
       if ((s = get_list_dep (s, e, FunctionSetAssignmentsList)) && primary) //获取到 EndDevice 下面的 FunctionSetAssignmentsList
         s->completion = fsa_list;
     }
@@ -542,7 +554,7 @@ void get_edev_subs (Stub *edevs) {
 
 //在获取到了 Registration 数据之后，执行检查动作。
 void check_registration (Stub *r) {
-  LOG_I("in function check_registration\n");
+  LOG_I("check_registration,%s\n",r->base.name);
   SE_Registration_t *reg = resource_data (r);
   if (reg->pIN == 111115) { //这个111115是这个程序程序所公用的一个值。
     LOG_D("registration succeeded,register test passed,clear REGISTER_TEST bit\n");
@@ -555,7 +567,7 @@ void check_registration (Stub *r) {
 //在获取到了EndDeviceList之后执行的操作。
 
 void end_device (Stub *r) {
-  LOG_I("in function end_device\n");
+  LOG_I("end_device : %s\n",r->base.name);
   SE_EndDevice_t *e = resource_data (r);
   
   //如果要执行删除设备操作
@@ -566,7 +578,7 @@ void end_device (Stub *r) {
   
   //
   if (e->sFDI == device_sfdi) {
-    LOG_I("end_device:find target device_sfdi,%ld\n",device_sfdi);
+    LOG_I("  end_device : find target device_sfdi,%ld\n",device_sfdi);
     test |= CLIENT_FOUND; //可能表示该操作已经执行过了，后面不要再执行。这个bit表示是否已经找到了这个DER了。
     if (device_sfdi == delete_sfdi) return;
     /*果是测试了primary，那么这个项是测试的。
@@ -576,7 +588,7 @@ void end_device (Stub *r) {
     if (test & REGISTER_TEST) {
       if (se_exists (e, RegistrationLink)) {
         if (test & PUT_PIN) { //如果用户没有指定 "pin xxxxxx" 指令，则该项操作不会执行。
-          LOG_I("end_device:test & PUT_PIN == true\n");
+          LOG_I("  end_device : test & PUT_PIN == true\n");
           SE_Registration_t reg = {0};  
           reg.dateTimeRegistered = se_time ();  //看起来是只要填充下面这两项数据就够了。
           reg.pIN = pin;  //这个pin的意思不是很清楚。
@@ -598,16 +610,16 @@ void end_device (Stub *r) {
 */
 
 void edev_list (Stub *r) {
-  LOG_I("edev_list\n");
+  LOG_I("edev_list : %s\n",r->base.name);
   edevs = r;
 
   if (test & DELETE_DEVICE) {
     test_fail ("delete device", "client EndDevice instance not found");
   }
   
-  if (!(test & CLIENT_FOUND)) { //表示的意思是：如果client还是没有被找到，那么执行下面的指令。
+  if (!(test & CLIENT_FOUND)) { //表示的意思是：如果client还是没有被找到，那么执行下面的指令。但是在我们的测试指令中，通常是包含了被测试的Client的。
     if (test & GET_EDEV) {  //在测试指令all和primary中将测试到该GET_EDEV项目。
-      LOG_I("edev_list:CLIENT_FOUND is false,POST EndDevice\n");
+      LOG_I("  edev_list : CLIENT_FOUND is false,POST EndDevice\n");
       SE_EndDevice_t edev = {0};
       edev.sFDI = device_sfdi;
       se_post (r->conn, &edev, SE_EndDevice, r->base.name); //POST 如果没有这个设备，那么就放上去一个？？
@@ -634,8 +646,8 @@ void edev_list (Stub *r) {
   
   /*由陈立飞添加，test case CORE 003 要求在获取到了该资源后，后续也要定时轮询。原始代码是没有这个的。*/
   SE_EndDeviceList_t *el = resource_data(r);
-  r->poll_rate = se_exists (el, pollRate) ? el->pollRate : 300; //添加一个默认的值，该值可以修改。
-  LOG_I("edev_list:add EndDeviceList to poll resource routine,pollRate:%d\n",r->poll_rate);
+  r->poll_rate = se_exists (el, pollRate) ? el->pollRate : 300; //添加一个默认的值，该值可以修改。尽量短一点，不能比测试case中的整体时间要长（否则必然测不过）
+  LOG_I("  edev_list : add EndDeviceList to poll resource routine,pollRate:%d\n",r->poll_rate);
   poll_resource (r);  //自动轮询该资源。
   /*陈立飞添加完毕*/
 
@@ -644,13 +656,13 @@ void edev_list (Stub *r) {
 
 //在收到了完整的dcap数据之后的处理程序。这个就跟整个test程序的逻辑有关。在获取到了dcap资源后，通常仅仅去获取time和EndDeviceList两种资源。
 void dcap (Stub *r) {
-  LOG_I("in function dcap\n");
+  LOG_I("dcap\n");
   SE_DeviceCapability_t *dcap = resource_data (r);
 
   //陈立飞添加开始
   /* test case CORE 003 要求在获取到了该资源后，后续也要定时轮询。原始代码是没有这个的。*/
   r->poll_rate = se_exists (dcap, pollRate) ? dcap->pollRate : 600;//有时候这个参数是不带的，所以必须预先设定一个默认值。
-  LOG_I("dcap:add DeviceCapability to poll resource routine,pollRate:%d\n",r->poll_rate);
+  LOG_I("  dcap : add DeviceCapability to poll resource routine,pollRate:%d\n",r->poll_rate);
   poll_resource(r); //自动轮询该资源
   //陈立飞添加结束
 
@@ -678,7 +690,7 @@ void dcap (Stub *r) {
 
 //请求时间同步
 void time_sync (Stub *s) {
-  LOG_I("in function time_sync\n");
+  LOG_I("time_sync\n");
   SE_Time_t *tm = resource_data (s);  //获取到时间资源
   s->poll_rate = se_exists (tm, pollRate) ? tm->pollRate : 900; //默认是900秒来获取一次数据。
   poll_resource (s);  //添加一个异步请求。首次获取到数据之后，将进入这种自动循环模式。
@@ -686,7 +698,7 @@ void time_sync (Stub *s) {
 }
 
 void update_mup (Stub *s) {
-  LOG_I("in function update_mup\n");
+  LOG_I("update_mup\n");
   SE_MirrorUsagePoint_t *mup = resource_data (s);
   uint64_t sfdi = sfdi_gen (mup->deviceLFDI);
   DerDevice *d = find_device (&sfdi);
@@ -755,7 +767,7 @@ void log_event (Stub *log) {
 }
 
 void self_device (Stub *r) {
-  LOG_I("in function self_device\n");
+  LOG_I("self_device\n");
   SE_SelfDevice_t *self = resource_data (r);
   r = get_list_dep (r, self, LogEventList);
   r->poll_rate = 30;
@@ -769,36 +781,49 @@ extern const char * const se_names[];
 这个函数是 process_http中  的   DepFunc 函数，当完整的获取到一个SE对象数据的时候，此时调用该函数对该对象作定制化处理*/
 void test_dep (Stub *r) {
   int res_type = resource_type (r);
-  LOG_I("test_dep:resource type:%d(%s)\n",res_type,se_names[res_type]);
+  LOG_I("test_dep : resource type:%d(%s),href:%s\n",res_type,se_names[res_type],r->base.name);
   switch (res_type) {
   case SE_Time:
+    LOG_I("  test_dep : SE_Time , call time_sync\n");
     time_sync (r);  //时间同步？
     break;
   case SE_DERProgram:
-    if (!primary) der_program (r);  //获取 DERProgram 下面的三个主要资源。在primary指令情况下，不会执行到这里。在primary指令下，通过EndDevice路径来执行。
+    if (!primary){ 
+      LOG_I("  test_dep : SE_DERProgram , call der_program\n");
+      der_program (r);  //获取 DERProgram 下面的三个主要资源。在primary指令情况下，不会执行到这里。在primary指令下，通过EndDevice路径来执行。
+    }
     break;
   case SE_DERProgramList:
+    LOG_I("  test_dep : SE_DERProgramList , call poll_derpl\n");
     poll_derpl (r);
     break;
   case SE_FunctionSetAssignments:
-    if (!primary) fsa (r);  //获取FSA下面的部分资源。但是只有在primary为0的时候才执行？？为什么
+    if (!primary) {
+      LOG_I("  test_dep : SE_FunctionSetAssignments , call fsa\n");
+      fsa (r);  //获取FSA下面的部分资源。但是只有在primary为0的时候才执行？？为什么
+    }
     break;
   case SE_DeviceCapability:
+    LOG_I("  test_dep : SE_DeviceCapability , call dcap\n");
     dcap (r);
     break;
   case SE_EndDevice:
+    LOG_I("  test_dep : SE_EndDevice , call end_device\n");
     end_device (r);
     break;
   case SE_Registration:
+    LOG_I("  test_dep : SE_Registration , call check_registration\n");
     check_registration (r);
     break;
   case SE_MirrorUsagePoint:
+    LOG_I("  test_dep : SE_MirrorUsagePoint , call update_mup\n");
     update_mup (r);
     break;
   case SE_SelfDevice:
+    LOG_I("  test_dep : SE_SelfDevice , call self_device\n");
     self_device (r);
   }
-  LOG_D("test_dep:exit function\n");
+  LOG_D("test_dep : exit function\n");
 }
 
 

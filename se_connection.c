@@ -295,7 +295,7 @@ int se_receive (void *conn) {
         }
       } else return method;
     case SE_DATA: //在收到数据之后，将XML文档解析成一个数据对象。
-      printf("se_receive:SE_DATA\n");
+      PRINT_HTTP(LOG_I("se_receive : SE_DATA\n"));
       while (data = http_data (h, &length)) {
         
         #if 0
@@ -314,7 +314,7 @@ int se_receive (void *conn) {
         } else if (!http_complete (h)) {
           http_rebuffer (h, p->ptr);
         } else {  //如果遇到这个错误，通常是由于服务器返回的消息中，包含了客户端无法识别的SE类型值，此时要修改sep.xsd文档，将新的类型值加入进去。
-          printf ("parse error in message body\n");
+          LOG_E ("  se_receive : parse error in message body\n");
           print_parse_stack (p);  //解析失败后，将已经解析成功的内容打印出来，以便分析
           code = 400;
           goto error;

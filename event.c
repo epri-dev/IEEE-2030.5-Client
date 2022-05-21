@@ -67,6 +67,7 @@ void print_events () {
 这个的参数“void *data”的数据类型是不确定的（也正是这里设计成void *类型的原因），经过查看全局代码，发现可以是der类型，也可以是Stub等。
 最终通过type来确定前面的data是什么类型*/
 void insert_event (void *data, int type, int64_t time) {
+  LOG_I("insert_event\n");
   Event *e = type_alloc (Event);
   e->data = data;
   e->type = type;

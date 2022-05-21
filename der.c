@@ -32,7 +32,7 @@ Included with `der_client.c` is the module `der.c` that provides:
 #include "settings.c"
 
 
-/** A DerDevice is a representation of a DER EndDevice. 一个DER EndDevice的对象 */
+/** A DerDevice is a representation of a DER EndDevice. 一个DER EndDevice的对象 ，代表了当前EndDevice中关联的DER，比如一个逆变器或者储能设备。*/
 typedef struct {
   uint64_t sfdi; ///< is the SFDI of the EndDevice
   uint8_t lfdi[20]; ///< is the LFDI of the EndDevice
@@ -188,14 +188,14 @@ void remove_programs (Schedule *s, List *derpl) {
 //对一个DER安排调度
 void schedule_der (Stub *edev) {
   SE_EndDevice_t *e = resource_data (edev);
-  DerDevice *device = get_device (e->sFDI);
-  Schedule *schedule = &device->schedule;
+  DerDevice *device = get_device (e->sFDI); //该EndDevice关联到的设备。
+  Schedule *schedule = &device->schedule; //设备上的调度器
   Stub *fsa = NULL, *s, *t;
   List *l, *m, *derpl = NULL;
   SE_DefaultDERControl_t *dderc = NULL;
-  LOG_I("schedule_der\n");
+  LOG_I("schedule_der (EndDevice completion) : href : %s\n",edev->base.name);
   if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) {
-    LOG_D("No FSA on edev %s\n",edev->base.name);
+    LOG_W("  schedule_der : no FSA on edev %s , return\n",edev->base.name);
     return; //获取这个edev下面的FSA数据
   }
   // add the lFDI if not provided by the server
@@ -204,31 +204,33 @@ void schedule_der (Stub *edev) {
     memcpy (e->lFDI, device->lfdi, 20);
   }
   
-  // collect all DERPrograms for the device (sorted by primacy) 收集所有的 DERPrograms 并且排序
+  // collect all DERPrograms for the device (sorted by primacy) 收集该DER下面所有的 DERPrograms 并且排序
   foreach (l, fsa->reqs)
     if (s = get_subordinate (l->data, SE_DERProgramList)) //收集所有的 SE_DERProgramList
       foreach (m, s->reqs)
-        derpl = insert_stub (derpl, m->data, s->base.info); //derpl 得到了所有的 DERProgram 构成一个List
+        derpl = insert_stub (derpl, m->data, s->base.info); //derpl 得到了所有的 FSA下面的 所有的 DERProgram ，构成一个List
     
-  // handle program removal
+  // handle program removal 将重复部分去掉，留下的都是不唯一的。
   remove_programs (schedule, list_subtract (device->derpl, derpl));
     
   /* event block schedule might change as a result of program removal and
      primacy change so clear the block lists */
   schedule->scheduled = schedule->active = schedule->superseded = NULL;
-  schedule->device = edev;
+  schedule->device = edev;  //指定调度器中的device为当前的edev。
   
-  // insert DER Control events into the schedule
+  // insert DER Control events into the schedule 从DERProgram中取出DERControlList，然后放到调度器中。
   foreach (l, derpl) {
     s = l->data;
     SE_DERProgram_t *derp = resource_data (s);
     if (t = get_subordinate (s, SE_DERControlList))
-      foreach (m, t->reqs) {
-      EventBlock *eb;
-      eb = schedule_event (schedule, m->data, derp->primacy); //将这个任务放到调度队列中去。
-      eb->program = s;
-      eb->context = device;
+      foreach (m, t->reqs) {  /*将 DERControlList 其下的 DERControl 全部放到 schedule 中*/
+        EventBlock *eb;
+        eb = schedule_event (schedule, m->data, derp->primacy); //将这个任务放到调度队列中去。
+        eb->program = s;
+        eb->context = device;
     }
+      
+    /*如果 DefaultDERControl 存在以及之前没有获取过，那么就获取一下*/
     if (!dderc && (t = get_subordinate (s, SE_DefaultDERControl)))
       dderc = resource_data (t);
   }
