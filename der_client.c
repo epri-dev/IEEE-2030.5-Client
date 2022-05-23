@@ -31,7 +31,7 @@ void print_event_start (EventBlock *eb) {
   switch (r->type) {
   case SE_DERControl:
     derc = r->data;
-    print_se_object (&derc->DERControlBase, SE_DERControlBase);
+    print_se_object (&derc->DERControlBase, SE_DERControlBase); //应当在这里插入对实际的逆变器的操作。本Demo代码没有涉及到对底层设备的接口。
   }
   printf ("\n");
 }
@@ -40,7 +40,7 @@ void print_event_end (EventBlock *eb) {
   Resource *r = eb->event;
   DerDevice *device = eb->context;
   SE_Event_t *ev = r->data;
-  printf ("Event End \"%s\" -- %s", ev->description, timestamp ());
+  printf ("Event End \"%s\" -- %s", ev->description, timestamp ()); //应当在这里插入对实际的逆变器的操作代码。在这个Demo程序中，仅仅是为了展示。
   printf ("EndDevice: %ld\n\n", device->sfdi);
 }
 

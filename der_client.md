@@ -9,6 +9,8 @@ represents a single inverter. For the aggregator case there may additional
 functions performed such as managing the server's EndDeviceList or performing
 other managment functions on behalf of the managed inverters.
 
+可以管理一个或者多个逆变器。本库适用于AGG或者DER
+
 DER Client Model
 ----------------
 
@@ -54,8 +56,9 @@ According to the 2030.5 standard the registration procedure is completed by the
 client retrieving its own EndDevice instance and verifying that the Registration
 resource linked from the EndDevice contains a matching PIN number包含了一个匹配的PIN数字. 
 In some cases the client may be registered with a server but the server's EndDeviceList does
-contain the corresponding EndDevice instance. In such cases the client is
+not contain the corresponding EndDevice instance. In such cases the client is
 required to POST its EndDevice instance to the server.
+验证，如果没有存在，那么就主动POST一下自己这个设备。
 
 ### 5. Performing retrieval of subordinate resources.
 

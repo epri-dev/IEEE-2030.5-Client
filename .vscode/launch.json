@@ -27,6 +27,15 @@
             "programArgs": "",
             //"stopOnEntry": true,
             "cwd": "${workspaceFolder}"
-        }        
+        },
+        {
+            "type": "by-gdb",
+            "request": "launch",
+            "name": "csip_test",
+            "program": "/home/vmuser/IEEE-2030.5-Client/build/csip_test",
+            "programArgs": "eth0 http://192.168.1.13:8088/dcap",
+            //"stopOnEntry": true,
+            "cwd": "${workspaceFolder}"
+        }                  
     ]
 }

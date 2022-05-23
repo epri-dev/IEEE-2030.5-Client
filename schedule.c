@@ -26,6 +26,14 @@ enum EventStatus {Scheduled, Active, Canceled, CanceledRandom,
                   ScheduleSuperseded
                  };
 
+ char* ResponseTypeString[] = {"EventReceived", "EventStarted", "EventCompleted",
+                    "EventOptOut", "EventOptIn", "EventCanceled", "EventSuperseded",
+                    "EventPartialOptOut", "EventPartialOptIn", "EventCompleteOptOut",
+                    "EventAcknowledge", "EventNoDisplay", "EventAbortedServer",
+                    "EventAbortedProgram",
+                    "EventInapplicable"/*252*/, "EventInvalid", "EventExpired"
+                   };
+
 /** @brief An EventBlock is an Event instance scheduled for a particular
     EndDevice.
     一个“事件块EventBlock”是面向一个特定的EndDevice的一个被调度的事件实例（Event instance）。
@@ -137,7 +145,13 @@ void schedule_init (Schedule *s);
   (type == SE_DERControl || type == SE_TimeTariffInterval \
    || type == SE_EndDeviceControl)  
 
-
+char * ResponseType_to_string( int ResponseTypeCode )
+{
+  if( ResponseTypeCode >= EventInapplicable){
+    ResponseTypeCode = ResponseTypeCode - EventInapplicable + 14;
+  }
+  return ResponseTypeCode < (sizeof(ResponseTypeString)/sizeof(char*))? ResponseTypeString[ResponseTypeCode] : "NotDefined";
+}
 //bound：一个传入的值，将对整个值做一个随机化处理。
 int rand_bound (int bound) {
   if (bound) {  //如果是非零(不是大于零)
@@ -165,6 +179,7 @@ int randomize_duration (void *event) {
 
 //回复服务器当前的设备的Event状态。
 void device_response (Stub *device, Stub *event, int status) {
+  LOG_I("device_response,device:%s,event:%s,status:%d(%s)\n",device->base.name,event->base.name,status,ResponseType_to_string(status));
   SE_EndDevice_t *edev = resource_data (device);
   SE_Event_t *ev = resource_data (event);
   SE_DERControlResponse_t resp;
@@ -186,12 +201,10 @@ uint32_t der_base (void *event) {
 int block_supersede (EventBlock *a, EventBlock *b) {
   SE_Event_t *x = resource_data (a->event),
               *y = resource_data (b->event);
-  if ((a->primacy == b->primacy
-       && x->creationTime > y->creationTime)  //如果两个事件的primacy的值相同，而前者创建比较早
-      || a->primacy < b->primacy)
-    return a->der ? (b->der &= ~a->der) == 0 : 1; //那么返回
-  a->der &= ~b->der;  //只有某个bit，在a中是1，在b中是0，则结果中的该bit得以保留；其他情况结果都是0。即a中有的但是b中没有的--保留；其他情况都删除。
-  return 0;
+  if ((a->primacy == b->primacy && x->creationTime > y->creationTime) || a->primacy < b->primacy)//如果两个事件的primacy的值相同，而前者创建比较早
+    return a->der ? (b->der &= ~a->der) == 0 : 1; //如果b中的ber标志位完全被清空了（被a中的相同bit清空了），那么就返回ture，表示b被a取代了。否则就是没有被取代。
+  a->der &= ~b->der;  //将a->der中的某些bit位清零。这些bit位是对应在b->der中的bit位。
+  return 0; //没有符合上述条件的:1)a的优先级没有b那么高。2）优先级相同，但是b的创建时间更早。那么，就返回0，表示b没有被a圈圈替代。
 }
 
 //新建一个 event block 
@@ -251,16 +264,16 @@ void insert_block (Schedule *s, EventBlock *eb) {
   if (resource_type (eb->event) == SE_DERControl) //resource和Stub指向同一个地址。
     eb->der = der_base (eb->event); //获取到这个DER的 DERControlBase 中的_flag值，即知道存在哪几个base设置项。详见 SE_DERControlBase_t 结构体。
   event_interval (&x, eb->event); //计算eb的结束时间。应该是首个EventBlock的时间。
-  while (e) { //应该是在排序后插入，根据开始时间等参数。
+  while (e) { //应该是在排序后插入，根据开始时间等参数。这里处理插入后，对别的已经存在的control的影响。
     next = e->next;
     event_interval (&y, e->event);  //计算结束时间
-    if (x.start < y.end && x.end > y.start) { //x被y包含
+    if (x.start < y.end && x.end > y.start) { //x和y有相互叠加部分，不一定是相互包含。
       if (block_supersede (eb, e)) {  //
         e->status = ScheduleSuperseded;
-        link_insert (s->superseded, e);
-        prev->next = e = next;
+        link_insert (s->superseded, e); // scheduled 队列中的第一个被 superseded 替代了？？
+        prev->next = e = next;  //直接跳过了这一个
         continue;
-      } else if (!eb->der) {
+      } else if (!eb->der) {  //如果当前的这个eb->der为空，那么也设置成 superseded 状态
         eb->status = ScheduleSuperseded;
         link_insert (s->superseded, eb);
         return;
@@ -275,33 +288,34 @@ void insert_block (Schedule *s, EventBlock *eb) {
   s->scheduled = insert_sorted (s->scheduled, eb, compare_start); //插入到队列中去。
 }
 
-int active_poll_rate = 300; //这个意思是：活跃的DER Control Event的轮询周期。可以修改。CORE中的测试要求在60秒之内。
+int active_poll_rate = 300; //这个意思是：活跃的DER Control Event的轮询周期。CORE中的测试要求在60秒之内。这个指令可以在测试指令中通过 poll 选项来修改。
 
+//将一个event激活，执行，并且回复给上面的服务器当前的 EventStarted 状态
 void activate_block (Schedule *s, EventBlock *eb) {
   Stub *event = eb->event;
-  printf ("activate_block href : %s , status : %d\n", event->base.name, eb->status);
+  LOG_I ("activate_block href : %s , status : %d\n", event->base.name, eb->status);
   if (eb->status != Active) {
     eb->status = Active;
-    insert_event (eb, EVENT_START, 0);  //将在主程序中对该类型的系统event做出响应（搜索EVENT_START）
+    insert_event (eb, EVENT_START, 0);  //将在主程序中对该类型的系统event做出响应（搜索EVENT_START），即执行对下层的逆变器设备的控制。
     device_response (s->device, event, EventStarted); //  向服务器回复“Event开始了”这个状态。
   }
-  event->poll_rate = active_poll_rate;  //
-  poll_resource (event);
+  event->poll_rate = active_poll_rate;  //以测试指令中通过 poll <interval> 指定的周期来轮询，
+  poll_resource (event);  //维持轮询
 }
 
 /*
-将一个EventBlock插入到一个Schedule中。
+将一个EventBlock插入到一个active 这个 Schedule 队列中。
 */
 void insert_active (Schedule *s, EventBlock *eb) {
   EventBlock *prev = (EventBlock *)&s->active, *a = s->active, *next;
-  printf ("insert_active\n");
+  LOG_I ("insert_active\n");
   if (resource_type (eb->event) == SE_DERControl)
     eb->der = der_base (eb->event);
   while (a) {
     next = a->next;
-    if (block_supersede (eb, a)) {
-      prev->next = next;
-      a->end = eb->start;
+    if (block_supersede (eb, a)) {  //如果a被eb完全替代了。
+      prev->next = next;  //则移除a
+      a->end = eb->start; //
       if (a->status == Active)
         insert_event (a, EVENT_END, 0);
       a->status = Superseded;
@@ -338,7 +352,7 @@ EventBlock *get_block (Schedule *s, void *event) {
 
 void activate_blocks (Stub *event) {
   List *l;
-  // printf ("activate_blocks\n");
+  LOG_I ("activate_blocks,href:%s\n",event->base.name);
   foreach (l, event->schedules) {
     EventBlock *eb = get_block (l->data, event);
     if (eb->status == ActiveWait)
@@ -350,6 +364,7 @@ void activate_blocks (Stub *event) {
 
 */
 void remove_block (Schedule *s, EventBlock *eb) {
+  LOG_I("remove_block : event name : %s\n",((Stub*)eb->event)->base.name);
   switch (eb->status) {
   case Scheduled:
     s->scheduled = list_remove (s->scheduled, eb);
@@ -432,7 +447,7 @@ void event_update (Stub *event) {
 void block_update (EventBlock *eb, int status) {
   if (eb->status == Active) {
     eb->end = se_time ();
-    insert_event (eb, EVENT_END, 0);
+    insert_event (eb, EVENT_END, 0);  //将在主程序中打印这个event的结束信息，没有做其他事情。
   }
   eb->status = status;
 }
@@ -449,7 +464,8 @@ EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
   if (eb = hash_get (s->blocks, ev->mRID)) {  //如果已经存在于hash表中
     eb->primacy = primacy;
   } else {  //如果不存在，则添加一个新的
-    event->schedules = insert_unique (event->schedules, s); //在这个list中插入这个 Schedule
+    event->schedules = insert_unique (event->schedules, s); //在这个schedules List中插入这个 Schedule。一个设备可能包含了多个 schedule
+    LOG_W("  schedule_event : set event's completion() to event_update\n");
     event->completion = event_update;
     eb = new_block (event, primacy);
     hash_put (s->blocks, eb);
@@ -463,7 +479,7 @@ EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
       return eb;
     }
   }
-  if (in_range (eb->status, Canceled, Completed)) return eb;  //如果已经取消或者执行成功了，那么就不用再放到调度器中去了，直接返回。
+  if (in_range (eb->status, Canceled, Completed)) return eb;  //如果已经取消、退出、替代或者执行成功了，那么就不用再放到调度器中去了，直接返回。
   // eb->status: Scheduled, Active, ActiveWait, ScheduleSuperseded
   switch (status) { //否则，再执行调度。
   case Scheduled:
@@ -486,6 +502,7 @@ EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
   return eb;
 }
 
+/*通过一个EventBlock数据来反推出mRID数据*/
 void *mrid_key (void *data) {
   EventBlock *eb = data;
   Stub *s = eb->event;
@@ -501,10 +518,10 @@ void schedule_init (Schedule *s) {
 
 /*  检查当前active表中的EventBlock是否已经执行完毕了。 */
 void update_schedule (Schedule *s) {
-  LOG_I("update_schedule\n");
+  LOG_I("update_schedule , now time :%ld\n",(int64_t)time(NULL));
   EventBlock *eb = s->active, *next;
   int64_t now = se_time (), last = 0;
-  while (eb) {  //检查是否有已经结束了的。
+  while (eb) {  //检查active队列中是否有已经结束了的。
     if (eb->end <= now) { //当前时间已经越过了end时刻，说明这个事情结束了。
       if (eb->status == Active) {
         device_response (s->device, eb->event, EventCompleted); //向服务器报告事件已经结束。
@@ -543,7 +560,7 @@ void update_schedule (Schedule *s) {
     eb = eb->next;
   }
   s->superseded = eb;
-  printf ("update_schedule %" PRId64 " %" PRId64 "\n", now, last);
+  printf ("update_schedule %" PRId64 "(now) %" PRId64 "(last)\n", now, last);
   if (last) {
     if (last != s->next) {
       remove_event (s);

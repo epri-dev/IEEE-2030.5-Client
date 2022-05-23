@@ -76,8 +76,8 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   uint32_t offset; ///< is the offset used for list paging 对于List类型的数据元素来说，offset表示本Stub在整个List中的序号
   uint32_t all; ///< is the total number of list items  List的总量
   struct _Stub *moved; ///< is a pointer to the new resource 这个可能跟资源的重定向有关。应该是资源重定向之后的对象位置，包含了最新的URL。
-  List *list; ///< is a list of old requirements for updates 之前需要准备区获取的数据。list长度于前面的flags中的置位的bit位个数一致。
-  List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的父层级的 Stub 。 这个是子级Stub指向父级Stub的链接。
+  List *list; ///< is a list of old requirements for updates 之前需要准备区获取的数据。list长度于前面的flags中的置位的bit位个数一致。通常有多个成员。
+  List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的父层级的 Stub 。 这个是子级Stub指向父级Stub的链接。通常只有一个成员。
   List *reqs; ///< is a list of requirements 需求：就是子级对象，当前Stub所需要的子级对象List。List中的data对象就是子级Stub。这个是父级Stub指向子级Stub的链接。
   union {
     void *context; ///< is a user defined completion context
@@ -385,10 +385,10 @@ void delete_stub (Stub *s) {
 void dep_complete (Stub *s) {
   List *l;
   static int enter_counter=0;
-  LOG_I("dep_complete(%d) : resource:%d(%s),href:%s,completion:%ld,complete:%d\n",
-    enter_counter++,s->base.type,se_names[s->base.type],s->base.name,(int64_t)s->completion,s->complete);
+  LOG_I("dep_complete(%d) : resource:%d(%s),href:%s,completion:%s,complete:%d\n",
+    enter_counter++,s->base.type,se_names[s->base.type],s->base.name,((s->completion != NULL )? "set" : "null"),s->complete);
   if (s->completion && !s->complete){  //complete设置为0，表示之前是不“齐备”的，也就是之前还没有执行过 completion 函数。
-    LOG_I("  dep_complete : ( complete=0 ) call completion function\n");
+    LOG_I("  dep_complete(%d) : call completion function\n",enter_counter);
     s->completion (s);  //如果 completion 函数之前设置过（现在存在），且数据也都获取成功了（complete为0表示不需要再获取什么东西了），则执行completion函数。
   }
   s->complete = 1;  //表示之前的请求都已经被满足了。
@@ -404,7 +404,7 @@ void dep_complete (Stub *s) {
       complete = !d->flags; //如果父级中的flags有任何一个bit置位了，则 complete =0，即表示没有完成。如果全部bit都清除掉了，则表示全部获取到了。
     }
     if (complete) {
-      LOG_I("  dep_complete : complete=1,excute dep_complete recursivly\n");
+      //LOG_I("  dep_complete(%d) : complete=1,excute dep_complete recursivly\n",enter_counter);
       if (d->list) {  //list中存储的应该是之前准备要去更新的内容，而现在由于本数据到位了，所以从这个表中移除。 
         remove_reqs (d, list_subtract (d->list, d->reqs));
         d->list = NULL; //前面的flags数据全部清零了，表示需要的dep已经全部被满足了。
@@ -488,6 +488,8 @@ Stub *get_resource (void *conn, int type, const char *href, int count) {
   if ((time (NULL) - s->base.time) > s->poll_rate) {  /*如果当前时间已经超过了poll_rate，即表示这个资源需要更新了，发出异步请求更新一次。*/
     s->all = count;   //如果Stub之前是不存在即使新建的（空的），那么 s->base.time 就是 0 。
     update_resource (s);  //在这个函数中去获取到资源（将访问网络），获取到之后，填充到哈希表中去。但是这个操作是异步访问网络。
+  }else{
+    LOG_D("  get_resource : time no up,exit\n");
   }
   return s;
 }

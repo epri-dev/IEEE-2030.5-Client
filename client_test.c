@@ -352,6 +352,7 @@ void generic_alarm (Stub *r) {
   static int id = 0;
   if (id == 10) {
     get_seq (r, 0, 255);
+    LOG_W("  generic_alarm : set alarm's completion() to NULL\n");
     r->completion = NULL;
     return;
   }
@@ -419,6 +420,7 @@ void edev_complete (Stub *r) {
     if (test & SCHEDULE_TEST) { //在all和primary中存在该测试项目。如果一个EndDevice的子级资源满足了，那么就执行schedule_der。
       LOG_I("  edev_complete : call schedule_der() on edev %s\n",r->base.name);
       schedule_der (r);
+      LOG_W("  edev_complete : set EndDevice's completion() to schedule_der\n");
       r->completion = schedule_der;
       /* 原先的edev的completion函数是本函数 edev_complete ，而这里如果符合执行 schedule 的条件的话，则修改成了 schedule_der 函数 。
       后续每刷新一次 FunctionSetAssignmentsList，都会调用一次 schedule_der 。
@@ -446,8 +448,10 @@ void edev_complete (Stub *r) {
                dcap_mup->base.name);
     }
     if (test & ALARM_TEST) {
-      if (t = get_list_root (r->conn, edev, LogEventList))
+      if (t = get_list_root (r->conn, edev, LogEventList)){
+        LOG_W(" edev_complete (edev completion): set LogEventList's completion() to alarm_test\n");
         t->completion = alarm_test;
+      }
       else test_fail ("alarm", "no LogEventList defined for the EndDevice.");
     }
   }
@@ -461,14 +465,24 @@ void der_program (Stub *d) {
     Stub *cl; //ControlList
     SE_DERProgram_t *dp = resource_data (d);
     LOG_I("  der_program : get_dep DefaultDERControl if exists\n");
-    get_dep (d, dp, DefaultDERControl); // 获取从属于dp的 DefaultDERControl 资源。
-    LOG_I("  der_program : get_dep DERControlList if exists\n");
-    if (cl = get_list_dep (d, dp, DERControlList)) {  //获取从属于dp的DERControlList资源。
-      cl->poll_rate = active_poll_rate;
-      poll_resource (cl); //获取到这些ControlList
+    get_dep (d, dp, DefaultDERControl); // 获取从属于dp的 DefaultDERControl 资源。这个资源要不存在要不就不存在，只有List才会有all值。
+
+    if( se_exists(dp,DERControlListLink) && dp->DERControlListLink.all > 0 ){
+      LOG_I("  der_program : DERControlLinkLink exist,all:%d\n",dp->DERControlListLink.all);
+      if (cl = get_list_dep (d, dp, DERControlList)) {  //获取从属于dp的DERControlList资源。
+        cl->poll_rate = active_poll_rate;
+        poll_resource (cl); //获取到这些ControlList
+      }
+    }else{
+      LOG_D("  der_program : DefaultDERControlLink not existed or all = 0\n");
     }
-    LOG_I("  der_program : get_list_dep DERCurveList if exists\n");
-    get_list_dep (d, dp, DERCurveList);
+    
+    if( se_exists(dp,DERCurveListLink) && dp->DERCurveListLink.all > 0 ){
+      LOG_I("  der_program : get_list_dep DERCurveList,all=%d\n",dp->DERCurveListLink.all);
+      get_list_dep (d, dp, DERCurveList);
+    }else{
+      LOG_D("  der_program : DERCurveListLink not existed or all = 0\n");
+    }
   }
 }
 
@@ -500,6 +514,7 @@ int fsa (Stub *r) {
     LOG_I("  fsa : get_list_dep DERProgramList\n");
     Stub *d = get_list_dep (r, fsa, DERProgramList);//获取到 DERProgramList 资源 。d 是 DERProgramList 资源（对象）
     if (d && primary) { //只要测试指令中包含了 primary 命令，则将调用该回调函数。
+      LOG_W("  fsa : set DERProgramList's completion() to  der_program_list\n");
       d->completion = der_program_list; //一个fsa中包含了一个program_list。
       return 1;
     }
@@ -529,7 +544,7 @@ void fsa_list (Stub *r) {
 对每一个edev对象执行：
 1）获取DERList对象
 2）获取 FunctionSetAssignmentsList 对象并设定 completion 函数为 fsa_list 函数，即在EndDevice数据全部满足后，调用fsa_list函数。*/
-void get_edev_subs (Stub *edevs) {
+void get_edev_subs (Stub *edevs) {  //这个参数对象是 EndDeviceList
   LOG_I("get_edev_subs : %s\n",edevs->base.name);
   List *l;
   if (test & REGISTER_TEST){
@@ -542,12 +557,15 @@ void get_edev_subs (Stub *edevs) {
     LOG_I("  get_edev_subs : dealing %s\n",s->base.name);
     SE_EndDevice_t *e = resource_data (s);
     if (test & INVERTER_CLIENT && e->sFDI != device_sfdi) continue; //作为DER Client，仅仅测试于本DER相同的EndDevice对象。通常指令中加入 inverter 指令。
+    LOG_W("  get_edev_subs : set EndDevice's completion() to edev_complete\n");
     s->completion = edev_complete;  //将为每一个 EndDevice 赋予该执行函数。
     get_list_dep (s, e, DERList); // 获取到 EndDevice 下面的 DERList。通常 href:/edev/edev0/der
     if (test & GET_FSA) { //在all和primary中都存在该测试项目
     LOG_I("  get_edev_subs : getting FunctionSetAssignmentsList on %s\n",s->base.name);
-      if ((s = get_list_dep (s, e, FunctionSetAssignmentsList)) && primary) //获取到 EndDevice 下面的 FunctionSetAssignmentsList
+      if ((s = get_list_dep (s, e, FunctionSetAssignmentsList)) && primary){ //获取到 EndDevice 下面的 FunctionSetAssignmentsList
+        LOG_W(" get_edev_subs : set FunctionSetAssignmentsList's completion() to fsa_list\n");
         s->completion = fsa_list;
+      }
     }
   }
 }
@@ -557,7 +575,7 @@ void check_registration (Stub *r) {
   LOG_I("check_registration,%s\n",r->base.name);
   SE_Registration_t *reg = resource_data (r);
   if (reg->pIN == 111115) { //这个111115是这个程序程序所公用的一个值。
-    LOG_D("registration succeeded,register test passed,clear REGISTER_TEST bit\n");
+    LOG_D("registration succeeded,register test passed,clear REGISTER_TEST bit,call get_edev_subs\n");
     test &= ~REGISTER_TEST; //在primary或者all指令的测试指令下，该bit初始值是置位的。这里一旦执行过了，就清除。
     if (edevs) get_edev_subs (edevs); //edevs 在函数 edev_list 中被初始化填充。所以基本逻辑是，先执行edev_list，然后再执行到这里，然后再执行一次get_edev_subs。
   } else test_fail ("registration", "pIN does not match 111115");
@@ -607,6 +625,8 @@ void end_device (Stub *r) {
 作为 EndDeviceList 对象的 completion 函数，
 就是 EndDeviceList 的子层（第一层就够了，不需要所有的层次都到齐）EndDevices到齐之后，执行的动作。
 在dcap资源获取到之后，主动指定该函数。
+
+注意：EndDeviceList函数的completion函数在执行过一次之后，就设置成了NULL，即后续不会再继续调用该函数。
 */
 
 void edev_list (Stub *r) {
@@ -650,7 +670,8 @@ void edev_list (Stub *r) {
   LOG_I("  edev_list : add EndDeviceList to poll resource routine,pollRate:%d\n",r->poll_rate);
   poll_resource (r);  //自动轮询该资源。
   /*陈立飞添加完毕*/
-
+  
+  LOG_W("  edev_list : set EndDeviceList's completion() to NULL\n");
   r->completion = NULL; //看起来 EndDeviceList数据只需要获取1次，后面就不需要了，所以自己结束掉。
 }
 
@@ -672,8 +693,10 @@ void dcap (Stub *r) {
   }
   
   if (test & GET_EDEV) {  //该项目在all和primary指令中都将被包含。执行获取EndDeviceList数据。
-    if (r = get_list_root (r->conn, dcap, EndDeviceList)) // 获取 EndDeviceList 资源
+    if (r = get_list_root (r->conn, dcap, EndDeviceList)){ // 获取 EndDeviceList 资源
+      LOG_W("  dcap : set EndDeviceList's completion() to edev_list\n");
       r->completion = edev_list;
+    }
     else test_fail ("edev", "no EndDeviceListLink in DeviceCapability");
   }
   
@@ -771,6 +794,7 @@ void self_device (Stub *r) {
   SE_SelfDevice_t *self = resource_data (r);
   r = get_list_dep (r, self, LogEventList);
   r->poll_rate = 30;
+  LOG_W("  self_device : set self_device's completion() to log_event\n");
   r->completion = log_event;
   poll_resource (r);
 }
@@ -781,7 +805,7 @@ extern const char * const se_names[];
 这个函数是 process_http中  的   DepFunc 函数，当完整的获取到一个SE对象数据的时候，此时调用该函数对该对象作定制化处理*/
 void test_dep (Stub *r) {
   int res_type = resource_type (r);
-  LOG_I("test_dep : resource type:%d(%s),href:%s\n",res_type,se_names[res_type],r->base.name);
+  //LOG_I("test_dep : resource type:%d(%s),href:%s\n",res_type,se_names[res_type],r->base.name);
   switch (res_type) {
   case SE_Time:
     LOG_I("  test_dep : SE_Time , call time_sync\n");
@@ -823,7 +847,7 @@ void test_dep (Stub *r) {
     LOG_I("  test_dep : SE_SelfDevice , call self_device\n");
     self_device (r);
   }
-  LOG_D("test_dep : exit function\n");
+  //LOG_D("test_dep : exit function\n");
 }
 
 

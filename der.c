@@ -193,6 +193,7 @@ void schedule_der (Stub *edev) {
   Stub *fsa = NULL, *s, *t;
   List *l, *m, *derpl = NULL;
   SE_DefaultDERControl_t *dderc = NULL;
+  int added_derc=0;
   LOG_I("schedule_der (EndDevice completion) : href : %s\n",edev->base.name);
   if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) {
     LOG_W("  schedule_der : no FSA on edev %s , return\n",edev->base.name);
@@ -233,7 +234,15 @@ void schedule_der (Stub *edev) {
     /*如果 DefaultDERControl 存在以及之前没有获取过，那么就获取一下*/
     if (!dderc && (t = get_subordinate (s, SE_DefaultDERControl)))
       dderc = resource_data (t);
+    added_derc++;
   }
+
+  if(added_derc == 0){
+    LOG_W("  schedule_der : no DERControl added to schedule\n");
+  }else{
+    LOG_I("  schedule_der : %d DERControl added\n",added_derc);
+  }
+  
   device->derpl = derpl;
   device->dderc = dderc;
   insert_event (schedule, SCHEDULE_UPDATE, 0);
