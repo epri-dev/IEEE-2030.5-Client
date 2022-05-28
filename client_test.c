@@ -505,7 +505,7 @@ void der_program_list (Stub *r) {
     //这里应该直接改成查询每一个reqs成员的。原代码仅仅对reqs中的第一个元素执行了der_program函数。这里可能存在问题。
     der_program (r->reqs->data);
     LOG_I("  der_program_list : after der_program,set DERProgramList completion to NULL\n");
-    r->completion = NULL;
+    r->completion = NULL; //对于core011测试case，只需要执行一次该函数即可。
   }
 }
 
@@ -534,7 +534,7 @@ int fsa (Stub *r) {
 void fsa_list (Stub *r) {
   LOG_I("fsa_list (FunctionSetAssignmentsList completion ) : %s\n",r->base.name);
   List *l;
-  foreach (l, r->reqs)  /*l取得的是fsalist中的子级，即单个fsa*/
+  foreach (l, r->reqs){  /*l取得的是fsalist中的子级，即单个fsa*/
     #if 0 //这个是原始代码版本
     if (fsa (l->data)){ 
       LOG_W("fsa_list:call fsa() on %s returns 1 , break\n",((Stub*)l->data)->base.name);
@@ -543,6 +543,9 @@ void fsa_list (Stub *r) {
     #else //这个是修改后的版本。还需要继续改进：判断其中的DERProgramListLink属性all的值是否大于0。只有大于0才去查询。否则可以省掉。
     fsa (l->data);
     #endif
+  }
+  LOG_I("  fsa_list : set completion to NULL\n");
+  r->completion = NULL; //针对core011的测试case，这个completion函数只需要执行一次即可。
 }
 
 /*获取EndDevice的子层资源，即EndDevice。参数edevs通常是 EndDeviceList 类型对象。
