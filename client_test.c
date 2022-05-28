@@ -53,14 +53,14 @@ path就是dnssd参数中的/path
 pin:在pIN测试中输入的pin值。
 */
 
-int server = 0, test = 0, secure = 0, interval = 5 * 60, primary = 0, pin = 0;
+int server = 0, test = 0, secure = 0, primary = 0, pin = 0;
 
 Stub *edevs;  //在本测试代码中，获取到的EndDeviceList设备数据对象，包含了List和各个EndDevice。
 
 char *path = NULL;  //注意这里是一个全局变量。是在<subtype[:1][/path]       | URI>中的path值。可能为空。
 uint64_t delete_sfdi;
 
-//要解析的指令是 <subtype[:1][/path]       | URI> ， 可能跟msDNS功能有关
+//要解析的指令是 <subtype[:1][/path]       | URI> ， 可能跟msDNS功能有关。我们的测试代码中，用的是直接连接服务器，所以这个函数用不到。
 int subtype_query (char *arg, char *name) {
   
   printf("arg in subtyupe_query is %s\n",arg);
@@ -414,7 +414,7 @@ void edev_complete (Stub *r) {
     } else {//在all和primary中走这个路径
       s->poll_rate = se_exists (fsal, pollRate) ? fsal->pollRate : 900; //通常要再poll_resource之前加入这一行，避免有些resource下发的时候没有带上pollRate数据。
       LOG_I("  edev_complete : call poll_resource(),poll_rate=%d\n",s->poll_rate);
-      poll_resource (s);  //这个测试逻辑思维：遇到一个EndDevice，就去poll一下FSAList
+      poll_resource (s);  //  这个测试逻辑思维：遇到一个EndDevice，就去poll一下FSAList
     }
     
     if (test & SCHEDULE_TEST) { //在all和primary中存在该测试项目。如果一个EndDevice的子级资源满足了，那么就执行schedule_der。
@@ -474,7 +474,7 @@ void der_program (Stub *d) {
         poll_resource (cl); //获取到这些ControlList
       }
     }else{
-      LOG_D("  der_program : DefaultDERControlLink not existed or all = 0\n");
+      LOG_D("  der_program : DERControlListLink not existed or all = 0\n");
     }
     
     if( se_exists(dp,DERCurveListLink) && dp->DERCurveListLink.all > 0 ){
@@ -501,12 +501,17 @@ void poll_derpl (Stub *r) {
 这个函数是 DERProgramList 的 completion 函数 */
 void der_program_list (Stub *r) {
   LOG_I("der_program_list (DERProgramList completion function) : %s\n",r->base.name);
-  if (primary && r->reqs) der_program (r->reqs->data);  //看样子只是执行了第一个？？
+  if (primary && r->reqs) {
+    //这里应该直接改成查询每一个reqs成员的。原代码仅仅对reqs中的第一个元素执行了der_program函数。这里可能存在问题。
+    der_program (r->reqs->data);
+    LOG_I("  der_program_list : after der_program,set DERProgramList completion to NULL\n");
+    r->completion = NULL;
+  }
 }
 
 
 /* 测试中获取到FSA资源 
-这个函数是test_dep中的 FunctionSetAssignments 的case*/
+这个函数是test_dep中的 FunctionSetAssignments 的 case 。*/
 int fsa (Stub *r) {
   LOG_I("fsa : resource href:%s\n",r->base.name);
   if (test & GET_DERP) {  //在all和primary中都存在该测试项目  
@@ -515,7 +520,7 @@ int fsa (Stub *r) {
     Stub *d = get_list_dep (r, fsa, DERProgramList);//获取到 DERProgramList 资源 。d 是 DERProgramList 资源（对象）
     if (d && primary) { //只要测试指令中包含了 primary 命令，则将调用该回调函数。
       LOG_W("  fsa : set DERProgramList's completion() to  der_program_list\n");
-      d->completion = der_program_list; //一个fsa中包含了一个program_list。
+      d->completion = der_program_list; //一个fsa中包含了一个program_list。对获取完毕了之后的DERProgramList资源的处理是异步的，这里设定了处理用的回调函数。
       return 1;
     }
   }
@@ -529,7 +534,7 @@ int fsa (Stub *r) {
 void fsa_list (Stub *r) {
   LOG_I("fsa_list (FunctionSetAssignmentsList completion ) : %s\n",r->base.name);
   List *l;
-  foreach (l, r->reqs)
+  foreach (l, r->reqs)  /*l取得的是fsalist中的子级，即单个fsa*/
     #if 0 //这个是原始代码版本
     if (fsa (l->data)){ 
       LOG_W("fsa_list:call fsa() on %s returns 1 , break\n",((Stub*)l->data)->base.name);
@@ -675,7 +680,8 @@ void edev_list (Stub *r) {
   r->completion = NULL; //看起来 EndDeviceList数据只需要获取1次，后面就不需要了，所以自己结束掉。
 }
 
-//在收到了完整的dcap数据之后的处理程序。这个就跟整个test程序的逻辑有关。在获取到了dcap资源后，通常仅仅去获取time和EndDeviceList两种资源。
+/*在收到了完整的dcap数据之后的处理程序。
+这个就跟整个test程序的逻辑有关。在获取到了dcap资源后，通常仅仅去获取time和EndDeviceList两种资源。*/
 void dcap (Stub *r) {
   LOG_I("dcap\n");
   SE_DeviceCapability_t *dcap = resource_data (r);
@@ -716,7 +722,7 @@ void time_sync (Stub *s) {
   LOG_I("time_sync\n");
   SE_Time_t *tm = resource_data (s);  //获取到时间资源
   s->poll_rate = se_exists (tm, pollRate) ? tm->pollRate : 900; //默认是900秒来获取一次数据。
-  poll_resource (s);  //添加一个异步请求。首次获取到数据之后，将进入这种自动循环模式。
+  poll_resource (s);  //添加一个异步请求。首次获取到数据之后，将进入这种自动轮询模式。这样该时间资源就能够自动定时刷新。
   set_time (tm);  //在获取到服务器时间后，同步一下本地时间，保持于服务器时间一致。
 }
 

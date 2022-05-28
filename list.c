@@ -162,7 +162,7 @@ List *list_delete (List *l, void *data) {
   return l; //移除特定节点之后，返回修改之后的 List 对象
 }
 
-//减去重复的节点。从la中减去lb中出现的重复的数据对象。
+//减去重复的节点。从la中减去在lb中出现的重复的数据对象，最后返回la。
 List *list_subtract (List *la, List *lb) {
   List *b;
   foreach (b, lb) la = list_delete (la, b->data);

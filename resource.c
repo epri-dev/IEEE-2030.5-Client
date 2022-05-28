@@ -88,7 +88,7 @@ void *resource_key (void *data) {
 
 global_hash(resource, string, 512)
 
-//
+//默认complete值是0。calloc在申请到内存后，将会对所有空间清零。
 void *new_resource (int size, char *name, void *data, int type) {
   Resource *r = calloc (1, size);
   r->name = strdup (name);

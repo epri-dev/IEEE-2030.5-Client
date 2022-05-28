@@ -29,6 +29,7 @@ Included with `der_client.c` is the module `der.c` that provides:
 #define DEFAULT_CONTROL (EVENT_NEW+13)  //
 
 #include "debug_log.h"
+#include "debug_log.h"
 #include "settings.c"
 
 
@@ -39,10 +40,10 @@ typedef struct {
   int metering_rate; ///< is the post rate for meter readings 上传数据的是时间周期
   Stub *mup; ///< is a pointer to the MirrorUsagePoint for this EndDevice
   List *readings; ///< is a list of MirrorMeterReadings
-  List *derpl; ///< is a list of DER programs DER program List
+  List *derpl; ///< is a list of DER programs DER program List 在这个设备上绑定的DERProgramList
   SE_DERControlBase_t base; //基本设定值？
-  SE_DefaultDERControl_t *dderc; ///< is the default DER control
-  Schedule schedule; ///< is the DER schedule for this device 需要执行的一系列事件
+  SE_DefaultDERControl_t *dderc; ///< is the default DER control 一个DefaultDERControl
+  Schedule schedule; ///< is the DER schedule for this device 需要执行的一系列事件的一个调度器
   Settings settings; ///< is the DER device settings 设定值
 } DerDevice;  //一个DER设备的对象表示，最终需要操作的就是这个对象
 
@@ -70,13 +71,14 @@ void device_cert (const char *path);
 */
 void device_certs (char *path);
 
-/** @brief Create a DER schedule for an EndDevice.
+/** @brief Create a DER schedule for an EndDevice.  创建一个DER调度器
     @param edev is a pointer to an EndDevice Stub
 */
 void schedule_der (Stub *edev);
 
 /** @} */
 
+//用sfdi作为一个设备的key。
 void *device_key (void *data) {
   DerDevice *d = data;
   return &d->sfdi;
@@ -125,7 +127,7 @@ void device_certs (char *path) {
 #define copy_boolean(a, b, field) \
   if (se_true (b, field)) se_set_true (a, field)
 
-/*这个函数只有在下面的 update_der 函数中被用到，修改了不影响整体。
+/*这个函数只有在下面的 update_der 函数中被用到，修改了不影响整体。相当于是一个孤儿函数。
 但是最新的sep.xsd文件中描述的数据结构跟现在这个函数不符，后续要用到的话需要对这个函数作一下修改。*/
 void copy_der_base (SE_DERControlBase_t *a,
                     SE_DERControlBase_t *b, uint32_t mask) {
@@ -169,7 +171,9 @@ void update_der (EventBlock *eb, int event) {
 }
 */
 
+/*将当前已经激活了的任务，设置成退出状态*/
 void remove_programs (Schedule *s, List *derpl) {
+  LOG_I("remove_programs\n");
   EventBlock *eb;
   HashPointer p;
   if (derpl == NULL) return;
@@ -185,7 +189,7 @@ void remove_programs (Schedule *s, List *derpl) {
   free_list (derpl);
 }
 
-//对一个DER安排调度
+//对一个DER安排调度。在Demo测试指令中如果指定了测试schedule的话，那么将指定本函数为completion函数。在每次EndDevice的子级数据刷新之后，将被调用。
 void schedule_der (Stub *edev) {
   SE_EndDevice_t *e = resource_data (edev);
   DerDevice *device = get_device (e->sFDI); //该EndDevice关联到的设备。
@@ -193,7 +197,7 @@ void schedule_der (Stub *edev) {
   Stub *fsa = NULL, *s, *t;
   List *l, *m, *derpl = NULL;
   SE_DefaultDERControl_t *dderc = NULL;
-  int added_derc=0;
+  int inserted_derp=0,added_derc=0;
   LOG_I("schedule_der (EndDevice completion) : href : %s\n",edev->base.name);
   if (!(fsa = get_subordinate (edev, SE_FunctionSetAssignmentsList))) {
     LOG_W("  schedule_der : no FSA on edev %s , return\n",edev->base.name);
@@ -206,27 +210,43 @@ void schedule_der (Stub *edev) {
   }
   
   // collect all DERPrograms for the device (sorted by primacy) 收集该DER下面所有的 DERPrograms 并且排序
-  foreach (l, fsa->reqs)
-    if (s = get_subordinate (l->data, SE_DERProgramList)) //收集所有的 SE_DERProgramList
-      foreach (m, s->reqs)
+  foreach (l, fsa->reqs) {
+    LOG_I("  schedule_der : Dealing with FSA , href : %s\n",((Stub*)l->data)->base.name);
+    if (s = get_subordinate (l->data, SE_DERProgramList)) { //l->data就是某一个fsa。这一行是为了得到FSA中的 DERProgramList 对象
+      LOG_I("  schedule_der : DERProgramList href : %s\n",s->base.name);
+      foreach (m, s->reqs) {  //m就是每一个DERProgram
+        LOG_I("  schedule_der : insert a DERProgram to derpl , href : %s\n",((Stub*)m->data)->base.name);
         derpl = insert_stub (derpl, m->data, s->base.info); //derpl 得到了所有的 FSA下面的 所有的 DERProgram ，构成一个List
-    
-  // handle program removal 将重复部分去掉，留下的都是不唯一的。
+        inserted_derp++;
+      }
+    }
+  }
+  if(inserted_derp){
+    LOG_I("  schedule_der : inserted %d DERPrograms\n",inserted_derp);
+  }
+  // handle program removal 
+  /*
+    device->derpl是上一次的，derpl是这一次的。
+    list_subtract (device->derpl, derpl) 的意思是从上一次中删除本次中出现的derp，剩下的放到device->derpl中。
+    然后再从schedule中删除这个留下来的部分。从实际的测试中已经可以验证这个逻辑。
+  */
   remove_programs (schedule, list_subtract (device->derpl, derpl));
     
   /* event block schedule might change as a result of program removal and
      primacy change so clear the block lists */
-  schedule->scheduled = schedule->active = schedule->superseded = NULL;
+  schedule->scheduled = schedule->active = schedule->superseded = NULL; //每次都要重新调整？那问题是之前的数据是否就丢弃了？
   schedule->device = edev;  //指定调度器中的device为当前的edev。
   
   // insert DER Control events into the schedule 从DERProgram中取出DERControlList，然后放到调度器中。
   foreach (l, derpl) {
-    s = l->data;
+    s = l->data;  //s 是这里的 DERProgram 对象。
     SE_DERProgram_t *derp = resource_data (s);
     if (t = get_subordinate (s, SE_DERControlList))
       foreach (m, t->reqs) {  /*将 DERControlList 其下的 DERControl 全部放到 schedule 中*/
         EventBlock *eb;
-        eb = schedule_event (schedule, m->data, derp->primacy); //将这个任务放到调度队列中去。
+        added_derc++;
+        LOG_I("  schedule_der : call schedule_event on DERProgramList %s,with %s\n",s->base.name,t->base.name);
+        eb = schedule_event (schedule, m->data, derp->primacy); //m是DERControl，将这个任务放到调度队列中去。
         eb->program = s;
         eb->context = device;
     }
@@ -234,7 +254,6 @@ void schedule_der (Stub *edev) {
     /*如果 DefaultDERControl 存在以及之前没有获取过，那么就获取一下*/
     if (!dderc && (t = get_subordinate (s, SE_DefaultDERControl)))
       dderc = resource_data (t);
-    added_derc++;
   }
 
   if(added_derc == 0){
@@ -243,9 +262,9 @@ void schedule_der (Stub *edev) {
     LOG_I("  schedule_der : %d DERControl added\n",added_derc);
   }
   
-  device->derpl = derpl;
-  device->dderc = dderc;
-  insert_event (schedule, SCHEDULE_UPDATE, 0);
+  device->derpl = derpl;  //保存最新的derpl
+  device->dderc = dderc;  //保存最新的dderc。
+  insert_event (schedule, SCHEDULE_UPDATE, 0);  // 后面将周期性的调用 update_schedule 函数。这里是首次触发调用。
   // update_schedule (schedule);
-  insert_event (device, DEVICE_SCHEDULE, 0);
+  insert_event (device, DEVICE_SCHEDULE, 0);  //仅仅是在主任务队列中显示一下当前全部的调度情况。
 }

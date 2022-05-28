@@ -18,7 +18,7 @@
     @{
 */
 
-#define SCHEDULE_UPDATE (EVENT_NEW+10)
+#define SCHEDULE_UPDATE (EVENT_NEW+10)  //首次触发是由schedule_der触发，后续将调用 update_schedule 函数，然后update_schedule将在有control需要执行的情况下连续的调用自己。
 
 //一个事件调度的各个状态
 enum EventStatus {Scheduled, Active, Canceled, CanceledRandom,
@@ -94,9 +94,9 @@ typedef struct _EventBlock {
     at that time for the EventBlock.
 */
 typedef struct {
-  int64_t next;
+  int64_t next; //下一个事件发生的时刻。
   Stub *device; ///< EndDevice that is the subject of scheduling 用来调度的对象（主题）
-  void *context; //< is a pointer to device specific information 设备特定的上下文环境信息
+  void *context; //< is a pointer to device specific information 设备特定的上下文环境信息。指的是 DerDevice 对象。
   /*哈希表，使用Event mRID 作为哈希表的 key */ 
   HashTable *blocks; /**< HashTable of EventBlocks that belong to the schedule using the Event mRID as the hash key. */
   EventBlock *scheduled; ///< EventBlock queue sorted by effective start time 以“开始时间”排序的 EventBlock 队列
@@ -149,9 +149,14 @@ char * ResponseType_to_string( int ResponseTypeCode )
 {
   if( ResponseTypeCode >= EventInapplicable){
     ResponseTypeCode = ResponseTypeCode - EventInapplicable + 14;
+  }else if(ResponseTypeCode >= 1){
+    ResponseTypeCode -= 1;
+  }else{
+    return "Invalid code";
   }
   return ResponseTypeCode < (sizeof(ResponseTypeString)/sizeof(char*))? ResponseTypeString[ResponseTypeCode] : "NotDefined";
 }
+
 //bound：一个传入的值，将对整个值做一个随机化处理。
 int rand_bound (int bound) {
   if (bound) {  //如果是非零(不是大于零)
@@ -293,7 +298,7 @@ int active_poll_rate = 300; //这个意思是：活跃的DER Control Event的轮
 //将一个event激活，执行，并且回复给上面的服务器当前的 EventStarted 状态
 void activate_block (Schedule *s, EventBlock *eb) {
   Stub *event = eb->event;
-  LOG_I ("activate_block href : %s , status : %d\n", event->base.name, eb->status);
+  LOG_I ("activate_block , href : %s , status : %d\n", event->base.name, eb->status);
   if (eb->status != Active) {
     eb->status = Active;
     insert_event (eb, EVENT_START, 0);  //将在主程序中对该类型的系统event做出响应（搜索EVENT_START），即执行对下层的逆变器设备的控制。
@@ -457,11 +462,11 @@ void block_update (EventBlock *eb, int status) {
 大意是，将一个Event对象加入到调度器中
 */
 EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
-  LOG_I("schedule_event : %s\n",event->base.name);
   EventBlock *eb; //这个是本代码内部定义的一个Event对象，专门用来做调度的
   SE_Event_t *ev = resource_data (event);
   int status = event_status (event);
-  if (eb = hash_get (s->blocks, ev->mRID)) {  //如果已经存在于hash表中
+  LOG_I("schedule_event : %s,primacy:%d,event status:%d(%s)\n",event->base.name,primacy,status,ResponseType_to_string(status) );
+  if (eb = hash_get (s->blocks, ev->mRID)) {  //如果已经存在于hash表中，那么就不用重复添加了。
     eb->primacy = primacy;
   } else {  //如果不存在，则添加一个新的
     event->schedules = insert_unique (event->schedules, s); //在这个schedules List中插入这个 Schedule。一个设备可能包含了多个 schedule
@@ -516,12 +521,14 @@ void schedule_init (Schedule *s) {
 }
 
 
-/*  检查当前active表中的EventBlock是否已经执行完毕了。 */
+/* 更新三个queue中的各个event的状态 */
 void update_schedule (Schedule *s) {
-  LOG_I("update_schedule , now time :%ld\n",(int64_t)time(NULL));
+  LOG_I("update_schedule , sys time :%ld\n",(int64_t)time(NULL));
   EventBlock *eb = s->active, *next;
   int64_t now = se_time (), last = 0;
-  while (eb) {  //检查active队列中是否有已经结束了的。
+  
+  while (eb) {  //检查active队列中是否有已经结束了的。遇到结束的就报告结束，直到遇到一个还没有到结束时间的。
+    LOG_D("  update_schedule : active queue : %s,start:%ld,end:%ld\n",((Stub*)eb->event)->base.name,eb->start,eb->end);
     if (eb->end <= now) { //当前时间已经越过了end时刻，说明这个事情结束了。
       if (eb->status == Active) {
         device_response (s->device, eb->event, EventCompleted); //向服务器报告事件已经结束。
@@ -534,12 +541,15 @@ void update_schedule (Schedule *s) {
     }
     eb = eb->next;
   }
-  s->active = eb;
-  eb = s->scheduled;  //检查scheduled中的EventBlock是否应当开始执行
+  s->active = eb; //定位到还没结束的那个EventBlock
+  
+  eb = s->scheduled;  //检查scheduled中的EventBlock是否应当开始执行，如果应该开始执行了，则放到active队列中去。
   while (eb) {
+    LOG_D("  update_schedule : scheduled queue : %s,start:%ld,end:%ld\n",((Stub*)eb->event)->base.name,eb->start,eb->end);
     next = eb->next;
     if (eb->start <= now) {
-      insert_active (s, eb);
+      LOG_I("  update_schedule : move from scheduled to active queue : %s",((Stub*)eb->event)->base.name);
+      insert_active (s, eb);  //从scheduled队列移动到active队列中去
       last = last ? min (last, eb->end) : eb->end;
     } else {
       last = last ? min (last, eb->start) : eb->start;
@@ -548,8 +558,10 @@ void update_schedule (Schedule *s) {
     eb = next;
   }
   s->scheduled = eb;
-  eb = s->superseded; //检查scheduled表中的EventBlock被替代。
+  
+  eb = s->superseded; //检查scheduled表中的EventBlock被替代。如果已经被替代了，则修改状态，发送Response给服务器。
   while (eb) {
+    LOG_D("  update_schedule : superseded queue : %s,start:%ld,end:%ld\n",((Stub*)eb->event)->base.name,eb->start,eb->end);
     if (eb->start <= now) {
       eb->status = Superseded;
       device_response (s->device, eb->event, EventSuperseded);
@@ -560,9 +572,10 @@ void update_schedule (Schedule *s) {
     eb = eb->next;
   }
   s->superseded = eb;
-  printf ("update_schedule %" PRId64 "(now) %" PRId64 "(last)\n", now, last);
-  if (last) {
-    if (last != s->next) {
+  
+  LOG_I ("  update_schedule %" PRId64 "(now) %" PRId64 "(last)\n", now, last);
+  if (last) { //last有可能是0。
+    if (last != s->next) {  //决定下一次调用 update_schedule 的时间。
       remove_event (s);
       insert_event (s, SCHEDULE_UPDATE, last);  //看起来像是在下一个时间点上触发该事件，将重新调用本函数。
     }

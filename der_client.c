@@ -46,7 +46,7 @@ void print_event_end (EventBlock *eb) {
 
 void print_default_control (DerDevice *device) {
   SE_DefaultDERControl_t *dc = device->dderc;
-  printf ("Default Control \"%s\" -- %s", dc->description, timestamp ());
+  LOG_I ("Default Control : \"%s\" -- %s", dc->description, timestamp ());//应当在这里插入对实际的逆变器的操作代码。本Demo代码没有涉及到对底层设备的接口。
   printf ("EndDevice: %ld\n", device->sfdi);
   print_se_object (dc, SE_DefaultDERControl);
   printf ("\n");
@@ -84,23 +84,23 @@ int der_poll (void **any, int timeout) {
   while (event = next_event (any)) {  // 查询下一个event是否已经到来。这里的event指的是系统中自定义的一些事件，由即值排在EVENT_NEW之后的event。
     switch (event) {
     case SCHEDULE_UPDATE: //调度器中设定的调度时刻到了，将调用 update_schedule 函数（这个函数中又会自己设置下次启动事件），就这样持续循环。
-      LOG_I("der_poll : next_event=SCHEDULE_UPDATE,call update_schedule\n");
+      LOG_I("\n** der_poll : next_event=SCHEDULE_UPDATE,call update_schedule\n");
       s = *any;
-      update_schedule (s);
-      if (!s->active) {
-        DerDevice *d = s->context;
-        if (d->dderc) insert_event (d, DEFAULT_CONTROL, 0);
+      update_schedule (s);  //更新各个事件的调度状态
+      if (!s->active) { //如果active队列空掉了，那么
+        DerDevice *d = s->context;  //得到原schedule中设备的对象数据
+        if (d->dderc) insert_event (d, DEFAULT_CONTROL, 0); //如果存在DefaultDERControl数据对象，那么就执行该Default control。这个是IEEE规范。
       }
       break;
     
     //注意下面两个case是连贯执行的。所以在处理完毕 RESOURCE_POLL 系统消息之后，就立即开始着手处理下面的UPDATE，涉及到网络通信。
-    case RESOURCE_POLL: //在函数 poll_resource 中执行一次 insert_event (s, RESOURCE_POLL, next);，然后这边就检测到了。
-      LOG_I("der_poll : next_event=RESOURCE_POLL,poll_resource : %s\n",((Stub*)(*any))->base.name );
+    case RESOURCE_POLL: //在函数 poll_resource 中执行一次 insert_event (s, RESOURCE_POLL, next);，然后这边就检测到了。所以只需要执行过一次poll_resource之后，后面就会自动的周期轮询。
+      LOG_I("\n** der_poll : next_event=RESOURCE_POLL,poll_resource : %s\n",((Stub*)(*any))->base.name );
       poll_resource (*any);
     case RESOURCE_UPDATE: 
       /*在函数 event_update 中执行了一次 insert_event (event, RESOURCE_UPDATE, now + 1) 操作，
       然后就会执行到这里。这个case专门是针对SE_Event_t的。*/
-      LOG_I("der_poll : next_event=RESOURCE_UPDATE,update_resource : %s\n",((Stub*)(*any))->base.name );
+      LOG_I("\n** der_poll : next_event=RESOURCE_UPDATE,update_resource : %s\n",((Stub*)(*any))->base.name );
       update_resource (*any); //访问网络，获取数据。
       break;
 

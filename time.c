@@ -29,6 +29,7 @@ int se_time_offset = 0;
 //设定SE指定的本地时间，跟系统本地时间区分开来。
 void set_time (SE_Time_t *tm) {
   se_time_offset = tm->currentTime - time (NULL);
+  LOG_I("set_time : se_time_offset : %d\n",se_time_offset);
   set_timezone (tm->tzOffset, tm->dstOffset,
                 tm->dstStartTime, tm->dstEndTime);
 }
