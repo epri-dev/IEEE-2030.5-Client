@@ -26,7 +26,7 @@ enum EventStatus {Scheduled, Active, Canceled, CanceledRandom,
                   ScheduleSuperseded
                  };
 
- char* ResponseTypeString[] = {"EventReceived", "EventStarted", "EventCompleted",
+char* ResponseTypeString[] = {"EventReceived", "EventStarted", "EventCompleted",
                     "EventOptOut", "EventOptIn", "EventCanceled", "EventSuperseded",
                     "EventPartialOptOut", "EventPartialOptIn", "EventCompleteOptOut",
                     "EventAcknowledge", "EventNoDisplay", "EventAbortedServer",
@@ -34,6 +34,11 @@ enum EventStatus {Scheduled, Active, Canceled, CanceledRandom,
                     "EventInapplicable"/*252*/, "EventInvalid", "EventExpired"
                    };
 
+char *EventStatusString[] = {
+  "Scheduled", "Active", "Canceled", "CanceledRandom",
+  "Superseded", "Aborted", "Completed", "ActiveWait",
+  "ScheduleSuperseded"};
+  
 /** @brief An EventBlock is an Event instance scheduled for a particular
     EndDevice.
     一个“事件块EventBlock”是面向一个特定的EndDevice的一个被调度的事件实例（Event instance）。
@@ -155,6 +160,11 @@ char * ResponseType_to_string( int ResponseTypeCode )
     return "Invalid code";
   }
   return ResponseTypeCode < (sizeof(ResponseTypeString)/sizeof(char*))? ResponseTypeString[ResponseTypeCode] : "NotDefined";
+}
+
+char * EventStatus_to_string(int status)
+{
+  return status < sizeof(EventStatusString)/sizeof(char*) ? EventStatusString[status] : "NotDefined";
 }
 
 //bound：一个传入的值，将对整个值做一个随机化处理。
@@ -465,7 +475,7 @@ EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
   EventBlock *eb; //这个是本代码内部定义的一个Event对象，专门用来做调度的
   SE_Event_t *ev = resource_data (event);
   int status = event_status (event);
-  LOG_I("schedule_event : %s,primacy:%d,event status:%d(%s)\n",event->base.name,primacy,status,ResponseType_to_string(status) );
+  LOG_I("schedule_event : %s,primacy:%d,event status:%d(%s)\n",event->base.name,primacy,status,EventStatus_to_string(status) );
   if (eb = hash_get (s->blocks, ev->mRID)) {  //如果已经存在于hash表中，那么就不用重复添加了。
     eb->primacy = primacy;
   } else {  //如果不存在，则添加一个新的

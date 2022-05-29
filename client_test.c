@@ -155,8 +155,8 @@ client_test eth0 http://192.168.1.13:8088/dcap edev
 
 client_test eth0 http://192.168.1.13:8088/dcap primary
 
-使用gdb调试步骤：
-1） 编译的时候使用 ./build debug，即以带gdb功能方式编译。
+使用gdb调试和在vscode中远程gdb来调试步骤：
+1）编译的时候使用 ./build debug，即以带gdb功能方式编译。否则无法调试。
 2）进入到./build目录，然后启动gdb，输入 file client_test。
 3）如果直接运行，则带上该程序运行参数：run eth0 http://192.168.1.13:8088/dcap edev
 
@@ -185,6 +185,10 @@ IEEE model : https://zepben.github.io/evolve/docs/2030-5/
 
 
 
+*/
+
+/*
+这个函数用来收集test_client中的指令参数，有些带的参数，就在函数中执行掉了。
 */
 void options (int argc, char **argv) {
   int i = 2, index;
