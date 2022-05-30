@@ -364,7 +364,7 @@ void generic_alarm (Stub *r) {
   sprintf (le.details, "Alarms Test");
   le.logEventCode = 1; // LE_GEN_SOFTWARE
   le.logEventID = id++;
-  le.logEventPEN = 37244; // ZigBee Alliance, Inc.
+  le.logEventPEN = 40732; // ZigBee Alliance, Inc.
   le.profileID = 2; // IEEE 2030.5
   se_post (r->conn, &le, SE_LogEvent, r->base.name);
 }
