@@ -587,7 +587,7 @@ void update_existing (Stub *s, void *obj, DepFunc dep) {
   List *l;
   if (!r->data) r->data = obj;  //如果该项数据原先不存在，那么就直接填充。
   else if (se_event (r->type)) {  //如果不为空，且类型为 SE_Event
-    LOG_I("  update_existing : event type\n");
+    LOG_I("  update_existing : s is an event type\n");
     SE_Event_t *ex = r->data, *ev = obj;
     memcpy (&ex->EventStatus, &ev->EventStatus,
             sizeof (SE_EventStatus_t));//如果是一个已经存在的 SE_Event 类型的数据，那么仅仅更新Status数据就够了。应该是对于SE_Event_t，数据更新的只有Status。

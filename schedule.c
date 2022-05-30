@@ -558,7 +558,7 @@ void update_schedule (Schedule *s) {
     LOG_D("  update_schedule : scheduled queue : %s,start:%ld,end:%ld\n",((Stub*)eb->event)->base.name,eb->start,eb->end);
     next = eb->next;
     if (eb->start <= now) {
-      LOG_I("  update_schedule : move from scheduled to active queue : %s",((Stub*)eb->event)->base.name);
+      LOG_I("  update_schedule : move from scheduled to active queue : %s\n",((Stub*)eb->event)->base.name);
       insert_active (s, eb);  //从scheduled队列移动到active队列中去
       last = last ? min (last, eb->end) : eb->end;
     } else {

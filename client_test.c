@@ -495,7 +495,7 @@ void der_program (Stub *d) {
 void poll_derpl (Stub *r) {
   LOG_I("poll_derpl : %s\n",r->base.name);
   SE_DERProgramList_t *derpl = resource_data (r);
-  r->poll_rate = se_exists (derpl, pollRate) ? derpl->pollRate : 900; //如果pollRate属性不不存在，那么就设定该值为900。
+  r->poll_rate = se_exists (derpl, pollRate) ? derpl->pollRate : 60; //按照CSIP文档，该值默认应当设置成900。但是900对于有些测试case来说太长了，这里设置成60比较合理。
   poll_resource (r);
 }
 
@@ -504,11 +504,20 @@ void poll_derpl (Stub *r) {
 /*按照前面的注释来看，意思是第一个的DERProgram的优先级（priority）最高？
 这个函数是 DERProgramList 的 completion 函数 */
 void der_program_list (Stub *r) {
-  LOG_I("der_program_list (DERProgramList completion function) : %s\n",r->base.name);
+  List *m;
+  LOG_I("der_program_list (DERProgramList completion ) : %s\n",r->base.name);
   if (primary && r->reqs) {
     //这里应该直接改成查询每一个reqs成员的。原代码仅仅对reqs中的第一个元素执行了der_program函数。这里可能存在问题。
+    #if 0
     der_program (r->reqs->data);
-    LOG_I("  der_program_list : after der_program,set DERProgramList completion to NULL\n");
+    #else  
+    foreach (m, r->reqs) {  // m就是每一个DERProgram
+      Stub *d = m->data;
+      LOG_I("  der_program_list : der_program() on DERProgram %s\n",d->base.name);  //这里到最后会出现SegmentFault错误
+      der_program (d);
+    }
+    #endif
+    LOG_I("  der_program_list : set DERProgramList completion to NULL\n");
     r->completion = NULL; //对于core011测试case，只需要执行一次该函数即可。
   }
 }
@@ -690,7 +699,7 @@ void edev_list (Stub *r) {
 /*在收到了完整的dcap数据之后的处理程序。
 这个就跟整个test程序的逻辑有关。在获取到了dcap资源后，通常仅仅去获取time和EndDeviceList两种资源。*/
 void dcap (Stub *r) {
-  LOG_I("dcap\n");
+  LOG_I("dcap()\n");
   SE_DeviceCapability_t *dcap = resource_data (r);
 
   //陈立飞添加开始
@@ -814,6 +823,7 @@ void self_device (Stub *r) {
 
 extern const char * const se_names[];
 
+static int got_dcap = 0;
 /*
 这个函数是 process_http中  的   DepFunc 函数，当完整的获取到一个SE对象数据的时候，此时调用该函数对该对象作定制化处理*/
 void test_dep (Stub *r) {
@@ -841,8 +851,13 @@ void test_dep (Stub *r) {
     }
     break;
   case SE_DeviceCapability:
-    LOG_I("  test_dep : SE_DeviceCapability , call dcap\n");
-    dcap (r);
+    if(!got_dcap){
+      got_dcap = 1;
+      LOG_I("  test_dep : SE_DeviceCapability , call dcap\n");
+      dcap (r);
+    }else{
+      LOG_W("  test_dep : dcap had called,skip\n");
+    }
     break;
   case SE_EndDevice:
     LOG_I("  test_dep : SE_EndDevice , call end_device\n");
