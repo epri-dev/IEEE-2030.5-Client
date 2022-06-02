@@ -8,7 +8,7 @@
 char *hex4 (int *x, char *data) {
   int c = *data;
   if (in_range (c, '0', '9')) *x = c - '0';
-  else if (in_range (c, 'a', 'f')) *x = c - 'a' + 10;
+  else if (in_range (c, 'a', 'f')) *x = c - 'a' + 10; 
   else if (in_range (c, 'A', 'F')) *x = c - 'A' + 10;
   else return NULL;
   //表示下一个字符的位置，主要用来提供给下一次调用的时候判断，字符串是否已经结束了。

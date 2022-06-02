@@ -303,7 +303,7 @@ void remove_deps (Stub *s, List *deps) {
   List *l;
   foreach (l, deps) { //遍历每一个依赖对象，即父级Stub
     Stub *t = l->data;//依赖对象，即父级Stub
-    if (t->status < 0)  //通常此时status=-1，表示向服务器发出的数据还在路上，要等待其回来。发出请求的原因是首次请求或者更新数据。
+    if (t->status < 0)  //通常此时 status = -1，表示向服务器发出的数据还在路上，要等待其回来。发出请求的原因是首次请求或者更新数据。
       t->list = list_delete (t->list, s);     //在父级Stub中的list中移除本Stub。
     else t->reqs = list_delete (t->reqs, s);  //从父级Stub中的reqs列表中移除本Stub。reqs是父级Stub中记录的“需要”的子级stub的一张表。
   }
@@ -329,8 +329,8 @@ void *get_stub (char *name, int type, void *conn) {
     s = new_resource (sizeof (Stub), name, NULL, type); //新建的时候，数据是空的。
     s->conn = conn;
     s->poll_rate = 900; //poll_rate 默认是900？
-    if (head) link_insert (list_next (head), s);  //此时数据为空
-    else insert_resource (s);
+    if (head) link_insert (list_next (head), s);    //在首个元素之后插入，构成一个链表。
+    else insert_resource (s); //如果该hash位置上还没有元素占据，那么直接插入到hash表中这个元素将成为head。
   }
   return s; //无论在哈希表中找到没有，都返回找个对象
 }
@@ -426,7 +426,8 @@ void dep_complete (Stub *s) {
       //LOG_I("  dep_complete(%d) : complete=1,excute dep_complete recursivly\n",enter_counter);
       if (d->list) {  //list中存储的应该是之前准备要去更新的内容，而现在由于本数据到位了，所以从这个表中移除。 
         LOG_I("  dep_complete(%d) : call remove_reqs\n",enter_counter);
-        remove_reqs (d, list_subtract (d->list, d->reqs));  //看起来像是这一次的获取中，少了几个成员，这样，之前旧的成员就要删除掉。实现本地和服务器端的同步。
+        remove_reqs (d, list_subtract (d->list, d->reqs));  
+        /*看起来像是这一次的获取中，少了几个成员，这样，之前旧的成员就要删除掉。实现本地和服务器端的同步。d->list像是对reqs的备份，这里用来做比较。*/
         d->list = NULL; //在调用dep_complete的时候，数据都到齐了，所以之前多出来的请求要都要删除掉。
       }
       dep_complete (d); //如果父级在本Stub补充上去之后变得齐备了，那么继续往上追溯。比如当前是EndDevice对象，接下去是EndDeviceList对象。
@@ -479,7 +480,7 @@ void update_resource (Stub *s) {
     status =0表示这个Stub是新建的，内部的数据是空的。>0表示数据已经回复了，由HTTP状态码来对其赋值。其实还有比如200这样的表示http回复的值。
     如果当前值是-1，则不会执行请求（请求的结果还未到达，可能还在路上）。
     即仅仅对刚刚新建的，或者之前已经获取过的资源（旧的资源）执行请求。*/
-    LOG_I("update_resource (s->reqs = NULL): %s\n",s->base.name);
+    LOG_I("update_resource (set s->reqs NULL): %s\n",s->base.name);
     if (s->all) s->offset = 0;//重新获取全部成员。
     s->list = s->reqs;        //将旧的请求先备份起来。s->list仅仅是为了备份。
     s->reqs = NULL;           //清空"需求"对象表，也就是子级资源。
@@ -490,7 +491,7 @@ void update_resource (Stub *s) {
     if (s->status && !se_event (resource_type (s))){ 
       LOG_I("  update_resource : call dep_reset\n");
       dep_reset (s);//如果是大于0的，即该资源之前已经请求过了，现在属于更新，且不属于SE_event类型资源，那么reset一下。如果是首次，不用reset。
-    }else{  //其他情况比如说这个资源是新建的，则统一将自己这个Stub的complete标记成0，而不涉及到其他Stub。这样的话，在该资源的子级资源都到位后，将触发调用completion函数。
+    }else{  //其他情况：该资源不是首次获取，或者是一个event类型（DERControl），则仅仅是将自己这个Stub的complete标记成0，而不涉及到其他Stub。这样的话，在该资源的子级资源都到位后，将触发调用completion函数。
       LOG_I("  update_resource : set Stub self complete flag to 0\n");
       s->complete = 0; //仅仅将自己标记成“未完整”。
     }
@@ -646,7 +647,7 @@ int list_object (Stub *s, void *obj, DepFunc dep) {
   dep (s);  //这个List作为一个整体对象，执行一遍对这个List的dep函数。在我们的本demoe代码中，没有执行 EndDeviceList 的操作。
   
   //接下去是对每一个List成员执行操作。构建List对象和其下的子级资源之间的dependent关系。先处理每一个成员。
-  foreach (l, input) {
+  foreach (l, input) {  //如果没有成员，那么就不会执行下面的循环。
     Uri128 buf;
     char *path;
     if (path = object_path (&buf, s->conn, l->data)) {  //取出URL路径
@@ -665,7 +666,7 @@ int list_object (Stub *s, void *obj, DepFunc dep) {
   }
   free_list (input);  //之前解析的时候，是动态申请的，所以这里释放掉。
 
-  //然后再处理本身这个List对象。
+  //处理继续索取情况和不需要继续索取的情况。
   if (count > 0) get_seq (s, s->offset, count); //有时候，一个list是分批获取的，所以有时候可能count值是大于0的，这种情况下就要继续去获取。
   else if (!s->all) { 
     LOG_I("  list_object : s->all==0,call dep_complete\n");

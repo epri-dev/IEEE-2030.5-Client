@@ -40,9 +40,9 @@ typedef struct {
   int metering_rate; ///< is the post rate for meter readings 上传数据的是时间周期
   Stub *mup; ///< is a pointer to the MirrorUsagePoint for this EndDevice
   List *readings; ///< is a list of MirrorMeterReadings
-  List *derpl; ///< is a list of DER programs DER program List 在这个设备上绑定的DERProgramList
+  List *derpl; ///< is a list of DER programs DER program List 在这个设备上绑定的DERProgramList，这个数据目前仅仅用在schedule_der函数中，起到备份作用。
   SE_DERControlBase_t base; //基本设定值？
-  SE_DefaultDERControl_t *dderc; ///< is the default DER control 一个DefaultDERControl
+  SE_DefaultDERControl_t *dderc; ///< is the default DER control  这个设备的DefaultDERControl表，在DERControl执行完毕后，要执行这个 defaultControl
   Schedule schedule; ///< is the DER schedule for this device 需要执行的一系列事件的一个调度器
   Settings settings; ///< is the DER device settings 设定值
 } DerDevice;  //一个DER设备的对象表示，最终需要操作的就是这个对象
@@ -176,11 +176,15 @@ void remove_programs (Schedule *s, List *derpl) {
   LOG_I("remove_programs\n");
   EventBlock *eb;
   HashPointer p;
-  if (derpl == NULL) return;
+  if (derpl == NULL){
+    LOG_I("  remove_programs : derpl is NULL , return\n");
+    return;  /*在实际场景中，针对的情况就是前后两次derp内容没有变化的情况*/
+  }
+  
   foreach_h (eb, &p, s->blocks) {
     if (find_by_data (derpl, eb->program)) {
       remove_block (s, eb);
-      if (eb->status == Active) {
+      if (eb->status == Active) { //如果当前已经是处于激活状态了，那么就发送一条消息到服务器中。
         device_response (s->device, eb->event, EventAbortedProgram);
       }
       eb->status = Aborted;
@@ -227,26 +231,30 @@ void schedule_der (Stub *edev) {
   // handle program removal 
   /*
     device->derpl是上一次的，derpl是这一次的。
-    list_subtract (device->derpl, derpl) 的意思是从上一次中删除本次中出现的derp，剩下的放到device->derpl中。
-    然后再从schedule中删除这个留下来的部分。从实际的测试中已经可以验证这个逻辑。
+    list_subtract (device->derpl, derpl) 的意思是从上一次的derpl中删除本次中出现的derp，剩下的放到device->derpl中。
+    然后再从schedule中删除这个留下来的部分。
+    
+    这个逻辑主要解决一种情况：如果本次derpl中的derp数量变少了，意思就是服务器端已经删除掉了，这样就要求同步到Client端本地来。
+    如果derpl数量增加了，那么这一行相当于不存在。
   */
   remove_programs (schedule, list_subtract (device->derpl, derpl));
     
   /* event block schedule might change as a result of program removal and
      primacy change so clear the block lists */
-  schedule->scheduled = schedule->active = schedule->superseded = NULL; //每次都要重新调整？那问题是之前的数据是否就丢弃了？
+  //这里全部删除（仅仅是删除链接，而Event的Stub依然存在本地），然后在好偶徐步骤中再重新加入进来。相当于每次调用这个 schedule_der 的时候都重新添加了。
+  schedule->scheduled = schedule->active = schedule->superseded = NULL; 
   schedule->device = edev;  //指定调度器中的device为当前的edev。
   
   // insert DER Control events into the schedule 从DERProgram中取出DERControlList，然后放到调度器中。
   foreach (l, derpl) {
     s = l->data;  //s 是这里的 DERProgram 对象。
     SE_DERProgram_t *derp = resource_data (s);
-    if (t = get_subordinate (s, SE_DERControlList))
+    if (t = get_subordinate (s, SE_DERControlList)) /* t 是 SE_DERControlList 对象（ DERProgram的三个主要对象之一 ） */
       foreach (m, t->reqs) {  /*将 DERControlList 其下的 DERControl 全部放到 schedule 中*/
         EventBlock *eb;
         added_derc++;
         LOG_I("  schedule_der : call schedule_event on DERProgramList %s,with %s\n",s->base.name,t->base.name);
-        eb = schedule_event (schedule, m->data, derp->primacy); //m是DERControl，将这个任务放到调度队列中去。
+        eb = schedule_event (schedule, m->data, derp->primacy);   // m 是DERControl，将这个任务放到调度队列中去。这个函数不会重复添加已经存在的event。
         eb->program = s;
         eb->context = device;
     }
@@ -264,7 +272,8 @@ void schedule_der (Stub *edev) {
   
   device->derpl = derpl;  //保存最新的derpl
   device->dderc = dderc;  //保存最新的dderc。
-  insert_event (schedule, SCHEDULE_UPDATE, 0);  // 后面将周期性的调用 update_schedule 函数。这里是首次触发调用。
+  //后面将周期性的调用 update_schedule 函数。这里是首次触发调用，相当于触发了一下。update_schedule将检查三个schedule队列中的状态变化，发送响应。
+  insert_event (schedule, SCHEDULE_UPDATE, 0);
   // update_schedule (schedule);
-  insert_event (device, DEVICE_SCHEDULE, 0);  //仅仅是在主任务队列中显示一下当前全部的调度情况。
+  insert_event (device, DEVICE_SCHEDULE, 0);    //仅仅是在主任务队列中显示一下当前全部的调度情况。
 }

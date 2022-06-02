@@ -22,7 +22,7 @@ needs as the framework is ported to other systems.
 Targets
 -------
 
-Running the build script with no arguments will attempt to build the targets
+Running the build script with no arguments will attempt to build the targets 
 specified in `targets.sh`. Within `targets.sh` the variable `targets` should
 be defined, this variable is an array of targets to be built:
 

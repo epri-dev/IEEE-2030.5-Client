@@ -53,18 +53,24 @@ void print_default_control (DerDevice *device) {
 }
 
 void print_blocks (EventBlock *eb) {
+  time_t now = (time_t)se_time ();
+  int printed = 0;
   while (eb) {
     SE_Event_t *ev = resource_data (eb->event);
-    printf ("  %-11ld %-11ld %-31s\n", eb->start, eb->end, ev->description);
+    printf ("  %-11ld %-11ld %-31s %-4ld\n", eb->start, eb->end, ev->description,(eb->start - now));
     eb = eb->next;
+    printed = 1;
+  }
+  if(!printed){
+    LOG_I("None\n");
   }
 }
 
 void print_event_schedule (DerDevice *d) {
   Schedule *s = &d->schedule;
   EventBlock *eb = s->scheduled;
-  printf ("Event Schedule for device %ld -- %s", d->sfdi, timestamp ());
-  printf ("  Start       End         Description\n");
+  LOG_I ("Event Schedule for device %ld -- %s", d->sfdi, timestamp ());
+  printf ("  Start       End         Description                 left(s)\n");
   print_blocks (s->scheduled);
   printf ("Active Blocks:\n");
   print_blocks (s->active);
@@ -87,7 +93,7 @@ int der_poll (void **any, int timeout) {
       LOG_I("\n** der_poll : next_event=SCHEDULE_UPDATE,call update_schedule\n");
       s = *any;
       update_schedule (s);  //更新各个事件的调度状态
-      if (!s->active) { //如果active队列空掉了，那么
+      if (!s->active) { //如果active队列空掉了，那么就要去执行 DefaultControl 动作
         DerDevice *d = s->context;  //得到原schedule中设备的对象数据
         if (d->dderc) insert_event (d, DEFAULT_CONTROL, 0); //如果存在DefaultDERControl数据对象，那么就执行该Default control。这个是IEEE规范。
       }
