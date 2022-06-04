@@ -102,8 +102,7 @@ typedef struct {
   int64_t next; //下一个事件发生的时刻。
   Stub *device; ///< EndDevice that is the subject of scheduling 用来调度的对象（主题）
   void *context; //< is a pointer to device specific information 设备特定的上下文环境信息。指的是 DerDevice 对象。
-  /*哈希表，使用Event mRID 作为哈希表的 key */ 
-  HashTable *blocks; /**< HashTable of EventBlocks that belong to the schedule using the Event mRID as the hash key. */
+  HashTable *blocks; /**< HashTable of EventBlocks that belong to the schedule using the Event mRID as the hash key. 哈希表，其中使用Event mRID 作为哈希表的 key */
   EventBlock *scheduled; ///< EventBlock queue sorted by effective start time 以“开始时间”排序的 EventBlock 队列
   EventBlock *active; ///< EventBlock queue sorted by effective end time 以“结束时间”排序的 EventBlock 队列
   EventBlock *superseded; ///< EventBlock queue sorted by effective start time 以“实际开始时间”排序的 EventBlock 队列
@@ -399,6 +398,7 @@ void remove_block (Schedule *s, EventBlock *eb) {
 
 //移除一个 EventBlock
 void remove_blocks (Stub *event, int response) {
+  LOG_I("remove_blocks , event href : %s\n",event->base.name);
   List *l;
   int status = event_status (event);
   foreach (l, event->schedules) {
@@ -423,7 +423,7 @@ void delete_blocks (Stub *event) {
   event->schedules = NULL;
 }
 
-
+ 
 /*
 
 这个程序通常用作event对象(Stub)的 completion 函数。
@@ -447,13 +447,16 @@ void event_update (Stub *event) {
     insert_event (event, RESOURCE_UPDATE, now + 1); //now+1的意思是：RESOURCE_UPDATE动作的时间在后面一秒钟执行。
     break;
   case Active:
+    LOG_I("  event_update : case Active , call activate_blocks\n");
     activate_blocks (event);  //看起来像是提前激活
     break;
   case Canceled:
   case CanceledRandom:  //取消
+    LOG_I("  event_update : case Canceled or CanceledRandom , call remove_blocks\n");
     remove_blocks (event, EventCanceled);
     break;
   case Superseded:  //挂起
+    LOG_I("  event_update : case Superseded , call remove_blocks\n");
     remove_blocks (event, EventSuperseded);
     break;
   }
@@ -584,7 +587,7 @@ void update_schedule (Schedule *s) {
   s->superseded = eb;
   
   LOG_I ("  update_schedule %" PRId64 "(now) %" PRId64 "(last)\n", now, last);
-  if (last) { //last有可能是0。
+  if (last) { //last有可能是0，就是表示不再调度了。
     if (last != s->next) {  //决定下一次调用 update_schedule 的时间。
       remove_event (s);
       insert_event (s, SCHEDULE_UPDATE, last);  //看起来像是在下一个时间点上触发该事件，将重新调用本函数。

@@ -135,7 +135,7 @@ int list_length (void *l) {
   return length;
 }
 
-//通过比较list单元中包含的data的地址值来判定是否找打了这份数据。
+//通过比较list单元中包含的data的地址值来判定是否找到了这份数据。
 void *_find_by_data (List **prev, List *l, void *data) {
   for (*prev = NULL; l; *prev = l, l = l->next)
     if (l->data == data) return l;  //同时也得到了在l元素之前的那个指针变量指向的地址。
