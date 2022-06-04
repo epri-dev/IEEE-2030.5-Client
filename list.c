@@ -17,9 +17,12 @@ typedef struct _List {
 } List;
 
 #define list_next(l) (((List *)l)->next)
+/*这个宏定义的巧妙之处在于，在本套代码的很多的结构体是这种类似的List结构，即首个元素是一个指针，指向后一个元素。
+所以这里可以用(List*)作强制转换，l可以是别的类型的元素*/
+
 #define list_data(l) (((List *)l)->data)
 
-//在头部插入一个list单元
+//在头部插入一个list单元。head是一个指向l元素的首地址的指针。新插入的元素l的next总是指向head。
 #define link_insert(head, l) \
   ((list_next (l) = (void *)head), (head = (void *)l))
 

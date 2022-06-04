@@ -546,7 +546,17 @@ int fsa (Stub *r) {
 /*这个函数作为 FunctionSetAssignmentsList 资源的 completion 函数，处理List中的每一个FSA资源对象。 */
 void fsa_list (Stub *r) {
   LOG_I("fsa_list (FunctionSetAssignmentsList completion ) : %s\n",r->base.name);
+  /* 在 BASIC-003 这个测试 case 中，要求检测到了FSAList变化了之后，重新执行一遍FSA下面的子级数据一遍。
+  在这个case之前，本函数在执行一遍完毕之后，将设置 r->completion = NULL，以避免后续再次执行。现在看起来需要修改。
+  应当加入一个判断：判断到本次获取的FSAlist跟之前的不一样，执行下面的fsa函数。
+  */
+  
   List *l;
+
+  /*陈立飞添加代码开始*/
+  
+  /*陈立飞添加代码结束*/
+
   foreach (l, r->reqs){  /*l取得的是fsalist中的子级，即单个fsa*/
     #if 0 //这个是原始代码版本
     if (fsa (l->data)){ 

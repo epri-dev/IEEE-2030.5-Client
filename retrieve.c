@@ -303,7 +303,7 @@ void remove_deps (Stub *s, List *deps) {
   List *l;
   foreach (l, deps) { //遍历每一个依赖对象，即父级Stub
     Stub *t = l->data;//依赖对象，即父级Stub
-    if (t->status < 0)  //通常此时status=-1，表示向服务器发出的数据还在路上，要等待其回来。发出请求的原因是首次请求或者更新数据。
+    if (t->status < 0)  //通常此时 status = -1，表示向服务器发出的数据还在路上，要等待其回来。发出请求的原因是首次请求或者更新数据。
       t->list = list_delete (t->list, s);     //在父级Stub中的list中移除本Stub。
     else t->reqs = list_delete (t->reqs, s);  //从父级Stub中的reqs列表中移除本Stub。reqs是父级Stub中记录的“需要”的子级stub的一张表。
   }
@@ -329,8 +329,8 @@ void *get_stub (char *name, int type, void *conn) {
     s = new_resource (sizeof (Stub), name, NULL, type); //新建的时候，数据是空的。
     s->conn = conn;
     s->poll_rate = 900; //poll_rate 默认是900？
-    if (head) link_insert (list_next (head), s);  //此时数据为空
-    else insert_resource (s);
+    if (head) link_insert (list_next (head), s);    //在首个元素之后插入，构成一个链表。
+    else insert_resource (s); //如果该hash位置上还没有元素占据，那么直接插入到hash表中这个元素将成为head。
   }
   return s; //无论在哈希表中找到没有，都返回找个对象
 }
@@ -426,7 +426,8 @@ void dep_complete (Stub *s) {
       //LOG_I("  dep_complete(%d) : complete=1,excute dep_complete recursivly\n",enter_counter);
       if (d->list) {  //list中存储的应该是之前准备要去更新的内容，而现在由于本数据到位了，所以从这个表中移除。 
         LOG_I("  dep_complete(%d) : call remove_reqs\n",enter_counter);
-        remove_reqs (d, list_subtract (d->list, d->reqs));  //看起来像是这一次的获取中，少了几个成员，这样，之前旧的成员就要删除掉。实现本地和服务器端的同步。
+        remove_reqs (d, list_subtract (d->list, d->reqs));  
+        /*看起来像是这一次的获取中，少了几个成员，这样，之前旧的成员就要删除掉。实现本地和服务器端的同步。d->list像是对reqs的备份，这里用来做比较。*/
         d->list = NULL; //在调用dep_complete的时候，数据都到齐了，所以之前多出来的请求要都要删除掉。
       }
       dep_complete (d); //如果父级在本Stub补充上去之后变得齐备了，那么继续往上追溯。比如当前是EndDevice对象，接下去是EndDeviceList对象。
