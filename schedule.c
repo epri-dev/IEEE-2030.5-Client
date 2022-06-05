@@ -20,7 +20,7 @@
 
 #define SCHEDULE_UPDATE (EVENT_NEW+10)  //首次触发是由schedule_der触发，后续将调用 update_schedule 函数，然后update_schedule将在有control需要执行的情况下连续的调用自己。
 
-//一个事件调度的各个状态
+//一个事件调度的各个状态。这些状态时这个代码自定义的，不是IEEE的标准值。但是前面4个跟IEEE的一致。后面的都是自己扩展的。
 enum EventStatus {Scheduled, Active, Canceled, CanceledRandom,
                   Superseded, Aborted, Completed, ActiveWait,
                   ScheduleSuperseded
@@ -207,18 +207,29 @@ void device_response (Stub *device, Stub *event, int status) {
 //返回Control对象中的flag值。
 uint32_t der_base (void *event) {
   SE_DERControl_t *derc = resource_data (event);
-  return se_flags (&derc->DERControlBase);
+  return se_flags (&derc->DERControlBase);  //具体就是 SE_DERControlBase_t 结构体定义中的各个 flag 标记
 }
 
 
-//不知道什么意思。supersede 是 " vt. 替代，取代 " 的意思
+//判断b是否被a完全替代。b是已经在执行的event，a是后来的。supersede 是 " vt. 替代，取代 " 的意思
 int block_supersede (EventBlock *a, EventBlock *b) {
   SE_Event_t *x = resource_data (a->event),
               *y = resource_data (b->event);
-  if ((a->primacy == b->primacy && x->creationTime > y->creationTime) || a->primacy < b->primacy)//如果两个事件的primacy的值相同，而前者创建比较早
-    return a->der ? (b->der &= ~a->der) == 0 : 1; //如果b中的ber标志位完全被清空了（被a中的相同bit清空了），那么就返回ture，表示b被a取代了。否则就是没有被取代。
-  a->der &= ~b->der;  //将a->der中的某些bit位清零。这些bit位是对应在b->der中的bit位。
-  return 0; //没有符合上述条件的:1)a的优先级没有b那么高。2）优先级相同，但是b的创建时间更早。那么，就返回0，表示b没有被a圈圈替代。
+  
+  /*如果两个事件的primacy的值相同，而a即前者的创建时间晚，或者primacy较小，则优先级更高。判断的原则依据 第90页，条款f中的描述。
+  When comparing two Nested Events or Overlapping Events from servers with the same primacy,
+  the creationTime element SHALL be used to determine which Event is newer and therefore
+  supersedes the older. The Event with the larger (e.g., more recent) creationTime is the newer Event.
+  */
+  if ((a->primacy == b->primacy && x->creationTime > y->creationTime) || a->primacy < b->primacy)
+    return a->der ? (b->der &= ~a->der) == 0 : 1;
+  /*上面的代码解释：首先判断a->der是否是0。如果是0，则直接返回1，表示b完全被替代了，b中的各个Control就不用执行了。
+  否则，如果a中包含了一些bit(a->der非零)，那么：
+  先尝试将b中跟a中的der相同的bit都清空掉，然后判断是否完全清空（完全清空就是相当于完全替代），如果是，则返回ture，即表示b完全被a所替代。
+  如果还有几个bit没有被清空，那么就返回false，表示没有被完全替代。*/
+  //对于优先级不一样的event来说，就将b中已经存在的control从a中清除出去。因为b先在执行了，所以后来到的a就不用执行了。
+  a->der &= ~b->der;
+  return 0;
 }
 
 //新建一个 event block 
@@ -276,18 +287,18 @@ void insert_block (Schedule *s, EventBlock *eb) {
   Interval x, y;
   eb->status = Scheduled;
   if (resource_type (eb->event) == SE_DERControl) //resource和Stub指向同一个地址。
-    eb->der = der_base (eb->event); //获取到这个DER的 DERControlBase 中的_flag值，即知道存在哪几个base设置项。详见 SE_DERControlBase_t 结构体。
+    eb->der = der_base (eb->event); //获取到这个DER的 DERControlBase 中的 _flag 值，即知道存在哪几个 base 设置项。详见 SE_DERControlBase_t 结构体。
   event_interval (&x, eb->event); //计算eb的结束时间。应该是首个EventBlock的时间。
   while (e) { //应该是在排序后插入，根据开始时间等参数。这里处理插入后，对别的已经存在的control的影响。
     next = e->next;
     event_interval (&y, e->event);  //计算结束时间
-    if (x.start < y.end && x.end > y.start) { //x和y有相互叠加部分，不一定是相互包含。
-      if (block_supersede (eb, e)) {  //
+    if (x.start < y.end && x.end > y.start) { //x和y有相互叠加部分，不一定是相互包含。即IEEE 文档中的 overlapped 这种情况。
+      if (block_supersede (eb, e)) {  //判断已经存在的e是否被后来者eb所替代
         e->status = ScheduleSuperseded;
-        link_insert (s->superseded, e); // scheduled 队列中的第一个被 superseded 替代了？？
-        prev->next = e = next;  //直接跳过了这一个
+        link_insert (s->superseded, e); //旧的某一个event被新来者替代了，所以就放到superseded队列中了。
+        prev->next = e = next;  //从scheduled队列中移出了（断开了链接）
         continue;
-      } else if (!eb->der) {  //如果当前的这个eb->der为空，那么也设置成 superseded 状态
+      } else if (!eb->der) {  //如果当前的这个eb->der为0,即不存在任何需要控制的项目，那么也设置成 superseded 状态。这个其实清除具体对应什么场景。
         eb->status = ScheduleSuperseded;
         link_insert (s->superseded, eb);
         return;
@@ -413,6 +424,7 @@ void remove_blocks (Stub *event, int response) {
 
 /*从数据库中删除这个 event 数据*/
 void delete_blocks (Stub *event) {
+  LOG_I("delete_blocks : href : %s\n",event->base.name);
   List *l;
   SE_Event_t *ev = resource_data (event);
   foreach (l, event->schedules) {
@@ -427,35 +439,35 @@ void delete_blocks (Stub *event) {
 /*
 
 这个程序通常用作event对象(Stub)的 completion 函数。
-在获取完毕服务器上的某一个资源 Stub / Resource 的全部数据之后，执行这个动作。
-
+在获取完毕服务器上的某一个资源 Stub / Resource 的全部数据之后，执行这个动作。这里指对Event更新后，将执行该动作。
+下面case中的几种case的处理，详见 IEEE 2030.5 2018版本中 currentStatus attribute 的描述（159页）
 */
 void event_update (Stub *event) {
   int64_t now;
   static int64_t sync_time = 0;
-  LOG_I ("event_update : %s\n",event->base.name);
+  LOG_I ("event_update (Event completion) : %s\n",event->base.name);
   switch (event_status (event)) {
   case Scheduled: //进入到调度状态
     /* The client's clock is ahead of the server's clock, attempt to
        synchronize by setting the clock (time offset) backward, also retry
-       the event retrieval in another second. */
-    if (sync_time != (now = se_time ())) {
+       the event retrieval in another second.  这段话什么意思，一直没搞懂 ？？ */
+    if (sync_time != (now = se_time ())) {  //只有当se_time()从这里离开后，过了一秒后再次进来，此时这个等式才会相等，后面的se_time_offset--才不会被执行。
       se_time_offset--;
-      sync_time = --now;
+      sync_time = --now;  //注意这里不是      " sync_time -= now "。 这里now同样也减少了1秒。
     }
     LOG_I("  event_update : insert_event,RESOURCE_UPDATE,now+1\n");
     insert_event (event, RESOURCE_UPDATE, now + 1); //now+1的意思是：RESOURCE_UPDATE动作的时间在后面一秒钟执行。
     break;
   case Active:
     LOG_I("  event_update : case Active , call activate_blocks\n");
-    activate_blocks (event);  //看起来像是提前激活
+    activate_blocks (event);  //如果收到这个event的时候，在服务器上标注的eventStatus值已经是Active了，那么就直接执行（不用等待了）。
     break;
   case Canceled:
-  case CanceledRandom:  //取消
+  case CanceledRandom:  //如果这个even的状态已经是canceled，那么就直接取消。
     LOG_I("  event_update : case Canceled or CanceledRandom , call remove_blocks\n");
     remove_blocks (event, EventCanceled);
     break;
-  case Superseded:  //挂起
+  case Superseded:  //替代。如果该event已经被替代了，那么标记为替代，并且从本地移除。
     LOG_I("  event_update : case Superseded , call remove_blocks\n");
     remove_blocks (event, EventSuperseded);
     break;
@@ -477,39 +489,41 @@ void block_update (EventBlock *eb, int status) {
 EventBlock *schedule_event (Schedule *s, Stub *event, int primacy) {
   EventBlock *eb; //这个是本代码内部定义的一个Event对象，专门用来做调度的
   SE_Event_t *ev = resource_data (event);
-  int status = event_status (event);
+  int status = event_status (event);  
+  /*这个status指的是从服务器直接获取到的status值，而不是当前正在执行的event的状态。
+  有 0 Scheduled / 1 Active / 2 Cancelled / 3 Cancelled with Randomization / 4 Superseded 这几个值。详见IEEE 2030.5 文档*/
   LOG_I("schedule_event : %s,primacy:%d,event status:%d(%s)\n",event->base.name,primacy,status,EventStatus_to_string(status) );
   if (eb = hash_get (s->blocks, ev->mRID)) {  //如果已经存在于hash表中，那么就不用重复添加了。
     eb->primacy = primacy;
-  } else {  //如果不存在，则添加一个新的
+  } else {  //如果是新发现的，则添加到hash表中
     event->schedules = insert_unique (event->schedules, s); //在这个schedules List中插入这个 Schedule。一个设备可能包含了多个 schedule
     LOG_W("  schedule_event : set event's completion() to event_update\n");
     event->completion = event_update;
     eb = new_block (event, primacy);
-    hash_put (s->blocks, eb);
+    hash_put (s->blocks, eb); //将这个ev存储下来。
     /**/
     LOG_I("  schedule_event : response to server EventReceived\n");
     device_response (s->device, event, EventReceived);  //回复给服务器说已经收到了该Event。
-    if (eb->end <= se_time ()) {  //如果该Event中的结束时间已经过了，那么就不用去执行了，直接告诉服务器该事件已经结束。
+    if (eb->end <= se_time ()) {  //如果该Event中的结束时间已经过了，那么就不用去执行了，直接告诉服务器该事件已经结束。这个是IEEE规则。
       // specified end time is in the past
       eb->status = Completed;
       device_response (s->device, event, EventExpired); //回复给服务器。
       return eb;
     }
   }
-  if (in_range (eb->status, Canceled, Completed)) return eb;  //如果已经取消、退出、替代或者执行成功了，那么就不用再放到调度器中去了，直接返回。
+  if (in_range (eb->status, Canceled, Completed)) return eb;  //这个eb->status值是在本代码中定义的值。如果已经取消、退出、替代或者执行成功了，那么就不用再放到调度器中去了，直接返回。
   // eb->status: Scheduled, Active, ActiveWait, ScheduleSuperseded
-  switch (status) { //否则，再执行调度。
-  case Scheduled:
+  switch (status) { //对来自服务器的状态值进行分类处理。
+  case Scheduled: //如果下发的时候状态是Scheduled
     if (eb->status != ActiveWait) {
-      insert_block (s, eb);
+      insert_block (s, eb); //插入到schedule队列中去
       break;
     }
-  case Active:
+  case Active:  //如果该事件已经是激活的，则放到active队列中去。
     insert_active (s, eb);
     break;
   case Canceled:
-  case CanceledRandom:
+  case CanceledRandom:  //如果是已经cancel掉了的，那么只需要发送一个报告。
     device_response (s->device, event, EventCanceled);
     block_update (eb, status);
     break;

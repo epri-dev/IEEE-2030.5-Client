@@ -77,7 +77,7 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   uint32_t all; ///< is the total number of list items  List的总量
   struct _Stub *moved; ///< is a pointer to the new resource 这个可能跟资源的重定向有关。应该是资源重定向之后的对象位置，包含了最新的URL。
   List *list; ///< is a list of old requirements for updates 在update_resource函数中，用来备份reqs列表，表示在更新资源之前旧的reqs数据。
-  List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的 Stub 就是他的父级。 这个是子级Stub指向父级Stub的链接。通常只有一个成员。
+  List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的 Stub ，就是他的父级。 这个是子级Stub指向父级Stub的链接。通常只有一个成员。
   List *reqs; ///< is a list of requirements 需求：就是一个Stub的子级对象，当前Stub所需要的子级对象List。List中的data对象就是子级Stub。这个是父级Stub指向子级Stub的链接。
   union {
     void *context; ///< is a user defined completion context
@@ -299,6 +299,7 @@ void remove_reqs (Stub *s, List *reqs) {
 参数中的deps在实际调用的时候，通常是s对象中的那个deps。
 */
 void remove_deps (Stub *s, List *deps) {
+
   LOG_I("remove_deps : href : %s\n",s->base.name);
   List *l;
   foreach (l, deps) { //遍历每一个依赖对象，即父级Stub
@@ -346,10 +347,12 @@ void delete_reqs (Stub *s) {
 
 /*建之前存储在数据库中的Stub资源删除掉？？*/
 void remove_stub (Stub *s) {
+  LOG_I("remove_stub : href : %s\n",s->base.name);
   Stub *head = find_resource (s->base.name),
         *t = list_remove (head, s); //head返回这个资源所在的哈希表的list（可能list中只有他单个成员）。t返回删除了s之后的list。
   if (t) {
     if (t != head) insert_resource (t); //这个是什么意思？？
+    
   } else delete_resource (head);  //如果该list只有他一个成员，那么在前面的list_remove之后，哈希表中就不存在该成员了，要从哈希表中移除。
   if (s->moved) remove_req (s, s->moved);
   else delete_reqs (s);//删除掉相关的“依赖”和“需求”

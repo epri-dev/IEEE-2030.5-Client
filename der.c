@@ -181,10 +181,10 @@ void remove_programs (Schedule *s, List *derpl) {
     return;  /*在实际场景中，针对的情况就是前后两次derp内容没有变化的情况*/
   }
   
-  foreach_h (eb, &p, s->blocks) {
-    if (find_by_data (derpl, eb->program)) {
-      remove_block (s, eb);
-      if (eb->status == Active) { //如果当前已经是处于激活状态了，那么就发送一条消息到服务器中。
+  foreach_h (eb, &p, s->blocks) { //从哈希表中查找每一个EventBlock对象。
+    if (find_by_data (derpl, eb->program)) {  //如果这EventBlock所属的DERProgram处在将要被移除的derpl（表）中
+      remove_block (s, eb); //那么就将这个eb也同样的移除掉（相当于说上级已经没有了，那么下级自然也不能存在，DERProgram是DERControlList和DERControl的上级）
+      if (eb->status == Active) { //如果当前已经是处于激活状态了，那么就发送一条消息到服务器中。如果该Event正在处于激活状态，则需要报告一下。
         device_response (s->device, eb->event, EventAbortedProgram);
       }
       eb->status = Aborted;
@@ -241,8 +241,8 @@ void schedule_der (Stub *edev) {
     
   /* event block schedule might change as a result of program removal and
      primacy change so clear the block lists */
-  //这里全部删除（仅仅是删除链接，而Event的Stub依然存在本地），然后在好偶徐步骤中再重新加入进来。相当于每次调用这个 schedule_der 的时候都重新添加了。
-  schedule->scheduled = schedule->active = schedule->superseded = NULL; 
+  //这里全部删除（仅仅是删除链接，而Event的Stub依然存在本地），然后在后续步骤中再重新加入进来。相当于每次调用这个 schedule_der 的时候都重新添加了。
+  schedule->scheduled = schedule->active = schedule->superseded = NULL; /*问题：在这里，active相当于被直接删除了。而当服务器端删除的时候，此时可能在本地还在执行，将导致本地不上报"Completed"消息*/
   schedule->device = edev;  //指定调度器中的device为当前的edev。
   
   // insert DER Control events into the schedule 从DERProgram中取出DERControlList，然后放到调度器中。
@@ -255,7 +255,7 @@ void schedule_der (Stub *edev) {
         added_derc++;
         LOG_I("  schedule_der : call schedule_event on DERProgramList %s,with %s\n",s->base.name,t->base.name);
         eb = schedule_event (schedule, m->data, derp->primacy);   // m 是DERControl，将这个任务放到调度队列中去。这个函数不会重复添加已经存在的event。
-        eb->program = s;
+        eb->program = s;  //绑定一下，以便后面用得着的时候使用。
         eb->context = device;
     }
       

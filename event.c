@@ -134,6 +134,7 @@ void *remove_by_data (void *list, void *data) {
 
 
 void remove_event (void *data) {
+  LOG_I("remove_event\n");
   im_event.last = remove_by_data (&im_event.first, data);
   remove_by_data (&cur_event, data);
 }
