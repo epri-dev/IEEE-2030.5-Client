@@ -318,7 +318,7 @@ int active_poll_rate = 300; //这个意思是：活跃的DER Control Event的轮
 //将一个event激活，执行，并且回复给上面的服务器当前的 EventStarted 状态
 void activate_block (Schedule *s, EventBlock *eb) {
   Stub *event = eb->event;
-  LOG_I ("activate_block , href : %s , status : %d\n", event->base.name, eb->status);
+  LOG_I ("activate_block , href : %s , status : %d(%s)\n", event->base.name, eb->status,EventStatus_to_string(eb->status));
   if (eb->status != Active) {
     eb->status = Active;
     insert_event (eb, EVENT_START, 0);  //将在主程序中对该类型的系统event做出响应（搜索EVENT_START），即执行对下层的逆变器设备的控制。
@@ -353,7 +353,7 @@ void insert_active (Schedule *s, EventBlock *eb) {
     a = next;
   }
   switch (event_status (eb->event)) {
-  case Scheduled:
+  case Scheduled: //如本页开头注释说说，在正式执行之前，先要去服务器那边查询一下这个DERControl的状态，避免服务器端已经将该Control取消掉了。
     update_resource (eb->event);
     eb->status = ActiveWait;
     break;
@@ -574,10 +574,10 @@ void update_schedule (Schedule *s) {
   while (eb) {
     LOG_D("  update_schedule : scheduled queue : %s,start:%ld,end:%ld\n",((Stub*)eb->event)->base.name,eb->start,eb->end);
     next = eb->next;
-    if (eb->start <= now) {
+    if (eb->start <= now) { //“现在时刻”刚刚越过该eventblock的start时刻，即表示该eb此刻应该开始执行了。
       LOG_I("  update_schedule : move from scheduled to active queue : %s\n",((Stub*)eb->event)->base.name);
       insert_active (s, eb);  //从scheduled队列移动到active队列中去
-      last = last ? min (last, eb->end) : eb->end;
+      last = last ? min (last, eb->end) : eb->end;  //下次调用 SCHEDULE_UPDATE 的时刻。
     } else {
       last = last ? min (last, eb->start) : eb->start;
       break;

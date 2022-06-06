@@ -501,8 +501,12 @@ void poll_derpl (Stub *r) {
 
 //select the highest priority DERProgram from a DERProgramList
 
-/*按照前面的注释来看，意思是第一个的DERProgram的优先级（priority）最高？
-这个函数是 DERProgramList 的 completion 函数 */
+/*
+按照前面的注释来看，意思是第一个的DERProgram的优先级（priority）最高？
+
+这个函数是 DERProgramList 的 completion 函数 
+这个函数的主要作用是：对每一个DERProgram成员调用der_program函数。
+在der_program函数中，将依次获取到dderc/derc/dc三个资源，并在后续过程中定时轮询。*/
 void der_program_list (Stub *r) {
   List *m;
   LOG_I("der_program_list (DERProgramList completion ) : %s\n",r->base.name);
@@ -518,7 +522,7 @@ void der_program_list (Stub *r) {
     }
     #endif
     LOG_I("  der_program_list : set DERProgramList completion to NULL\n");
-    r->completion = NULL; //对于core011测试case，只需要执行一次该函数即可。
+    r->completion = NULL; //对于core011测试case，只需要执行一次该函数即可。否则将导致失败。
   }
 }
 

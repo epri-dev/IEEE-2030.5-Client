@@ -76,7 +76,7 @@ typedef struct _Stub {  /* ... the local representation of a resource（在der_c
   uint32_t offset; ///< is the offset used for list paging 对于List类型的数据元素来说，offset表示本Stub在整个List中的序号
   uint32_t all; ///< is the total number of list items  List的总量
   struct _Stub *moved; ///< is a pointer to the new resource 这个可能跟资源的重定向有关。应该是资源重定向之后的对象位置，包含了最新的URL。
-  List *list; ///< is a list of old requirements for updates 在update_resource函数中，用来备份reqs列表，表示在更新资源之前旧的reqs数据。
+  List *list; ///< is a list of old requirements for updates 在 update_resource 函数中，用来备份reqs列表，表示在更新资源之前旧的reqs数据。
   List *deps; ///< is a list of dependencies 存储的是一个个Stub内容单元，表示的是以本 Stub “依赖” 的 Stub ，就是他的父级。 这个是子级Stub指向父级Stub的链接。通常只有一个成员。
   List *reqs; ///< is a list of requirements 需求：就是一个Stub的子级对象，当前Stub所需要的子级对象List。List中的data对象就是子级Stub。这个是父级Stub指向子级Stub的链接。
   union {
@@ -249,6 +249,10 @@ void add_dep (Stub *r, Stub *d) {
   d->deps = insert_unique (d->deps, r); //在子级d的“依赖”表中，加入通过deps这个表，能够找到每一个父级Stub。
   d->poll_rate = min (d->poll_rate, r->poll_rate);  //设定好子级 Stub 更新频率
   r->complete = 0;  
+
+  /*为什么要在这里将complete值设置成0？这个是有目的的，因为对于r来说，新加入了一个子级成员，那么就意味着调用completion的时候，可能情况有不一样，
+  所以这里设置成0，表示 “等待重新执行completion函数” */
+  
   /*一个新加入的Stub由于目前还未被查询过以及没有被执行过completion函数，所以，此时complete的值表示“未完成”。
   等到所缺少的Stub从服务器获取到了之后，则标记为1。*/
 }
@@ -596,7 +600,7 @@ void update_existing (Stub *s, void *obj, DepFunc dep) {
     memcpy (&ex->EventStatus, &ev->EventStatus,
             sizeof (SE_EventStatus_t));//如果是一个已经存在的 SE_Event 类型的数据，那么仅仅更新Status数据就够了。应该是对于SE_Event_t，数据更新的只有Status。
     free_se_object (obj, r->type);
-  } else replace_se_object (r->data, obj, r->type); //其他的类型的数据如果已经存在的话，就直接替换。
+  } else replace_se_object (r->data, obj, r->type); //其他的类型的数据如果已经存在的话，就直接全体更新掉。
   LOG_I("  update_existing : call dep(s)\n");
   dep (s);  //dep函数都要执行一遍。但是未必对这个数据执行什么操作。
   if (!s->flags) {  //如果这个资源的所有子级都是到齐的，那么才能执行下面的 dep_complete 函数 。 在 list_object 中，也同时判断和调用该 dep_complete 函数。
