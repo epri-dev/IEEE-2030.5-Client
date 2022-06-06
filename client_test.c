@@ -451,6 +451,7 @@ void edev_complete (Stub *r) {
       se_post (dcap_mup->conn, &mup, SE_MirrorUsagePoint,
                dcap_mup->base.name);
     }
+    #if 0 //这块被取消的代码是本Demo代码的原始版本。这里仅仅作保留。
     if (test & ALARM_TEST) {
       if (t = get_list_root (r->conn, edev, LogEventList)){
         LOG_W(" edev_complete (edev completion): set LogEventList's completion() to alarm_test\n");
@@ -458,6 +459,14 @@ void edev_complete (Stub *r) {
       }
       else test_fail ("alarm", "no LogEventList defined for the EndDevice.");
     }
+    #else //这个修改是为了应对BASIC028这个case。
+    if (t = get_list_root (r->conn, edev, LogEventList)){
+      LOG_W(" edev_complete (edev completion): set LogEventList's completion() to alarm_test\n");
+      t->completion = alarm_test;
+    }
+    #endif  
+    
+    
   }
 }
 
@@ -468,10 +477,13 @@ void der_program (Stub *d) {
     //LOG_I("  der_program : test GET_DERC\n");
     Stub *cl; //ControlList
     SE_DERProgram_t *dp = resource_data (d);
-    LOG_I("  der_program : get_dep DefaultDERControl if exists\n");
-    get_dep (d, dp, DefaultDERControl); // 获取从属于dp的 DefaultDERControl 资源。这个资源要不存在要不就不存在，只有List才会有all值。
 
-    if( se_exists(dp,DERControlListLink) && dp->DERControlListLink.all > 0 ){
+    if(get_subordinate(d,SE_DefaultDERControl) == NULL){
+      LOG_I("  der_program : get_dep DefaultDERControl if exists\n");
+      get_dep (d, dp, DefaultDERControl); // 获取从属于dp的 DefaultDERControl 资源。这个资源要不存在要不就不存在，只有List才具备有all值。
+    }
+    
+    if( se_exists(dp,DERControlListLink) && dp->DERControlListLink.all > 0 && (get_subordinate(d,SE_DERControlList) == NULL) ){
       LOG_I("  der_program : DERControlLinkLink exist,all:%d\n",dp->DERControlListLink.all);
       if (cl = get_list_dep (d, dp, DERControlList)) {  //获取从属于dp的DERControlList资源。
         cl->poll_rate = active_poll_rate;
@@ -481,12 +493,13 @@ void der_program (Stub *d) {
       LOG_D("  der_program : DERControlListLink not existed or all = 0\n");
     }
     
-    if( se_exists(dp,DERCurveListLink) && dp->DERCurveListLink.all > 0 ){
+    if( se_exists(dp,DERCurveListLink) && dp->DERCurveListLink.all > 0 && (get_subordinate(d,SE_DERCurveList) == NULL) ){
       LOG_I("  der_program : get_list_dep DERCurveList,all=%d\n",dp->DERCurveListLink.all);
       get_list_dep (d, dp, DERCurveList);
     }else{
       LOG_D("  der_program : DERCurveListLink not existed or all = 0\n");
     }
+    
   }
 }
 
@@ -521,8 +534,12 @@ void der_program_list (Stub *r) {
       der_program (d);
     }
     #endif
+
+    #if 0
     LOG_I("  der_program_list : set DERProgramList completion to NULL\n");
     r->completion = NULL; //对于core011测试case，只需要执行一次该函数即可。否则将导致失败。
+    #endif
+    
   }
 }
 

@@ -15,7 +15,7 @@
             //"programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary",  //这个是5.17之前的测试通过了很多Case的指令
             "programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary inverter poll 27",   //指定为DER Client方式来测试并且poll 
             //在没有测试alarm的时候，要求把alarm去掉，否则会报告错误。
-            //在通过COMM-002的时候，必须把meter metering去掉，否则自己这个程序报告错误。
+            //在通过COMM-002的时候，必须把 meter metering 去掉，否则自己这个程序报告错误。
             //"programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 inverter",
             //"programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary | tee debug.log", 
             //如果按照上述方式，在后面加上 | tee 指令，将导致dbg工具无法正常执行断点操作，而只能停止、开始。
