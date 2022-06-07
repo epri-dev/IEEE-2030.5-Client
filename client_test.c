@@ -434,7 +434,11 @@ void edev_complete (Stub *r) {
   }
   
   if (edev->sFDI == device_sfdi) {
+    #if 0 //这部分代码是原始的版本。这里仅仅是为了保留。
     if (test & METER_TEST) {
+    #else
+    if(dcap_mup){ //这部分代码是为了通过BASIC029
+    #endif
       List *rds = NULL;
       SE_MirrorUsagePoint_t mup;
       create_mirror (&mup, NULL, 0, edev->lFDI);
@@ -446,7 +450,9 @@ void edev_complete (Stub *r) {
       rds = create_reading (rds, "Current (A)", 5, 0);
       rds = create_reading (rds, "Frequency (Hz)", 33, 0);
       d->readings = rds;
+      #if 0
       if (test & INCLUDE_READINGS)
+      #endif  
         mup.MirrorMeterReading = rds;
       se_post (dcap_mup->conn, &mup, SE_MirrorUsagePoint,
                dcap_mup->base.name);
@@ -758,10 +764,17 @@ void dcap (Stub *r) {
       test_fail ("self", "no SelfDevice in DeviceCapability");
   }
   
+  #if 0 //下面的代码是这份代码的原始版本，这里仅仅为了保留。
   if (test & METER_TEST) {  //通常也没有 MirrorUsagePointList 
     if (!(dcap_mup = get_list_root (r->conn, dcap, MirrorUsagePointList)))
       test_fail ("meter", "no MirrorUsagePointLink in DeviceCapability");
   }
+
+  #else //这个是为了通过BASIC029
+  
+  dcap_mup = get_list_root (r->conn, dcap, MirrorUsagePointList);
+
+  #endif
   }
 
 //请求时间同步
@@ -781,12 +794,14 @@ void update_mup (Stub *s) {
   if (d && d->readings) {
     d->mup = s;
     d->metering_rate = se_exists (mup, postRate) ? mup->postRate : 5 * 60;
+    #if 0 //这部分代码是原始版本中的。这里仅仅为了保留。
     if (!(test & INCLUDE_READINGS)) {
       List *r;
       foreach (r, d->readings)
       se_post (d->mup->conn, r->data, SE_MirrorMeterReading,
                resource_name (d->mup));
     }
+    #endif
     insert_event (d, DEVICE_METERING, 0);
   }
 }
