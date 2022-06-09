@@ -2,6 +2,7 @@
 // author: Mark Slicker <mark.slicker@gmail.com>
 
 #define CIPHER_LIST "ECDHE-ECDSA-AES128-CCM8"
+#include "debug_log.h"
 
 /** @addtogroup security
     @{
@@ -56,7 +57,7 @@ void print_ssl_error (char *func) {
   int err;
   while (err = ERR_get_error()) {
     ERR_error_string (err, buffer);
-    printf ("%s: %d, %s\n", func, err, buffer);
+    LOG_E ("%s: %d, %s\n", func, err, buffer);
     fflush (stdout);
   }
 }
@@ -161,7 +162,7 @@ int ssl_load_cert (const char *path) {
 
 void load_cert (const char *path) {
   if (ssl_load_cert (path) != 1) {
-    printf ("load_cert: error opening certificate file: %s\n", path);
+    LOG_E ("load_cert: error opening certificate file: %s\n", path);
     exit (0);
   }
   printf ("loaded certificate \"%s\"\n", path);
@@ -176,7 +177,21 @@ void load_cert_dir (const char *path) {
 }
 
 int _tls_initialized = 0;
+/*
+Initialize the TLS library.
+Initialize the TLS library calling the appropriate functions. 
+Load the device certificate 'path'.x509 and use the device private key 'path'.pem, where 'path' is the first function parameter.
 
+Parameters
+<path>: is used to identify the device certificate and private key files, 'path'.x509 and 'path'.pem respectively.
+<verify>: is called as extra step to verify the client TLS certificate. 
+Certificates are in any case are verified against their CA certificate chain, 
+this extra step this can be used to impliment a filter by only accepting clients with the right credentials (SFDI, LFDI), 
+this parameter can be NULL to indicate not to take this step.
+
+这个注释看起来有问题，跟代码不一样。可能是老的注释，代码修改了注释没有改。
+
+*/
 void tls_init (const char *path, VerifyFunc verify) {
   int ret, type;
   char *private = strdup (path), *ext;
@@ -189,21 +204,25 @@ void tls_init (const char *path, VerifyFunc verify) {
   SSL_CTX_set_verify (ssl_ctx, SSL_VERIFY_PEER |
                       SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_peer);
   if (!SSL_CTX_set_cipher_list (ssl_ctx, CIPHER_LIST)) {
-    printf ("tls_init: error selecting %s cipher list\n", CIPHER_LIST);
+    LOG_E ("tls_init: error selecting %s cipher list\n", CIPHER_LIST);
     exit (0);
   }
   if (ext = strstr (private, ".x509")) {
-    strcpy (ext, ".pem");
+    strcpy (ext, ".pem"); //如果传入的是一个 .x509 文件，那么就将后缀替换成 .pem 
     type = SSL_FILETYPE_ASN1;
   } else type = SSL_FILETYPE_PEM;
-  if (SSL_CTX_use_certificate_file (ssl_ctx, path, type) != 1) {
-    printf ("tls_init: error opening certificate file: %s\n", path);
+  
+  //导入设备自己的证书文件
+  if ( SSL_CTX_use_certificate_file (ssl_ctx, path, type) != 1 ) {
+    LOG_E ("tls_init: error opening certificate file: %s\n", path);
+    print_ssl_error ("SSL_CTX_use_certificate_file");
     exit (0);
   }
+  
+  //导入设备的私钥文件。要求将 private key 直接拷贝到前面的证书文件的后面。这样这个函数也能够读取进来。
   if ((ret = SSL_CTX_use_PrivateKey_file
              (ssl_ctx, private, SSL_FILETYPE_PEM)) != 1) {
-    printf ("tls_init: error (%d) opening private key file: %s\n",
-            ret, private);
+    LOG_E ("tls_init: error (%d) opening private key file: %s\n",ret, private);
     exit (0);
   }
   free (private);

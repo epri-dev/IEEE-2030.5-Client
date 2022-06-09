@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
+#include "../debug_log.h"
 
 int file_type (const char *name) {
   struct stat sb;
@@ -44,12 +45,14 @@ void process_dir (const char *name, void *ctx,
   char path[128];
   struct dirent *ep;
   if (!dp) {
+    LOG_E("process_dir : %s\n",name);
     perror ("process_dir");
     exit (0);
   }
   while (ep = readdir (dp))
     if (ep->d_type == DT_REG) { //  DT_REG : A regular file. 常规文件
       sprintf (path, "%s/%s", name, ep->d_name);
+      LOG_I("process_dir path : %s,name:%s,d_name:%s\n",path,name,ep->d_name);
       func (path, ctx); //对每一个文件都执行一遍func
     }
   closedir (dp);

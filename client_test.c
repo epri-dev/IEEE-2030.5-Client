@@ -128,11 +128,15 @@ int uri_retrieval (char *arg) {
 }
 
 int cert_name (char *arg) {
+  LOG_I("cert_name,arg:%s\n",arg);
+  
   switch (file_type (arg)) {
   case FILE_DIR:
+    LOG_I("  cert_name : FILE_DIR\n");
     load_cert_dir (arg);
     break;
   case FILE_REGULAR:
+    LOG_I("  cert_name : FILE_REGULAR\n");
     load_cert (arg);
     break;
   default:
@@ -194,16 +198,18 @@ void options (int argc, char **argv) {
   int i = 2, index;
   char *name = argv[1]; //就是网卡名 interface
 
-  printf("[options] argc:%d\n",argc);
+  LOG_I("[options] argc:%d\n",argc);
+  
   int j=0;
   for(j=0;j<argc;j++) printf("[options] arg[%d]:%s\n",j,argv[j]);
   
   if (argc < 3){
-    printf("The input argument count less than 3,argv[0]=%s\n",argv[0]); 
+    LOG_E("The input argument count less than 3,argv[0]=%s\n",argv[0]); 
     usage (); 
   }
+  
   if ((index = interface_index (name)) < 0) {
-    printf ("options: interface %s not found\n", name);
+    LOG_E("options: interface %s not found\n", name);
     exit (0);
   }
   //
@@ -220,13 +226,13 @@ void options (int argc, char **argv) {
       printf("break;\n");
       i++;
       break; //如果参数中的存在这两项中的一项，解析下一个参数。
-    } else if (!secure) { //应该是 [device_cert ca_certs...] 部分参数
+    } else if (!secure) { //应该是 [device_cert ca_certs...] 部分参数。如果这部分参数还未获取过，则执行一次。
       client_init (name, argv[i]);  //初始化有关加密和dnssd相关功能
       secure = 1;
       d = get_device (device_sfdi);
       memcpy (d->lfdi, device_lfdi, 20);
-    } else if (!cert_name (argv[i])) {
-      printf ("options: certificate file or directory %s does not exist\n",
+    } else if (!cert_name (argv[i])) {  //通常是前面那个参数 device_cert 导入后，再来处理这个参数
+      LOG_E ("options: certificate file or directory %s does not exist\n",
               argv[i]);
       exit (0);
     }
@@ -236,15 +242,15 @@ void options (int argc, char **argv) {
   
   //这里看起来是要求使用证书文件
   if (!secure) {
-    printf ("options: warning, no device certificate specified, "
+    LOG_W("options: warning, no device certificate specified, "
             "TLS library will be uninitialized\n");
   } else if (i < 5) {
-    printf ("options: no CA certificates specified, using ./certs\n");
+    LOG_W("options: no CA certificates specified, using ./certs\n");
     load_cert_dir ("certs");
   }
 
   
-  printf("[options] process tests \n");
+  LOG_I("options , process test commands\n");
   
   // process tests，应该是指令中的 [commands] 部分。这一段是直接操作
   while (i < argc) {

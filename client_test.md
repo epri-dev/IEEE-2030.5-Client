@@ -17,20 +17,27 @@ The `interface` argument is the the name of the network interface,
 running the `client_test` application with no arguments will list the
 available network interfaces.
 
-The `device_cert` argument names the device certificate file. If the
-certificate ends in `.x509` then the `client_test` application looks for the
-corresponding private key in similarly named file with the `.pem` extension. If
-certificate end in `.pem`, then both the certificate and private key are loaded
-from the same file.
+有关证书
 
-The `ca_certs` argument is a list of CA certificates or certificate
-directories to be loaded. If a directory is specified, then all the
-certificates within the directory are loaded. If no certificates or
-directories then the certificates from `./certs` in the local directory
-are loaded.
+The `device_cert` argument names the device certificate file. 
+If the certificate ends in `.x509` then the `client_test` application looks for the corresponding private key in similarly named file with the `.pem` extension. 
+
+如果证书文件是以.x509结尾的，那么 client_test 程序将寻找（可能是在同目录下寻找）对应的私钥文件，该文件以.pem为扩展名。
+
+If certificate end in `.pem`, then both the certificate and private key are loaded from the same file.
+
+如果证书文件以.pem作为后缀，那么证书和私钥将从同一个文件内导入。
+
+
+The `ca_certs` argument is a list of CA certificates or certificate directories to be loaded. If a directory is specified, then all the
+certificates within the directory are loaded. If no certificates or directories then the certificates from `./certs` in the local directory are loaded.
+
+'ca_certs'是一个将要导入的CA证书列表或者证书文件夹。如果被指定的是文件夹，那么该文件夹下面的所有的证书文件将被导入。如果给出没有没有证书或者文件夹参数，
+那么使用测试目录下的 ‘./certs’ 目录。
 
 The `<subtype[:1][/path] | URI>` argument delimits(vt. 划界；定界限) the list of certificates and
 specifies either to perform xmDNS service discovery, OR to retrieve the document at the specified URI.
+
 要么使用xmDNS方式来发现服务Service，要么通过遍历的方式找到在URI指定下的文档
 
 Subtype DNS-SD queries 注意，下面的指令只是针对DNS-SD服务
@@ -94,8 +101,8 @@ The last set of arguments are a list of commands to be interpreted.
 These can be any of the following:
 
 这个参数应当是第一个参数
--   `sfdi SFDI` - Use the specified sfdi in performing device registration.
-This command should be the first command in the list of commands.
+
+-   `sfdi SFDI` - Use the specified sfdi in performing device registration. This command should be the first command in the list of commands.
 
 
 -   `register` - Register the client EndDevice with the server. The
@@ -130,7 +137,7 @@ events when retrieval is complete.
 
 -   `all` - Perform the same functions as `primary`, except all DERPrograms
 and the associated DERCurveLists and DERControlLists are retrieved.
-跟前面的primary类似，除了所有的DERPrograms和与之相关联的DERCurveLists和DERControlLists。
+跟前面的primary类似，除了所有的DERPrograms和与之相关联的DERCurveLists和DERControlLists将被获取（从服务器）。
 
 -   `time` - Perform the time test.
 
@@ -157,8 +164,7 @@ and the associated DERCurveLists and DERControlLists are retrieved.
     client's computed SFDI. An aggregator client will retrieve the subordinate
     resources and perform scheduling for every EndDevice managed by the
     aggregator client.
+    
     仅仅作为一个逆变器客户端（DER Client，但是意思不是只有“一台”逆变器）来测试，而不是一个“集中器”来测试。
     如果是作为集中器来测试，那么将对这个集中器下面的每一个EndDevice执行调度操作。
-
-    我的笔记：通常我们不测试该项目。
 
