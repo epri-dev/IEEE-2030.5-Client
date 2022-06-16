@@ -133,7 +133,7 @@ void print_cert_serial_num(X509 *cert) {
   BIO_puts(outbio,"serial (openssl x509 -serial style): ");
   i2a_ASN1_INTEGER(outbio, asn1_serial);
   BIO_puts(outbio,"\n");
-
+  #if 0
   /* ---------------------------------------------------------- *
    * Print the serial number value, openssl x509 -text style    *
    * ---------------------------------------------------------- */
@@ -154,12 +154,12 @@ void print_cert_serial_num(X509 *cert) {
       BIO_printf(outbio, "Error during printing the serial.\n");
 
     for (i=0; i<asn1_serial->length; i++) {
-     if (BIO_printf(outbio,"%02x%c",asn1_serial->data[i],
-        ((i+1 == asn1_serial->length)?'\n':':')) <= 0)
+     if (BIO_printf(outbio,"%02x%c",asn1_serial->data[i],((i+1 == asn1_serial->length)?'\n':':')) <= 0)
       BIO_printf(outbio, "Error during printing the serial.\n");
     }
   }
-
+  #endif
+  
   BIO_free_all(outbio);
   
 }
@@ -218,6 +218,26 @@ int check_cert (int status, X509 *cert) {
   return status;
 }
 
+int verify_chain(int status,X509_STORE_CTX* ctx)
+{
+    int i = 0;
+    STACK_OF(X509) *certs = X509_STORE_CTX_get1_chain(ctx);
+    for (i = 0; i < sk_X509_num(certs); i++) {
+        X509* uCert = sk_X509_value(certs, i);
+        print_cert_serial_num(uCert);
+        if (check_cert(status,uCert) == 0){
+          LOG_W("verify_chain : failed,return 0\n");
+          status = 0;
+          break;
+        }
+    }
+    
+    sk_X509_pop_free(certs, X509_free);
+
+    return status;
+}
+
+/*原Demo代码是仅仅检查了证书链中的第一个证书，而实际测试条件是，要求检查全部证书*/
 int verify_peer (int status, X509_STORE_CTX *ctx) {
   SSL *ssl = X509_STORE_CTX_get_ex_data
              (ctx, SSL_get_ex_data_X509_STORE_CTX_idx ());
@@ -228,12 +248,13 @@ int verify_peer (int status, X509_STORE_CTX *ctx) {
   */
   X509 *x509 = X509_STORE_CTX_get0_cert (ctx), // peer cert
         *curr = X509_STORE_CTX_get_current_cert (ctx);
-  status = check_cert (status, x509);
+  //status = check_cert (status, x509);
+  status = verify_chain(status,ctx);
   /*陈立飞加入的代码*/
   /*X509_STORE_CTX_get1_chain() returns a complete validate chain if a previous verification is successful. 
     Otherwise the returned chain may be incomplete or invalid. */
   //X509_STORE_CTX_get1_chain();  
-  /*结束*/
+  /*结束。其实不知道这个什么意思，为什么要返回。*/
   if (x509 != curr) {
     LOG_W("verify_peer : x509 != curr,return status %d\n",status);
     return status; // only check the peer cert 意思就是仅仅检查对端的证书？
