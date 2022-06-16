@@ -114,6 +114,7 @@ void _device_cert (const char *path, void *ctx) {
   memcpy (d->lfdi, lfdi, 20);
 }
 
+//这个函数没有被调用过。
 void device_cert (const char *path) {
   _device_cert (path, NULL);
 }

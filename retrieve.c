@@ -788,7 +788,7 @@ int process_http (void *conn, DepFunc dep) {
       if (http_method (conn) == HTTP_GET
           && (s = find_target (conn))) {
         s->status = status;
-        insert_event (s, RETRIEVE_FAIL, 0);
+        insert_event (s, RETRIEVE_FAIL, 0); //将要移除该Stub。
       }
       free_se_body (conn);
     }

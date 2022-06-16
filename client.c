@@ -58,7 +58,7 @@ top:
 
 /*client就是相当于我们的FG设备，这里就是这个测试程序*/
 void client_init (char *name, const char *cert) {
-  if (cert) {
+  if (cert) { //cert是设备证书文件
     tls_init (cert, 0);
     security_init (cert);
   }
