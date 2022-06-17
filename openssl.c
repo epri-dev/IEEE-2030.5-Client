@@ -100,13 +100,12 @@ void init_bio () {
   BIO_meth_set_ctrl (ssl_bio, bio_ctrl);
 }
 
+
+//打印每一个证书的序列号，以辅助调试。
 void print_cert_serial_num(X509 *cert) {
 
   ASN1_INTEGER *asn1_serial = NULL;
   BIO               *outbio = NULL;
-  const char *neg;
-  int ret, i;
-  long l;
 
   /* ---------------------------------------------------------- *
    * These function calls initialize openssl for correct work.  *
@@ -130,10 +129,11 @@ void print_cert_serial_num(X509 *cert) {
   /* ---------------------------------------------------------- *
    * Print the serial number value, openssl x509 -serial style  *
    * ---------------------------------------------------------- */
-  BIO_puts(outbio,"serial (openssl x509 -serial style): ");
+  //BIO_puts(outbio,"serial (openssl x509 -serial style): ");
   i2a_ASN1_INTEGER(outbio, asn1_serial);
   BIO_puts(outbio,"\n");
-  #if 0
+  
+  #if 0 //下面这部分仅仅是中间加入了冒号，所以不用打了
   /* ---------------------------------------------------------- *
    * Print the serial number value, openssl x509 -text style    *
    * ---------------------------------------------------------- */
@@ -218,9 +218,13 @@ int check_cert (int status, X509 *cert) {
   return status;
 }
 
+
+/*检查对方的证书链中的每一个证书是否符合客户端这边的要求（根据IEEE对证书的规格的规定）*/
 int verify_chain(int status,X509_STORE_CTX* ctx)
 {
     int i = 0;
+    /*X509_STORE_CTX_get1_chain() returns a complete validate chain if a previous verification is successful. 
+      Otherwise the returned chain may be incomplete or invalid. */    
     STACK_OF(X509) *certs = X509_STORE_CTX_get1_chain(ctx);
     for (i = 0; i < sk_X509_num(certs); i++) {
         X509* uCert = sk_X509_value(certs, i);
@@ -237,25 +241,26 @@ int verify_chain(int status,X509_STORE_CTX* ctx)
     return status;
 }
 
-/*原Demo代码是仅仅检查了证书链中的第一个证书，而实际测试条件是，要求检查全部证书*/
+
+/*原Demo代码是仅仅检查了证书链中的第一个证书，而实际测试条件是，要求检查证书链上的全部证书。
+这部分代码经过了陈立飞的修改，以通过测试case中的COMM004E/F两个case。*/
 int verify_peer (int status, X509_STORE_CTX *ctx) {
-  SSL *ssl = X509_STORE_CTX_get_ex_data
-             (ctx, SSL_get_ex_data_X509_STORE_CTX_idx ());
+  SSL *ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx ());
   void *user = SSL_get_app_data (ssl);
   
-  /*X509_STORE_CTX_get0_cert() retrieves an internal pointer to the certificate being verified by the ctx.
+  /*
+  X509_STORE_CTX_get0_cert() retrieves an internal pointer to the certificate being verified by the ctx.
   X509_STORE_CTX_get_current_cert() returns the certificate in ctx which caused the error or NULL if no certificate is relevant.
   */
   X509 *x509 = X509_STORE_CTX_get0_cert (ctx), // peer cert
         *curr = X509_STORE_CTX_get_current_cert (ctx);
-  //status = check_cert (status, x509);
-  status = verify_chain(status,ctx);
+  
+  //status = check_cert (status, x509); //删除原代码
+  
   /*陈立飞加入的代码*/
-  /*X509_STORE_CTX_get1_chain() returns a complete validate chain if a previous verification is successful. 
-    Otherwise the returned chain may be incomplete or invalid. */
-  //X509_STORE_CTX_get1_chain();  
-  /*结束。其实不知道这个什么意思，为什么要返回。*/
-  if (x509 != curr) {
+  status = verify_chain(status,ctx);
+  /*结束*/
+  if (x509 != curr) { //其实不知道这个什么意思，为什么要返回。
     LOG_W("verify_peer : x509 != curr,return status %d\n",status);
     return status; // only check the peer cert 意思就是仅仅检查对端的证书？
   }
@@ -325,9 +330,11 @@ void tls_init (const char *path, VerifyFunc verify) {
   }
   init_bio ();
   _verify_peer = verify;
+
   /*陈立飞加入的代码*/
-  SSL_CTX_set_verify_depth(ssl_ctx,10);
+  SSL_CTX_set_verify_depth(ssl_ctx,10); //实际上最大可能只有4层。如果不加入这一段，将导致COMM004不能通过。
   /*陈立飞加入的代码结束*/
+  
   /* SSL_CTX_set_verify() sets the verification flags for ctx to be mode and specifies the verify_callback function to be used.
   The verify_callback function is used to control the behaviour when the SSL_VERIFY_PEER flag is set. */
   SSL_CTX_set_verify (ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_peer);
