@@ -15,9 +15,9 @@
             //上述参数最后使用时间是2022.06.07
             
             //"programArgs": "eth0 /home/vmuser/IEEE-2030.5-Client/sat-key_dev_57099-00-0-0_4082013001431.pem ../certs http://192.168.1.13:8088/dcap  sfdi 2694881444 primary inverter poll 27",
-            "programArgs": "eth0 sat-cli_mca-mica-dev_pri_key.pem ./sat-root.pem http://192.168.1.13:8088/dcap  sfdi 2694881444 primary inverter poll 27",
-            //./client_test eth0 sat-cli_mca-mica-dev_57099-00-0-0_4082013001431.pem ./sat-root.pem https://192.168.1.13:403/dcap sfdi 350186836794 primary inverter poll 27 
-            //上面的指令是似乎可行的命令行指令。不能在dbg中执行。否则会报告文件无法找到。
+            "programArgs": "eth0 sat-cli_mca-mica-dev_pri_key.pem ./sat-root.pem http://192.168.1.13:8080/dcap  sfdi 2694881444 primary inverter poll 27",
+            // ./client_test eth0 sat-cli_dev_57099-00-0-0_4082013001431.pem  ./certs  https://192.168.1.13:403/dcap sfdi 350186836794 primary inverter poll 27 
+            //上面的指令是似乎可行的命令行指令。不能在dbg中执行。否则会报告文件无法找到。应该还是我们的程序是在gdb中运行的，而gdb没有访问有些文件的权限。
 
             //"programArgs": "eth0 http://192.168.1.13:8088/dcap sfdi 2694881444 primary | tee debug.log", 
             //如果按照上述方式，在后面加上 | tee 指令，将导致dbg工具无法正常执行断点操作，而只能停止、开始。
