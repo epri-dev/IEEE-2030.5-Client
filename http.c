@@ -397,7 +397,7 @@ void print_headers (void *conn, char *buffer) {
   char *end;
   if (end = strstr (buffer, "\r\n\r\n")) {
     *end = '\0';
-    printf ("\n\n--- conn = %p -->\n"
+    printf ("\n\n--- conn = %p (out)-->\n"
             "%s\r\n\r\n", conn, buffer);
     *end = '\r';
   }
@@ -682,7 +682,7 @@ int http_receive (void *conn) {
       ok_v (next = next_line (c), HTTP_NONE);
       data = c->data; //当前这一行的开始地址
       if (*data == '\0') break; // allow empty lines to start
-      if (c->debug) printf ("\n\n<-- conn = %p ---\n"
+      if (c->debug) printf ("\n\n<--(in) conn = %p ---\n"
                               "%s\r\n", c, data);
       c->close = c->end = c->header = c->error = 0;
       c->content_type = c->media_range = NULL;

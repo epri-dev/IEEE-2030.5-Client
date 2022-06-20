@@ -351,7 +351,7 @@ void options (int argc, char **argv) {
 }
 
 void test_fail (char *test, char *description) {
-  printf ("%s failed: %s\n", test, description);
+  LOG_E ("%s failed: %s\n", test, description);
   exit (0);
 }
 
@@ -516,7 +516,7 @@ void der_program (Stub *d) {
 }
 
 
-/*将DErProgramList放到轮询队列中。作为test_dep函数中DERProgramList资源的case 函数 */
+/*将DErProgramList放到轮询队列中。作为 test_dep 函数中DERProgramList资源的case 函数 */
 void poll_derpl (Stub *r) {
   LOG_I("poll_derpl : %s\n",r->base.name);
   SE_DERProgramList_t *derpl = resource_data (r);
@@ -557,7 +557,7 @@ void der_program_list (Stub *r) {
 
 
 /* 测试中获取到FSA资源 
-这个函数是test_dep中的 FunctionSetAssignments 的 case 。*/
+这个函数是 test_dep 中的 FunctionSetAssignments 的 case 。*/
 int fsa (Stub *r) {
   LOG_I("fsa : resource href:%s\n",r->base.name);
   if (test & GET_DERP) {  //在all和primary中都存在该测试项目  
@@ -583,14 +583,48 @@ void fsa_list (Stub *r) {
   在这个case之前，本函数在执行一遍完毕之后，将设置 r->completion = NULL，以避免后续再次执行。现在看起来需要修改。
   应当加入一个判断：判断到本次获取的FSAlist跟之前的不一样，执行下面的fsa函数。
   */
-  
+  int changed=0;
   List *l;
 
   /*陈立飞添加代码开始*/
   
+  /*思路：建立一个静态的fsaList，每次程序到这里的时候，比较一下这两个表是否一样。如果一样，则不用执行后续的步骤。
+  如果不一样了，那么就更新掉这个静态的fsalist，然后执行下面的函数。r->completion函数不用设定成null。*/
+  static List *lst_old = NULL;
+  List *lst_new = NULL;
+  
+  /* 新建list_new，即当前传入的Stub中的r->reqs全部内容*/
+  lst_new = list_union(lst_new,r->reqs);
+  LOG_I(" fsa_list:lst_new length %d\n",list_length(lst_new));
+  
+  /*执行减法运算，看看两者是否相等。a=b,即为a-b=0。但是这种情况对新的 fsa_list 有增加的情况不适用。或许要再两者对调后再算一下*/
+  lst_new = list_subtract(lst_new,lst_old);
+  
+  /* 释放 & 备份 */
+  if(lst_new != NULL){
+    changed=1;
+    free_list(lst_new);
+  }else{
+    changed =0;
+  }
+  
+  if(lst_old != NULL) {
+    free_list(lst_old);     //先清空lst_old，准备全部替换掉。
+    lst_old = NULL;
+  }
+  lst_old = list_union(lst_old,r->reqs);      //现在lst_old变成空了，那么将最新的数据填充进去。
+  
+  //决定是否执行后面的实质性操作
+  if(changed){ // 这个修改兼顾到了下面的原先的r->completion=NULL这个操作。有了这个判断之后，就不会重复执行下面实质性动作了。 
+    LOG_I("  fsa_list:fsa_list changed,continue\n");
+  }else{
+    LOG_I("  fsa_list:fsa_list not changed,skip next operation\n");
+    return;
+  }
+  
   /*陈立飞添加代码结束*/
 
-  foreach (l, r->reqs){  /*l取得的是fsalist中的子级，即单个fsa*/
+  foreach (l, r->reqs){  /*l取得的是 fsalist 中的子级，即单个fsa*/
     #if 0 //这个是原始代码版本
     if (fsa (l->data)){ 
       LOG_W("fsa_list:call fsa() on %s returns 1 , break\n",((Stub*)l->data)->base.name);
@@ -601,7 +635,7 @@ void fsa_list (Stub *r) {
     #endif
   }
   LOG_I("  fsa_list : set completion to NULL\n");
-  r->completion = NULL; //针对core011的测试case，这个completion函数只需要执行一次即可。
+  //r->completion = NULL; // 针对core011的测试case，这个completion函数只需要执行一次即可。
 }
 
 /*获取EndDevice的子层资源，即EndDevice。参数edevs通常是 EndDeviceList 类型对象。

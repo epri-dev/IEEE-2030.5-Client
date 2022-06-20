@@ -61,7 +61,7 @@ extern uint64_t device_sfdi;
 #include <inttypes.h>
 
 uint8_t device_lfdi[20];
-uint64_t device_sfdi = 0; //由该设备的证书文件生成的一个sfdi数值
+uint64_t device_sfdi = 0; //由该设备的证书文件生成的一个sfdi数值。但是如果指令中没有用到设备证书，那么就用后面指令中指定的sfdi值。两者也可以一致。
 
 void print_bytes (unsigned char *data, int n) {
   int i;

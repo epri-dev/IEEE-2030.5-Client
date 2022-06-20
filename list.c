@@ -114,6 +114,7 @@ void *insert_sorted (void *list, void *item,
 #include <stdlib.h>
 #include <string.h>
 
+/*删除这个list，但是不会删除list成员中指向的那个数据体，即data成员。*/
 void free_list (void *list) {
   List *l = list, *t;
   while (l) t = l, l = l->next, free (t);
@@ -172,7 +173,7 @@ List *list_subtract (List *la, List *lb) {
   return la;
 }
 
-//删除la中于lb不同的部分
+//删除la中跟lb不同的部分
 List *list_intersect (List *la, List *lb) {
   List *a = la, *prev = (List *)&la, *next;
   while (a) { //遍历全部的la节点
@@ -186,7 +187,7 @@ List *list_intersect (List *la, List *lb) {
   return la;
 }
 
-//将la和lb中全部的节点合并起来（只合并不同的节点）
+//将la和lb中全部的不同的节点合并起来（只合并不同的节点）
 List *list_union (List *la, List *lb) {
   List *b;
   foreach (b, lb)
