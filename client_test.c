@@ -6,7 +6,7 @@
 #include "der_client.c"
 #include "query.c"
 
-#define VERSION "0.2.11"
+#define VERSION "1.00"
 //print client version
 void version () {
   printf("IEEE 2030.5 client test version %s -- compiled: %s\n",
