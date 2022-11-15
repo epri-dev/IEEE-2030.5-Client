@@ -14,7 +14,7 @@
 void set_time (SE_Time_t *tm);
 
 /** @brief Get the current (adjusted) time, syncronized with a IEEE 2030.5
-    server. 
+    server.
     @returns the system time with an added offset to match the time of the
     server.
 */
@@ -26,12 +26,15 @@ int64_t se_time ();
 
 int se_time_offset = 0;
 
+//设定SE指定的本地时间，跟系统本地时间区分开来。
 void set_time (SE_Time_t *tm) {
   se_time_offset = tm->currentTime - time (NULL);
+  LOG_I("set_time : se_time_offset : %d\n",se_time_offset);
   set_timezone (tm->tzOffset, tm->dstOffset,
-		tm->dstStartTime, tm->dstEndTime);
+                tm->dstStartTime, tm->dstEndTime);
 }
 
+/*返回当前的SE时间*/
 int64_t se_time () {
   return time (NULL) + se_time_offset;
 }

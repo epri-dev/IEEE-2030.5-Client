@@ -21,9 +21,9 @@ cc=gcc
 cpp=cpp
 args=( "$@" )
 compile_args=()
-debug_flags=( -g )
-optimize_flags=( -Os -ffunction-sections -Wl,--gc-sections
-		 -fno-asynchronous-unwind-tables )
+debug_flags=( -g )  #在编译时，如果没有指定上面的任何优化参数，则默认为 -O0，即没有优化。
+optimize_flags=( -Os -ffunction-sections -Wl,--gc-sections  
+		 -fno-asynchronous-unwind-tables )  #gcc中指定优化级别的参数有：-O0、-O1、-O2、-O3、-Og、-Os、-Ofast。
 static_flags=( -static -Wl,-Bstatic )
 
 contains () {

@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://ieee.org/2030.5" targetNamespace="http://ieee.org/2030.5" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.0.4">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="urn:ieee:std:2030.5:ns" targetNamespace="urn:ieee:std:2030.5:ns" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.1.0">
   <xs:annotation>
-    <xs:documentation>The IEEE 2030.5 model is organized into function sets, represented by sub-packages. However, all structures are defined inside a single namespace. 
-Legal Notice
-Copyright 2011-2013 © ZigBee Alliance, Inc. and HomePlug Powerline Alliance, Inc.  All rights Reserved.  This information within this document is the property of the ZigBee Alliance and the HomePlug Powerline Alliance and its use and disclosure are restricted.
-Elements of ZigBee Alliance and HomePlug Powerline Alliance specifications may be subject to third party intellectual property rights, including without limitation, patent, copyright or trademark rights (such a third party may or may not be a member of ZigBee and/or HomePlug). ZigBee and HomePlug are not responsible and shall not be held responsible in any manner for identifying or failing to identify any or all such third party intellectual property rights.
-This document and the information contained herein are provided on an “AS IS” basis and ZigBee and HomePlug DISCLAIM ALL WARRANTIES EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO (A) ANY WARRANTY THAT THE USE OF THE INFORMATION HEREIN WILL NOT INFRINGE ANY RIGHTS OF THIRD PARTIES (INCLUDING WITHOUT LIMITATION ANY INTELLECTUAL PROPERTY RIGHTS INCLUDING PATENT, COPYRIGHT OR TRADEMARK RIGHTS) OR (B) ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE OR NON-INFRINGEMENT. IN NO EVENT WILL ZIGBEE OR HOMEPLUG BE LIABLE FOR ANY LOSS OF PROFITS, LOSS OF BUSINESS, LOSS OF USE OF DATA, INTERRUPTION OF BUSINESS, OR FOR ANY OTHER DIRECT, INDIRECT, SPECIAL OR EXEMPLARY, INCIDENTIAL, PUNITIVE OR CONSEQUENTIAL DAMAGES OF ANY KIND, IN CONTRACT OR IN TORT, IN CONNECTION WITH THIS DOCUMENT OR THE INFORMATION CONTAINED HEREIN, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH LOSS OR DAMAGE. All Company, brand and product names may be trademarks that are the sole property of their respective owners.
-The above notice and this paragraph MUST be included on all copies of this document that are made.
-ZigBee Alliance, Inc.
-2400 Camino Ramon, Suite 375
-San Ramon, CA 94583
-HomePlug Powerline Alliance, Inc.
-5200 SW Macadam Ave, Suite 470
-Portland, OR  97239</xs:documentation>
+    <xs:documentation>The IEEE 2030.5 model is organized into function sets, represented by sub-packages. However, all structures are defined inside a single namespace.
+
+Copyright
+The IEEE Standards publication(s) ("Document") is approved by the IEEE Standards Association ("IEEE-SA") Standards Board and is published in accordance with established IEEE-SA Standards Board bylaws and operations procedures.
+
+IEEE owns the copyright to this Document in all forms of media. Copyright in the text retrieved, displayed or output from this Document is owned by IEEE and is protected by the copyright laws of the United States and by international treaties. IEEE reserves all rights not expressly granted.
+
+IEEE is providing the Document to you at no charge. However, the Document is not to be considered within the "Public Domain", as IEEE is, and at all times shall remain, the sole copyright holder in the Document.
+
+Terms of Use
+You may retrieve, download and print one (1) copy of each Document in this Program for your personal use. You may retain one (1) additional copy of this Document as your personal archive copy.
+
+Except as allowed by the copyright laws of the United States of America or applicable international treaties, or as explicitly allowed in these Terms of Use, you may not further copy, prepare, and/or distribute copies of the Document, nor significant portions of the Document, in any form, without prior written permission from IEEE.
+
+Requests for permission to reprint this Document, in whole or in part, or requests for a license to reproduce and/or distribute this Document, in any form, must be submitted via email to the Standards Licensing and Contracts (http://standards.ieee.org/contact/form.html), or in writing to:
+
+IEEE-SA Licensing and Contracts 
+445 Hoes Lane 
+Piscataway, NJ 08855</xs:documentation>
   </xs:annotation>
   <xs:complexType name="DeviceCapability">
     <xs:annotation>
@@ -42,6 +49,11 @@ Portland, OR  97239</xs:documentation>
         <xs:sequence>
           <xs:element name="ConfigurationLink" type="ConfigurationLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="DERListLink" type="DERListLink" minOccurs="0" maxOccurs="1" />
+          <xs:element name="deviceCategory" minOccurs="0" maxOccurs="1" type="DeviceCategoryType">
+            <xs:annotation>
+              <xs:documentation>This field is for use in devices that can adjust energy usage (e.g., demand response, distributed energy resources).  For devices that do not respond to EndDeviceControls or DERControls (for instance, an ESI), this field should not have any bits set.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="DeviceInformationLink" type="DeviceInformationLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="DeviceStatusLink" type="DeviceStatusLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="FileStatusLink" type="FileStatusLink" minOccurs="0" maxOccurs="1" />
@@ -52,11 +64,6 @@ Portland, OR  97239</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="LoadShedAvailabilityListLink" type="LoadShedAvailabilityListLink" minOccurs="0" maxOccurs="1" />
-          <xs:element name="loadShedDeviceCategory" minOccurs="0" maxOccurs="1" type="DeviceCategoryType">
-            <xs:annotation>
-              <xs:documentation>This field is for use in devices that can shed load.  If you are a device that does not respond to EndDeviceControls (for instance, an ESI), this field should not have any bits set.</xs:documentation>
-            </xs:annotation>
-          </xs:element>
           <xs:element name="LogEventListLink" type="LogEventListLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="PowerStatusLink" type="PowerStatusLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="sFDI" minOccurs="1" maxOccurs="1" type="SFDIType">
@@ -134,6 +141,11 @@ Portland, OR  97239</xs:documentation>
           <xs:element name="FlowReservationRequestListLink" type="FlowReservationRequestListLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="FlowReservationResponseListLink" type="FlowReservationResponseListLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="FunctionSetAssignmentsListLink" type="FunctionSetAssignmentsListLink" minOccurs="0" maxOccurs="1" />
+          <xs:element name="postRate" minOccurs="0" maxOccurs="1" type="UInt32">
+            <xs:annotation>
+              <xs:documentation>POST rate, or how often EndDevice and subordinate resources should be POSTed, in seconds. A client MAY indicate a preferred postRate when POSTing EndDevice. A server MAY add or modify postRate to indicate its preferred posting rate.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="RegistrationLink" type="RegistrationLink" minOccurs="0" maxOccurs="1" />
           <xs:element name="SubscriptionListLink" type="SubscriptionListLink" minOccurs="0" maxOccurs="1" />
         </xs:sequence>
@@ -350,7 +362,7 @@ Portland, OR  97239</xs:documentation>
               <xs:documentation>Contains the preferred schema and extensibility level indication such as "+S1"</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="limit" minOccurs="1" maxOccurs="1" type="UInt16">
+          <xs:element name="limit" minOccurs="1" maxOccurs="1" type="UInt32">
             <xs:annotation>
               <xs:documentation>This element is used to indicate the maximum number of list items that should be included in a notification when the subscribed resource changes. This limit is meant to be functionally equivalent to the ‘limit’ query string parameter, but applies to both list resources as well as other resources.  For list resources, if a limit of ‘0’ is specified, then notifications SHALL contain a list resource with results=’0’ (equivalent to a simple change notification).  For list resources, if a limit greater than ‘0’ is specified, then notifications SHALL contain a list resource with results equal to the limit specified (or less, should the list contain fewer items than the limit specified or should the server be unable to provide the requested number of items for any reason) and follow the same rules for list resources (e.g., ordering).  For non-list resources, if a limit of ‘0’ is specified, then notifications SHALL NOT contain a resource representation (equivalent to a simple change notification).  For non-list resources, if a limit greater than ‘0’ is specified, then notifications SHALL contain the representation of the changed resource.</xs:documentation>
             </xs:annotation>
@@ -658,6 +670,11 @@ All other values are reserved for future use.</xs:documentation>
 20 - DER Control</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="gpsLocation" minOccurs="0" maxOccurs="1" type="GPSLocationType">
+            <xs:annotation>
+              <xs:documentation>GPS location of this device.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="lFDI" minOccurs="1" maxOccurs="1" type="HexBinary160">
             <xs:annotation>
               <xs:documentation>Long form device identifier. See the Security section for full details.</xs:documentation>
@@ -760,7 +777,7 @@ All other values are reserved for future use.</xs:documentation>
 18 - Duty cycle
 19 - Load adjustment percentage
 20 - Appliance load reduction
-21-32 - Reserved</xs:documentation>
+21-31 - Reserved</xs:documentation>
         </xs:annotation>
       </xs:element>
     </xs:sequence>
@@ -1437,7 +1454,7 @@ All other values are reserved.</xs:documentation>
           </xs:element>
           <xs:element name="logEventPEN" minOccurs="1" maxOccurs="1" type="PENType">
             <xs:annotation>
-              <xs:documentation>The Private Enterprise Number(PEN) of the entity that defined the profileID, functionSet, and logEventCode of the logEvent. ZigBee-assigned logEventCodes SHALL use the ZigBee Alliance PEN.  Combinations of profileID, functionSet, and logEventCode SHALL have unique meaning within a logEventPEN and are defined by the owner of the PEN.</xs:documentation>
+              <xs:documentation>The Private Enterprise Number(PEN) of the entity that defined the profileID, functionSet, and logEventCode of the logEvent. IEEE 2030.5-assigned logEventCodes SHALL use the IEEE 2030.5 PEN.  Combinations of profileID, functionSet, and logEventCode SHALL have unique meaning within a logEventPEN and are defined by the owner of the PEN.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="profileID" minOccurs="1" maxOccurs="1" type="UInt8">
@@ -1513,7 +1530,7 @@ All other values are reserved.</xs:documentation>
       </xs:element>
       <xs:element name="lowChargeThreshold" minOccurs="0" maxOccurs="1" type="UInt32">
         <xs:annotation>
-          <xs:documentation>In context of the PowerStatus resource, this is the value of EstimatedTimeRemaining below which BatteryStatus "low" is indicated and the LE_LOW_BATTERY is raised.</xs:documentation>
+          <xs:documentation>In context of the PowerStatus resource, this is the value of EstimatedTimeRemaining below which BatteryStatus "low" is indicated and the PS_LOW_BATTERY is raised.</xs:documentation>
         </xs:annotation>
       </xs:element>
     </xs:sequence>
@@ -3251,7 +3268,7 @@ All other values reserved.</xs:documentation>
       <xs:extension base="SubscribableIdentifiedObject">
         <xs:sequence>
           <xs:element name="DERControlBase" type="DERControlBase" minOccurs="1" maxOccurs="1" />
-          <xs:element name="setESDelay" minOccurs="0" maxOccurs="1" type="UInt16">
+          <xs:element name="setESDelay" minOccurs="0" maxOccurs="1" type="UInt32">
             <xs:annotation>
               <xs:documentation>Enter service delay, in hundredths of a second. When present, this value SHALL update the value of the corresponding setting (DERSettings::setESDelay).</xs:documentation>
             </xs:annotation>
@@ -3276,7 +3293,12 @@ All other values reserved.</xs:documentation>
               <xs:documentation>Enter service voltage low. Specified as an effective percent voltage, defined as (100% * (locally measured voltage - setVRefOfs) / setVRef), in hundredths of a percent. When present, this value SHALL update the value of the corresponding setting (DERSettings::setESLowVolt).</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="setESRandomDelay" minOccurs="0" maxOccurs="1" type="UInt16">
+          <xs:element name="setESRampTms" minOccurs="0" maxOccurs="1" type="UInt32">
+            <xs:annotation>
+              <xs:documentation>Enter service ramp time, in hundredths of a second. When present, this value SHALL update the value of the corresponding setting (DERSettings::setESRampTms).</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="setESRandomDelay" minOccurs="0" maxOccurs="1" type="UInt32">
             <xs:annotation>
               <xs:documentation>Enter service randomized delay, in hundredths of a second. When present, this value SHALL update the value of the corresponding setting (DERSettings::setESRandomDelay).</xs:documentation>
             </xs:annotation>
@@ -3374,7 +3396,7 @@ All other values reserved.</xs:documentation>
               <xs:documentation>Bitmap indicating the DER Controls enabled on the device. See DERControlType for values. If a control is supported (see DERCapability::modesSupported), but not enabled, the control will not be executed if encountered.</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="setESDelay" minOccurs="0" maxOccurs="1" type="UInt16">
+          <xs:element name="setESDelay" minOccurs="0" maxOccurs="1" type="UInt32">
             <xs:annotation>
               <xs:documentation>Enter service delay, in hundredths of a second.</xs:documentation>
             </xs:annotation>
@@ -3399,7 +3421,12 @@ All other values reserved.</xs:documentation>
               <xs:documentation>Enter service voltage low. Specified as an effective percent voltage, defined as (100% * (locally measured voltage - setVRefOfs) / setVRef), in hundredths of a percent.</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="setESRandomDelay" minOccurs="0" maxOccurs="1" type="UInt16">
+          <xs:element name="setESRampTms" minOccurs="0" maxOccurs="1" type="UInt32">
+            <xs:annotation>
+              <xs:documentation>Enter service ramp time, in hundredths of a second.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="setESRandomDelay" minOccurs="0" maxOccurs="1" type="UInt32">
             <xs:annotation>
               <xs:documentation>Enter service randomized delay, in hundredths of a second.</xs:documentation>
             </xs:annotation>
@@ -3439,24 +3466,29 @@ All other values reserved.</xs:documentation>
               <xs:documentation>Maximum rate of energy transfer delivered by the storage device, in Watts. Defaults to rtgMaxDischargeRateW.</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="setMaxV" minOccurs="0" maxOccurs="1" type="VoltageRMS">
+            <xs:annotation>
+              <xs:documentation>AC voltage maximum setting.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="setMaxVA" minOccurs="0" maxOccurs="1" type="ApparentPower">
             <xs:annotation>
-              <xs:documentation>Set limit for maximum apparent power capability of the DER (in VA). Defaults to rtgVA.</xs:documentation>
+              <xs:documentation>Set limit for maximum apparent power capability of the DER (in VA). Defaults to rtgMaxVA.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="setMaxVar" minOccurs="0" maxOccurs="1" type="ReactivePower">
             <xs:annotation>
-              <xs:documentation>Set limit for maximum reactive power delivered by the DER (in var). SHALL be a positive value &amp;lt;= rtgVar (default).</xs:documentation>
+              <xs:documentation>Set limit for maximum reactive power delivered by the DER (in var). SHALL be a positive value &amp;lt;= rtgMaxVar (default).</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="setMaxVarNeg" minOccurs="0" maxOccurs="1" type="ReactivePower">
             <xs:annotation>
-              <xs:documentation>Set limit for maximum reactive power received by the DER (in var). If present, SHALL be a negative value &amp;gt;= rtgVarNeg (default). If absent, defaults to negative setMaxVar.</xs:documentation>
+              <xs:documentation>Set limit for maximum reactive power received by the DER (in var). If present, SHALL be a negative value &amp;gt;= rtgMaxVarNeg (default). If absent, defaults to negative setMaxVar.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="setMaxW" minOccurs="1" maxOccurs="1" type="ActivePower">
             <xs:annotation>
-              <xs:documentation>Set limit for maximum active power capability of the DER (in W). Defaults to rtgW.</xs:documentation>
+              <xs:documentation>Set limit for maximum active power capability of the DER (in W). Defaults to rtgMaxW.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="setMaxWh" minOccurs="0" maxOccurs="1" type="WattHour">
@@ -3464,19 +3496,29 @@ All other values reserved.</xs:documentation>
               <xs:documentation>Maximum energy storage capacity of the DER, in WattHours. Note: this may be different from physical capability.</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="setMinPF" minOccurs="0" maxOccurs="1" type="PowerFactor">
+          <xs:element name="setMinPFOverExcited" minOccurs="0" maxOccurs="1" type="PowerFactor">
             <xs:annotation>
-              <xs:documentation>Set minimum Power Factor displacement limit of the DER; positive value between 0.0 (typically &amp;gt; 0.7) and 1.0.  SHALL be &amp;gt;= rtgMinPF (default).</xs:documentation>
+              <xs:documentation>Set minimum Power Factor displacement limit of the DER when injecting reactive power (over-excited); SHALL be a positive value between 0.0 (typically &amp;gt; 0.7) and 1.0.  SHALL be &amp;gt;= rtgMinPFOverExcited (default).</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="setMinPFNeg" minOccurs="0" maxOccurs="1" type="PowerFactor">
+          <xs:element name="setMinPFUnderExcited" minOccurs="0" maxOccurs="1" type="PowerFactor">
             <xs:annotation>
-              <xs:documentation>Set minimum Power Factor displacement limit of the DER; negative value between 0.0 (typically &amp;lt; -0.7) and -0.9999.  If present, SHALL be &amp;lt;= rtgMinPFNeg (default).  If absent, defaults to negative setMinPF.</xs:documentation>
+              <xs:documentation>Set minimum Power Factor displacement limit of the DER when absorbing reactive power (under-excited); SHALL be a positive value between 0.0 (typically &amp;gt; 0.7) and 0.9999.  If present, SHALL be &amp;gt;= rtgMinPFUnderExcited (default).  If absent, defaults to setMinPFOverExcited.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="setMinV" minOccurs="0" maxOccurs="1" type="VoltageRMS">
+            <xs:annotation>
+              <xs:documentation>AC voltage minimum setting.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="setSoftGradW" minOccurs="0" maxOccurs="1" type="UInt16">
             <xs:annotation>
               <xs:documentation>Set soft-start rate of change (soft-start ramp rate) of active power output due to command or internal action, defined in %setWMax / second.  Resolution is in hundredths of a percent/second. A value of 0 means there is no limit. Interpreted as a percentage change in output capability limit per second when used as a ramp rate.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="setVNom" minOccurs="0" maxOccurs="1" type="VoltageRMS">
+            <xs:annotation>
+              <xs:documentation>AC voltage nominal setting.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="setVRef" minOccurs="0" maxOccurs="1" type="VoltageRMS">
@@ -3500,15 +3542,17 @@ All other values reserved.</xs:documentation>
   </xs:complexType>
   <xs:complexType name="DERType">
     <xs:annotation>
-      <xs:documentation>0 - Not applicable / Unknown 
-1 - Virtual or mixed DER 
-2 - Reciprocating engine 
-3 - Fuel cell 
-4 - Photovoltaic system 
-5 - Combined heat and power 
-80 - Storage (immobile)
-81 - Electric vehicle / EVSE
-82 - Combined PV and storage
+      <xs:documentation>0 - Not applicable / Unknown
+1 - Virtual or mixed DER
+2 - Reciprocating engine
+3 - Fuel cell
+4 - Photovoltaic system
+5 - Combined heat and power
+6 - Other generation system
+80 - Other storage system
+81 - Electric vehicle
+82 - EVSE
+83 - Combined PV and storage
 All other values reserved.</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -3573,14 +3617,9 @@ All other values reserved.</xs:documentation>
               <xs:documentation>Bitmap indicating the DER Controls implemented by the device. See DERControlType for values.</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="rtgA" minOccurs="1" maxOccurs="1" type="CurrentRMS">
-            <xs:annotation>
-              <xs:documentation>Maximum continuous AC current capability of the DER, in Amperes (RMS).</xs:documentation>
-            </xs:annotation>
-          </xs:element>
           <xs:element name="rtgAbnormalCategory" minOccurs="0" maxOccurs="1" type="UInt8">
             <xs:annotation>
-              <xs:documentation>Abnormal operating performance category as defined by IEEE 1547-2017. One of:
+              <xs:documentation>Abnormal operating performance category as defined by IEEE 1547-2018. One of:
 0 - not specified
 1 - Category I
 2 - Category II
@@ -3588,7 +3627,12 @@ All other values reserved.</xs:documentation>
 All other values reserved.</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="rtgAh" minOccurs="0" maxOccurs="1" type="AmpereHour">
+          <xs:element name="rtgMaxA" minOccurs="0" maxOccurs="1" type="CurrentRMS">
+            <xs:annotation>
+              <xs:documentation>Maximum continuous AC current capability of the DER, in Amperes (RMS).</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="rtgMaxAh" minOccurs="0" maxOccurs="1" type="AmpereHour">
             <xs:annotation>
               <xs:documentation>Usable energy storage capacity of the DER, in AmpHours.</xs:documentation>
             </xs:annotation>
@@ -3610,22 +3654,57 @@ All other values reserved.</xs:documentation>
           </xs:element>
           <xs:element name="rtgMaxDischargeRateW" minOccurs="0" maxOccurs="1" type="ActivePower">
             <xs:annotation>
-              <xs:documentation>Maximum rate of energy transfer delivered by the storage DER, in Watts. Required for combined generation/storage DERs (e.g. DERType == 82).</xs:documentation>
+              <xs:documentation>Maximum rate of energy transfer delivered by the storage DER, in Watts. Required for combined generation/storage DERs (e.g. DERType == 83).</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="rtgMinPF" minOccurs="0" maxOccurs="1" type="PowerFactor">
+          <xs:element name="rtgMaxV" minOccurs="0" maxOccurs="1" type="VoltageRMS">
             <xs:annotation>
-              <xs:documentation>Minimum Power Factor displacement capability of the DER; SHALL be a positive value between 0.0 (typically &amp;gt; 0.7) and 1.0. If absent, defaults to unity. (Unity power factor is considered unsigned.)</xs:documentation>
+              <xs:documentation>AC voltage maximum rating.</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="rtgMinPFNeg" minOccurs="0" maxOccurs="1" type="PowerFactor">
+          <xs:element name="rtgMaxVA" minOccurs="0" maxOccurs="1" type="ApparentPower">
             <xs:annotation>
-              <xs:documentation>Minimum Power Factor displacement capability of the DER; SHALL be a negative value between 0.0 (typically &amp;lt; -0.7) and -0.9999.  If absent, defaults to negative rtgMinPF. (Unity power factor is considered unsigned.)</xs:documentation>
+              <xs:documentation>Maximum continuous apparent power output capability of the DER, in VA.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="rtgMaxVar" minOccurs="0" maxOccurs="1" type="ReactivePower">
+            <xs:annotation>
+              <xs:documentation>Maximum continuous reactive power delivered by the DER, in var.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="rtgMaxVarNeg" minOccurs="0" maxOccurs="1" type="ReactivePower">
+            <xs:annotation>
+              <xs:documentation>Maximum continuous reactive power received by the DER, in var.  If absent, defaults to negative rtgMaxVar.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="rtgMaxW" minOccurs="1" maxOccurs="1" type="ActivePower">
+            <xs:annotation>
+              <xs:documentation>Maximum continuous active power output capability of the DER, in watts. Represents combined generation plus storage output if DERType == 83.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="rtgMaxWh" minOccurs="0" maxOccurs="1" type="WattHour">
+            <xs:annotation>
+              <xs:documentation>Maximum energy storage capacity of the DER, in WattHours.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="rtgMinPFOverExcited" minOccurs="0" maxOccurs="1" type="PowerFactor">
+            <xs:annotation>
+              <xs:documentation>Minimum Power Factor displacement capability of the DER when injecting reactive power (over-excited); SHALL be a positive value between 0.0 (typically &amp;gt; 0.7) and 1.0. If absent, defaults to unity.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="rtgMinPFUnderExcited" minOccurs="0" maxOccurs="1" type="PowerFactor">
+            <xs:annotation>
+              <xs:documentation>Minimum Power Factor displacement capability of the DER when absorbing reactive power (under-excited); SHALL be a positive value between 0.0 (typically &amp;gt; 0.7) and 0.9999.  If absent, defaults to rtgMinPFOverExcited.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="rtgMinV" minOccurs="0" maxOccurs="1" type="VoltageRMS">
+            <xs:annotation>
+              <xs:documentation>AC voltage minimum rating.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="rtgNormalCategory" minOccurs="0" maxOccurs="1" type="UInt8">
             <xs:annotation>
-              <xs:documentation>Normal operating performance category as defined by IEEE 1547-2017. One of:
+              <xs:documentation>Normal operating performance category as defined by IEEE 1547-2018. One of:
 0 - not specified
 1 - Category A
 2 - Category B
@@ -3642,6 +3721,11 @@ All other values reserved.</xs:documentation>
               <xs:documentation>Active power rating in Watts at specified over-excited power factor (rtgOverExcitedPF). If present, rtgOverExcitedPF SHALL be present.</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="rtgReactiveSusceptance" minOccurs="0" maxOccurs="1" type="ReactiveSusceptance">
+            <xs:annotation>
+              <xs:documentation>Reactive susceptance that remains connected to the Area EPS in the cease to energize and trip state.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="rtgUnderExcitedPF" minOccurs="0" maxOccurs="1" type="PowerFactor">
             <xs:annotation>
               <xs:documentation>Specified under-excited power factor.</xs:documentation>
@@ -3652,29 +3736,9 @@ All other values reserved.</xs:documentation>
               <xs:documentation>Active power rating in Watts at specified under-excited power factor (rtgUnderExcitedPF). If present, rtgUnderExcitedPF SHALL be present.</xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="rtgVA" minOccurs="0" maxOccurs="1" type="ApparentPower">
+          <xs:element name="rtgVNom" minOccurs="0" maxOccurs="1" type="VoltageRMS">
             <xs:annotation>
-              <xs:documentation>Maximum continuous apparent power output capability of the DER, in VA.</xs:documentation>
-            </xs:annotation>
-          </xs:element>
-          <xs:element name="rtgVar" minOccurs="0" maxOccurs="1" type="ReactivePower">
-            <xs:annotation>
-              <xs:documentation>Maximum continuous reactive power delivered by the DER, in var.</xs:documentation>
-            </xs:annotation>
-          </xs:element>
-          <xs:element name="rtgVarNeg" minOccurs="0" maxOccurs="1" type="ReactivePower">
-            <xs:annotation>
-              <xs:documentation>Maximum continuous reactive power received by the DER, in var.  If absent, defaults to negative rtgVar.</xs:documentation>
-            </xs:annotation>
-          </xs:element>
-          <xs:element name="rtgW" minOccurs="1" maxOccurs="1" type="ActivePower">
-            <xs:annotation>
-              <xs:documentation>Maximum continuous active power output capability of the DER, in watts. Represents combined generation plus storage output if DERType == 82.</xs:documentation>
-            </xs:annotation>
-          </xs:element>
-          <xs:element name="rtgWh" minOccurs="0" maxOccurs="1" type="WattHour">
-            <xs:annotation>
-              <xs:documentation>Maximum energy storage capacity of the DER, in WattHours.</xs:documentation>
+              <xs:documentation>AC voltage nominal rating.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="type" minOccurs="1" maxOccurs="1" type="DERType">
@@ -3701,14 +3765,19 @@ All other values reserved.</xs:documentation>
           <xs:documentation>Set DER as energized (true) or de-energized (false). Used in conjunction with ramp rate when re-energizing.</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="opModFixedPF" minOccurs="0" maxOccurs="1" type="PowerFactor">
+      <xs:element name="opModFixedPFAbsorbW" minOccurs="0" maxOccurs="1" type="PowerFactorWithExcitation">
         <xs:annotation>
-          <xs:documentation>The opModFixedPF function specifies a requested fixed Power Factor (PF) setting, consisting of a signed displacement value. The PF sign (which SHALL be interpreted according to the EEI convention, where unity PF is considered unsigned) indicates the direction of reactive power flow. The actual displacement SHALL be within the limits established by setMinPF and setMinPFNeg. If issued simultaneously with other reactive power controls (e.g. opModFixedVar) the control resulting in least var magnitude SHOULD take precedence.</xs:documentation>
+          <xs:documentation>The opModFixedPFAbsorbW function specifies a requested fixed Power Factor (PF) setting for when active power is being absorbed. The actual displacement SHALL be within the limits established by setMinPFOverExcited and setMinPFUnderExcited. If issued simultaneously with other reactive power controls (e.g. opModFixedVar) the control resulting in least var magnitude SHOULD take precedence.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="opModFixedPFInjectW" minOccurs="0" maxOccurs="1" type="PowerFactorWithExcitation">
+        <xs:annotation>
+          <xs:documentation>The opModFixedPFInjectW function specifies a requested fixed Power Factor (PF) setting for when active power is being injected. The actual displacement SHALL be within the limits established by setMinPFOverExcited and setMinPFUnderExcited. If issued simultaneously with other reactive power controls (e.g. opModFixedVar) the control resulting in least var magnitude SHOULD take precedence.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModFixedVar" minOccurs="0" maxOccurs="1" type="FixedVar">
         <xs:annotation>
-          <xs:documentation>The opModFixedVar function specifies the delivered or received reactive power setpoint.  The context for the setpoint value is determined by refType and SHALL be one of %setMaxW, %setMaxVar, or %statVarAvail.  If issued simultaneously with other reactive power controls (e.g. opModFixedPF) the control resulting in least var magnitude SHOULD take precedence.</xs:documentation>
+          <xs:documentation>The opModFixedVar function specifies the delivered or received reactive power setpoint.  The context for the setpoint value is determined by refType and SHALL be one of %setMaxW, %setMaxVar, or %statVarAvail.  If issued simultaneously with other reactive power controls (e.g. opModFixedPFInjectW) the control resulting in least var magnitude SHOULD take precedence.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModFixedW" minOccurs="0" maxOccurs="1" type="SignedPerCent">
@@ -3723,37 +3792,57 @@ All other values reserved.</xs:documentation>
       </xs:element>
       <xs:element name="opModFreqWatt" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify DERCurveLink for curve type == 1.  The Frequency-Watt function limits active power generation or consumption when the line frequency deviates from nominal by a specified amount. The Frequency-Watt curve is specified as an array of Frequency-Watt pairs that are interpolated into a piecewise linear function with hysteresis.  The x value of each pair specifies a frequency in Hz. The y value specifies a corresponding active power output in %setMaxW.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 0.  The Frequency-Watt function limits active power generation or consumption when the line frequency deviates from nominal by a specified amount. The Frequency-Watt curve is specified as an array of Frequency-Watt pairs that are interpolated into a piecewise linear function with hysteresis.  The x value of each pair specifies a frequency in Hz. The y value specifies a corresponding active power output in %setMaxW.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="opModHFRTMayTrip" minOccurs="0" maxOccurs="1" type="DERCurveLink">
+        <xs:annotation>
+          <xs:documentation>Specify DERCurveLink for curveType == 1. The High Frequency Ride-Through (HFRT) function is specified by one or two duration-frequency curves that define the operating region under high frequency conditions. Each HFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region. The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "may trip" region.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModHFRTMustTrip" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify curve type == 9.  The High Frequency Ride-Through (HFRT) function is specified by a duration-frequency curve that defines the operating region under high frequency conditions.  Each HFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "must trip" region.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 2.  The High Frequency Ride-Through (HFRT) function is specified by a duration-frequency curve that defines the operating region under high frequency conditions.  Each HFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "must trip" region.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="opModHVRTMayTrip" minOccurs="0" maxOccurs="1" type="DERCurveLink">
+        <xs:annotation>
+          <xs:documentation>Specify DERCurveLink for curveType == 3. The High Voltage Ride-Through (HVRT) function is specified by one, two, or three duration-volt curves that define the operating region under high voltage conditions. Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region. The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percentage voltage, defined as ((locally measured voltage - setVRefOfs / setVRef). This control specifies the "may trip" region.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModHVRTMomentaryCessation" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify curve type == 6.  The High Voltage Ride-Through (HVRT) function is specified by duration-volt curves that define the operating region under high voltage conditions.  Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "momentary cessation" region.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 4.  The High Voltage Ride-Through (HVRT) function is specified by duration-volt curves that define the operating region under high voltage conditions.  Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "momentary cessation" region.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModHVRTMustTrip" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify curve type == 7.  The High Voltage Ride-Through (HVRT) function is specified by duration-volt curves that define the operating region under high voltage conditions.  Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "must trip" region.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 5.  The High Voltage Ride-Through (HVRT) function is specified by duration-volt curves that define the operating region under high voltage conditions.  Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "must trip" region.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="opModLFRTMayTrip" minOccurs="0" maxOccurs="1" type="DERCurveLink">
+        <xs:annotation>
+          <xs:documentation>Specify DERCurveLink for curveType == 6. The Low Frequency Ride-Through (LFRT) function is specified by one or two duration-frequency curves that define the operating region under low frequency conditions. Each LFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region. The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "may trip" region.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModLFRTMustTrip" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify curve type == 8.  The Low Frequency Ride-Through (LFRT) function is specified by a duration-frequency curve that defines the operating region under low frequency conditions.  Each LFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "must trip" region.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 7.  The Low Frequency Ride-Through (LFRT) function is specified by a duration-frequency curve that defines the operating region under low frequency conditions.  Each LFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "must trip" region.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="opModLVRTMayTrip" minOccurs="0" maxOccurs="1" type="DERCurveLink">
+        <xs:annotation>
+          <xs:documentation>Specify DERCurveLink for curveType == 8. The Low Voltage Ride-Through (LVRT) function is specified by one, two, or three duration-volt curves that define the operating region under low voltage conditions. Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region. The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "may trip" region.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModLVRTMomentaryCessation" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify curve type == 4.  The Low Voltage Ride-Through (LVRT) function is specified by duration-volt curves that define the operating region under low voltage conditions.  Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "momentary cessation" region.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 9.  The Low Voltage Ride-Through (LVRT) function is specified by duration-volt curves that define the operating region under low voltage conditions.  Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "momentary cessation" region.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModLVRTMustTrip" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify curve type == 5.  The Low Voltage Ride-Through (LVRT) function is specified by duration-volt curves that define the operating region under low voltage conditions.  Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "must trip" region.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 10.  The Low Voltage Ride-Through (LVRT) function is specified by duration-volt curves that define the operating region under low voltage conditions.  Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "must trip" region.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModMaxLimW" minOccurs="0" maxOccurs="1" type="PerCent">
@@ -3773,22 +3862,22 @@ All other values reserved.</xs:documentation>
       </xs:element>
       <xs:element name="opModVoltVar" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify DERCurveLink for curve type == 0.  The static volt-var function provides over- or under-excited var compensation as a function of measured voltage. The volt-var curve is specified as an array of volt-var pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef) and SHOULD support a domain of at least 0 - 135.  The y value specifies a target var output interpreted as a signed percentage (-100 to 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW, %setMaxVar, or %statVarAvail.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 11.  The static volt-var function provides over- or under-excited var compensation as a function of measured voltage. The volt-var curve is specified as an array of volt-var pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef) and SHOULD support a domain of at least 0 - 135. If VRef is present in DERCurve, then the x value of each pair is additionally multiplied by (VRef / 10000). The y value specifies a target var output interpreted as a signed percentage (-100 to 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW, %setMaxVar, or %statVarAvail.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModVoltWatt" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify DERCurveLink for curve type == 3.  The Volt-Watt reduces active power output as a function of measured voltage. The Volt-Watt curve is specified as an array of Volt-Watt pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef) and SHOULD support a domain of at least 0 - 135. The y value specifies an active power output in %setMaxW, (0 - 100).</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 12.  The Volt-Watt reduces active power output as a function of measured voltage. The Volt-Watt curve is specified as an array of Volt-Watt pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef) and SHOULD support a domain of at least 0 - 135. The y value specifies an active power output interpreted as a percentage (0 - 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW or %statWAvail.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModWattPF" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify DERCurveLink for curve type == 2.  The Watt-PF function varies Power Factor (PF) as a function of delivered active power. The Watt-PF curve is specified as an array of Watt-PF coordinates that are interpolated into a piecewise linear function with hysteresis.  The x value of each pair specifies a watt setting in %setMaxW, (0 - 100). The PF output setting is a signed displacement in y value (PF sign SHALL be interpreted according to the EEI convention, where unity PF is considered unsigned). These settings are not expected to be updated very often during the life of the installation, therefore only a single curve is required.  If issued simultaneously with other reactive power controls (e.g. opModFixedPF) the control resulting in least var magnitude SHOULD take precedence.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 13.  The Watt-PF function varies Power Factor (PF) as a function of delivered active power. The Watt-PF curve is specified as an array of Watt-PF coordinates that are interpolated into a piecewise linear function with hysteresis.  The x value of each pair specifies a watt setting in %setMaxW, (0 - 100). The PF output setting is a signed displacement in y value (PF sign SHALL be interpreted according to the EEI convention, where unity PF is considered unsigned). These settings are not expected to be updated very often during the life of the installation, therefore only a single curve is required.  If issued simultaneously with other reactive power controls (e.g. opModFixedPFInjectW) the control resulting in least var magnitude SHOULD take precedence.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="opModWattVar" minOccurs="0" maxOccurs="1" type="DERCurveLink">
         <xs:annotation>
-          <xs:documentation>Specify DERCurveLink for curve type == 10. The Watt-Var function varies vars as a function of delivered active power. The Watt-Var curve is specified as an array of Watt-Var pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies a watt setting in %setMaxW, (0-100). The y value specifies a target var output interpreted as a signed percentage (-100 to 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW, %setMaxVar, or %statVarAvail.</xs:documentation>
+          <xs:documentation>Specify DERCurveLink for curveType == 14. The Watt-Var function varies vars as a function of delivered active power. The Watt-Var curve is specified as an array of Watt-Var pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies a watt setting in %setMaxW, (0-100). The y value specifies a target var output interpreted as a signed percentage (-100 to 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW, %setMaxVar, or %statVarAvail.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="rampTms" minOccurs="0" maxOccurs="1" type="UInt16">
@@ -3806,6 +3895,11 @@ All other values reserved.</xs:documentation>
       <xs:extension base="RandomizableEvent">
         <xs:sequence>
           <xs:element name="DERControlBase" type="DERControlBase" minOccurs="1" maxOccurs="1" />
+          <xs:element name="deviceCategory" minOccurs="0" maxOccurs="1" type="DeviceCategoryType">
+            <xs:annotation>
+              <xs:documentation>Specifies the bitmap indicating  the categories of devices that SHOULD respond. Devices SHOULD ignore events that do not indicate their device category. If not present, all devices SHOULD respond.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
@@ -3825,28 +3919,33 @@ All other values reserved.</xs:documentation>
   <xs:complexType name="DERControlType">
     <xs:annotation>
       <xs:documentation>Control modes supported by the DER.  Bit positions SHALL be defined as follows:
-0 - opModVoltVar (Volt-Var Mode)
-1 - opModFreqWatt (Frequency-Watt Curve Mode)
-2 - opModFreqDroop (Frequency-Watt Parameterized Mode)
-3 - opModWattPF (Watt-PowerFactor Mode)
-4 - opModVoltWatt (Volt-Watt Mode)
-5 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
-6 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
-7 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
-8 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
-9 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
-10 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
-11 - opModConnect (Connect / Disconnect - implies galvanic isolation)
-12 - opModEnergize (Energize / De-Energize)
-13 - opModMaxLimW (Maximum Active Power)
-14 - opModFixedVar (Reactive Power Setpoint)
-15 - opModFixedPF (Fixed Power Factor Setpoint)
-16 - opModFixedW (Charge / Discharge Setpoint)
-17 - opModTargetW (Target Active Power)
-18 - opModTargetVar (Target Reactive Power)
-19 - Charge mode
-20 - Discharge mode
-21 - opModWattVar (Watt-Var Mode)
+0 - Charge mode
+1 - Discharge mode
+2 - opModConnect (Connect / Disconnect - implies galvanic isolation)
+3 - opModEnergize (Energize / De-Energize)
+4 - opModFixedPFAbsorbW (Fixed Power Factor Setpoint when absorbing active power)
+5 - opModFixedPFInjectW (Fixed Power Factor Setpoint when injecting active power)
+6 - opModFixedVar (Reactive Power Setpoint)
+7 - opModFixedW (Charge / Discharge Setpoint)
+8 - opModFreqDroop (Frequency-Watt Parameterized Mode)
+9 - opModFreqWatt (Frequency-Watt Curve Mode)
+10 - opModHFRTMayTrip (High Frequency Ride Through, May Trip Mode)
+11 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
+12 - opModHVRTMayTrip (High Voltage Ride Through, May Trip Mode)
+13 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
+14 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
+15 - opModLFRTMayTrip (Low Frequency Ride Through, May Trip Mode)
+16 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
+17 - opModLVRTMayTrip (Low Voltage Ride Through, May Trip Mode)
+18 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
+19 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
+20 - opModMaxLimW (Maximum Active Power)
+21 - opModTargetVar (Target Reactive Power)
+22 - opModTargetW (Target Active Power)
+23 - opModVoltVar (Volt-Var Mode)
+24 - opModVoltWatt (Volt-Watt Mode)
+25 - opModWattPF (Watt-PowerFactor Mode)
+26 - opModWattVar (Watt-Var Mode)
 All other values reserved.</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -3860,6 +3959,16 @@ All other values reserved.</xs:documentation>
     <xs:complexContent>
       <xs:extension base="IdentifiedObject">
         <xs:sequence>
+          <xs:element name="autonomousVRefEnable" minOccurs="0" maxOccurs="1" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>If the curveType is opModVoltVar, then this field MAY be present. If the curveType is not opModVoltVar, then this field SHALL NOT be present. Enable/disable autonomous vRef adjustment. When enabled, the Volt-Var curve characteristic SHALL be adjusted autonomously as vRef changes and autonomousVRefTimeConstant SHALL be present. If a DER is able to support Volt-Var mode but is unable to support autonomous vRef adjustment, then the DER SHALL execute the curve without autonomous vRef adjustment. If not specified, then the value is false.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="autonomousVRefTimeConstant" minOccurs="0" maxOccurs="1" type="UInt32">
+            <xs:annotation>
+              <xs:documentation>If the curveType is opModVoltVar, then this field MAY be present. If the curveType is not opModVoltVar, then this field SHALL NOT be present. Adjustment range for vRef time constant, in hundredths of a second.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="creationTime" minOccurs="1" maxOccurs="1" type="TimeType">
             <xs:annotation>
               <xs:documentation>The time at which the object was created.</xs:documentation>
@@ -3873,7 +3982,7 @@ All other values reserved.</xs:documentation>
           </xs:element>
           <xs:element name="openLoopTms" minOccurs="0" maxOccurs="1" type="UInt16">
             <xs:annotation>
-              <xs:documentation>Open loop response time, the time to ramp up to 90% of the new reactive power target in response to the change in voltage, in hundredths of a second. Resolution is 1/100 sec. A value of 0 is used to mean no limit. When not present, the device SHOULD follow its default behavior.</xs:documentation>
+              <xs:documentation>Open loop response time, the time to ramp up to 90% of the new target in response to the change in voltage, in hundredths of a second. Resolution is 1/100 sec. A value of 0 is used to mean no limit. When not present, the device SHOULD follow its default behavior.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="rampDecTms" minOccurs="0" maxOccurs="1" type="UInt16">
@@ -3889,6 +3998,11 @@ All other values reserved.</xs:documentation>
           <xs:element name="rampPT1Tms" minOccurs="0" maxOccurs="1" type="UInt16">
             <xs:annotation>
               <xs:documentation>The configuration parameter for a low-pass filter, PT1 is a time, in hundredths of a second, in which the filter will settle to 95% of a step change in the input value. Resolution is 1/100 sec.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="vRef" minOccurs="0" maxOccurs="1" type="PerCent">
+            <xs:annotation>
+              <xs:documentation>If the curveType is opModVoltVar, then this field MAY be present. If the curveType is not opModVoltVar, then this field SHALL NOT be present. The nominal AC voltage (RMS) adjustment to the voltage curve points for Volt-Var curves.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="xMultiplier" minOccurs="1" maxOccurs="1" type="PowerOfTenMultiplierType">
@@ -3935,6 +4049,13 @@ All other values reserved.</xs:documentation>
       <xs:documentation>Data point values for defining a curve or schedule</xs:documentation>
     </xs:annotation>
     <xs:sequence>
+      <xs:element name="excitation" minOccurs="0" maxOccurs="1" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>If yvalue is Power Factor, then this field SHALL be present. If yvalue is not Power Factor, then this field SHALL NOT be present.
+True when DER is absorbing reactive power (under-excited), false
+when DER is injecting reactive power (over-excited).</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="xvalue" minOccurs="1" maxOccurs="1" type="Int32">
         <xs:annotation>
           <xs:documentation>The data value of the X-axis (independent) variable, depending on the curve type. See definitions in DERControlBase for further information.</xs:documentation>
@@ -3942,24 +4063,28 @@ All other values reserved.</xs:documentation>
       </xs:element>
       <xs:element name="yvalue" minOccurs="1" maxOccurs="1" type="Int32">
         <xs:annotation>
-          <xs:documentation>The data value of the Y-axis (dependent) variable, depending on the curve type. See definitions in DERControlBase for further information.</xs:documentation>
+          <xs:documentation>The data value of the Y-axis (dependent) variable, depending on the curve type. See definitions in DERControlBase for further information. If yvalue is Power Factor, the excitation field SHALL be present and yvalue SHALL be a positive value. If yvalue is not Power Factor, the excitation field SHALL NOT be present.</xs:documentation>
         </xs:annotation>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="DERCurveType">
     <xs:annotation>
-      <xs:documentation>0 - opModVoltVar (Volt-Var Mode)
-1 - opModFreqWatt (Frequency-Watt Curve Mode)
-2 - opModWattPF (Watt-PowerFactor Mode)
-3 - opModVoltWatt (Volt-Watt Mode)
-4 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
-5 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
-6 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
-7 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
-8 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
-9 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
-10 - opModWattVar (Watt-Var Mode)
+      <xs:documentation>0 - opModFreqWatt (Frequency-Watt Curve Mode)
+1 - opModHFRTMayTrip (High Frequency Ride Through, May Trip Mode)
+2 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
+3 - opModHVRTMayTrip (High Voltage Ride Through, May Trip Mode)
+4 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
+5 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
+6 - opModLFRTMayTrip (Low Frequency Ride Through, May Trip Mode)
+7 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
+8 - opModLVRTMayTrip (Low Voltage Ride Through, May Trip Mode)
+9 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
+10 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
+11 - opModVoltVar (Volt-Var Mode)
+12 - opModVoltWatt (Volt-Watt Mode)
+13 - opModWattPF (Watt-PowerFactor Mode)
+14 - opModWattVar (Watt-Var Mode)
 All other values reserved.</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -4010,6 +4135,23 @@ All other values reserved.</xs:documentation>
     <xs:complexContent>
       <xs:extension base="SubscribableResource">
         <xs:sequence>
+          <xs:element name="alarmStatus" minOccurs="0" maxOccurs="1" type="HexBinary32">
+            <xs:annotation>
+              <xs:documentation>Bitmap indicating the status of DER alarms (see DER LogEvents for more details).
+0 - DER_FAULT_OVER_CURRENT
+1 - DER_FAULT_OVER_VOLTAGE
+2 - DER_FAULT_UNDER_VOLTAGE
+3 - DER_FAULT_OVER_FREQUENCY
+4 - DER_FAULT_UNDER_FREQUENCY
+5 - DER_FAULT_VOLTAGE_IMBALANCE
+6 - DER_FAULT_CURRENT_IMBALANCE
+7 - DER_FAULT_EMERGENCY_LOCAL
+8 - DER_FAULT_EMERGENCY_REMOTE
+9 - DER_FAULT_LOW_POWER_INPUT
+10 - DER_FAULT_PHASE_ROTATION
+11-31 - Reserved</xs:documentation>
+            </xs:annotation>
+          </xs:element>
           <xs:element name="genConnectStatus" minOccurs="0" maxOccurs="1" type="ConnectStatusType">
             <xs:annotation>
               <xs:documentation>Connect/status value for generator DER. 
@@ -4076,6 +4218,7 @@ See ConnectStatusType for values.</xs:documentation>
 4 - %setEffectiveV
 5 - %setMaxChargeRateW
 6 - %setMaxDischargeRateW
+7 - %statWAvail
 All other values reserved.</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -4201,14 +4344,54 @@ All other values reserved.</xs:documentation>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="ReactiveSusceptance">
+    <xs:annotation>
+      <xs:documentation>Reactive susceptance</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="multiplier" minOccurs="1" maxOccurs="1" type="PowerOfTenMultiplierType">
+        <xs:annotation>
+          <xs:documentation>Specifies exponent of uom.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="value" minOccurs="1" maxOccurs="1" type="UInt16">
+        <xs:annotation>
+          <xs:documentation>Value in siemens (uom 53)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="PowerFactor">
     <xs:annotation>
       <xs:documentation>Specifies a setpoint for Displacement Power Factor, the ratio between apparent and active powers at the fundamental frequency (e.g. 60 Hz).</xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="displacement" minOccurs="1" maxOccurs="1" type="Int16">
+      <xs:element name="displacement" minOccurs="1" maxOccurs="1" type="UInt16">
         <xs:annotation>
-          <xs:documentation>Significand of a signed value of cos(theta) between -0.9999 and 1.0. E.g. a value of -0.95 may be specified as a displacement of -950 and a multiplier of -3. Sign SHALL be interpreted according to the EEI convention.</xs:documentation>
+          <xs:documentation>Significand of an unsigned value of cos(theta) between 0 and 1.0. E.g. a value of 0.95 may be specified as a displacement of 950 and a multiplier of -3.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="multiplier" minOccurs="1" maxOccurs="1" type="PowerOfTenMultiplierType">
+        <xs:annotation>
+          <xs:documentation>Specifies exponent of 'displacement'.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PowerFactorWithExcitation">
+    <xs:annotation>
+      <xs:documentation>Specifies a setpoint for Displacement Power Factor, the ratio between apparent and active powers at the fundamental frequency (e.g. 60 Hz) and includes an excitation flag.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="displacement" minOccurs="1" maxOccurs="1" type="UInt16">
+        <xs:annotation>
+          <xs:documentation>Significand of an unsigned value of cos(theta) between 0 and 1.0. E.g. a value of 0.95 may be specified as a displacement of 950 and a multiplier of -3.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="excitation" minOccurs="1" maxOccurs="1" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>True when DER is absorbing reactive power (under-excited), false
+when DER is injecting reactive power (over-excited).</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="multiplier" minOccurs="1" maxOccurs="1" type="PowerOfTenMultiplierType">
@@ -5176,16 +5359,16 @@ All other values reserved.</xs:documentation>
   </xs:complexType>
   <xs:complexType name="List">
     <xs:annotation>
-      <xs:documentation>Container to hold a collection of object instances or references. See [ZB 11-0167] Design Patterns section for additional details.</xs:documentation>
+      <xs:documentation>Container to hold a collection of object instances or references. See Design Pattern section for additional details.</xs:documentation>
     </xs:annotation>
     <xs:complexContent>
       <xs:extension base="Resource">
-        <xs:attribute name="all" use="required" type="UInt16">
+        <xs:attribute name="all" use="required" type="UInt32">
           <xs:annotation>
             <xs:documentation>The number specifying "all" of the items in the list. Required on a response to a GET, ignored otherwise.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="results" use="required" type="UInt8">
+        <xs:attribute name="results" use="required" type="UInt32">
           <xs:annotation>
             <xs:documentation>Indicates the number of items in this page of results.</xs:documentation>
           </xs:annotation>
@@ -5199,7 +5382,7 @@ All other values reserved.</xs:documentation>
     </xs:annotation>
     <xs:complexContent>
       <xs:extension base="Link">
-        <xs:attribute name="all" use="optional" type="UInt16">
+        <xs:attribute name="all" use="optional" type="UInt32">
           <xs:annotation>
             <xs:documentation>Indicates the total number of items in the referenced list. This attribute SHALL be present if the href is a local or relative URI. This attribute SHOULD NOT be present if the href is a remote or absolute URI, as the server may be unaware of changes to the value.</xs:documentation>
           </xs:annotation>
@@ -5261,7 +5444,7 @@ All other values reserved.</xs:documentation>
 If the resource has a deviceCategory field, devices that match one or more of the device types indicated in deviceCategory SHALL respond according to the rules listed below.  If the category does not match, the device SHALL NOT respond. If the resource does not have a deviceCategory field, a device receiving the resource SHALL respond according to the rules listed below.
 
 Value encoded as hex according to the following bit assignments, any combination is possible. 
-See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 0 - End device shall indicate that message was received 
 1 - End device shall indicate specific response. 
 2 - End user / customer response is required. 
@@ -5334,12 +5517,12 @@ All other values reserved.</xs:documentation>
     </xs:annotation>
     <xs:complexContent>
       <xs:extension base="SubscribableResource">
-        <xs:attribute name="all" use="required" type="UInt16">
+        <xs:attribute name="all" use="required" type="UInt32">
           <xs:annotation>
             <xs:documentation>The number specifying "all" of the items in the list. Required on GET, ignored otherwise.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="results" use="required" type="UInt8">
+        <xs:attribute name="results" use="required" type="UInt32">
           <xs:annotation>
             <xs:documentation>Indicates the number of items in this page of results.</xs:documentation>
           </xs:annotation>
@@ -5429,7 +5612,7 @@ When events are cancelled, the Status.dateTime attribute SHALL be set to the tim
 The server is responsible for maintaining the cancelled event in its collection for the duration of the Effective Scheduled Period. Client devices SHALL be aware of Cancelled with Randomization events, determine if the Cancelled event applies to them, and cancel the event immediately, using the larger of (absolute value of randomizeStart) and (absolute value of randomizeDuration) as the end randomization, in seconds. This Status.type SHALL NOT be used with "regular" Events, only with specializations of RandomizableEvent.
 
 4 = Superseded
-Events marked as Superseded by servers are events that may have been replaced by new events from the same program that target the exact same set of deviceCategory's (if applicable) and overlap for a given period of time. Servers SHALL mark an event as Superseded at the earliest Effective Start Time of the overlapping event. Servers are responsible for maintaining the Superseded event in their collection for the duration of the Effective Scheduled Period. 
+Events marked as Superseded by servers are events that may have been replaced by new events from the same program that target the exact same set of deviceCategory's (if applicable) AND DERControl controls (e.g., opModTargetW) (if applicable) and overlap for a given period of time. Servers SHALL mark an event as Superseded at the earliest Effective Start Time of the overlapping event. Servers are responsible for maintaining the Superseded event in their collection for the duration of the Effective Scheduled Period. 
 Client devices encountering a Superseded event SHALL terminate execution of the event immediately and commence execution of the new event immediately, unless the current time is within the start randomization window of the superseded event, in which case the client SHALL obey the start randomization of the new event. This Status.type SHALL NOT be used with TextMessage, since multiple text messages can be active. 
 
 All other values reserved.</xs:documentation>
@@ -5442,7 +5625,7 @@ All other values reserved.</xs:documentation>
       </xs:element>
       <xs:element name="potentiallySuperseded" minOccurs="1" maxOccurs="1" type="xs:boolean">
         <xs:annotation>
-          <xs:documentation>Set to true by a server of this event if there are events that overlap this event in time and also overlap in some, but not all, deviceCategory's in the same function set instance.</xs:documentation>
+          <xs:documentation>Set to true by a server of this event if there are events that overlap this event in time and also overlap in some, but not all, deviceCategory's (if applicable) AND DERControl controls (e.g., opModTargetW) (if applicable) in the same function set instance.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="potentiallySupersededTime" minOccurs="0" maxOccurs="1" type="TimeType">
@@ -5615,27 +5798,32 @@ All other values reserved.</xs:documentation>
     <xs:annotation>
       <xs:documentation>The Device category types defined.
 Bit positions SHALL be defined as follows:
-0 - Programmable Communicating Thermostat 
-1 - Strip Heaters 
-2 - Baseboard Heaters 
-3 - Water Heater 
-4 - Pool Pump 
-5 - Sauna 
-6 - Hot tub
-7 - Smart Appliance 
-8 - Irrigation Pump 
-9 - Managed Commercial and Industrial (C&amp;amp;I) Loads 
-10 - Simple misc. (Residential On/Off) loads 
-11 - Exterior Lighting 
-12 - Interior Lighting 
-13 - Electric Vehicle 
-14 - Generation Systems 
-15 - Load Control Switch 
-16 - Smart Inverter 
-17 - EVSE 
-18 - RESU (Residential Energy Storage Unit)
-19 - Energy Management System 
-20 - Smart Energy Module
+0 - Programmable Communicating Thermostat
+1 - Strip Heaters
+2 - Baseboard Heaters
+3 - Water Heater
+4 - Pool Pump
+5 - Sauna
+6 - Hot Tub
+7 - Smart Appliance
+8 - Irrigation Pump
+9 - Managed Commercial and Industrial (C&amp;amp;I) Loads
+10 - Simple Misc. (Residential On/Off) Loads
+11 - Exterior Lighting
+12 - Interior Lighting
+13 - Load Control Switch
+14 - Energy Management System
+15 - Smart Energy Module
+16 - Electric Vehicle
+17 - EVSE
+18 - Virtual or Mixed DER
+19 - Reciprocating Engine
+20 - Fuel Cell
+21 - Photovoltaic System
+22 - Combined Heat and Power
+23 - Combined PV and Storage
+24 - Other Generation System
+25 - Other Storage System
 All other values reserved.</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -5689,6 +5877,23 @@ All other values reserved.</xs:documentation>
     <xs:simpleContent>
       <xs:extension base="UInt8" />
     </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GPSLocationType">
+    <xs:annotation>
+      <xs:documentation>Specifies a GPS location, expressed in WGS 84 coordinates.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="lat" minOccurs="1" maxOccurs="1" type="String32">
+        <xs:annotation>
+          <xs:documentation>Specifies the latitude from equator. -90 (south) to +90 (north) in decimal degrees.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="lon" minOccurs="1" maxOccurs="1" type="String32">
+        <xs:annotation>
+          <xs:documentation>Specifies the longitude from Greenwich Meridian. -180 (west) to +180 (east) in decimal degrees.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
   <xs:complexType name="KindType">
     <xs:annotation>
@@ -6554,7 +6759,9 @@ Bit 6 - projected (forecast): data that has been calculated as a projection or f
   <xs:element name="AmpereHour" type="AmpereHour" />
   <xs:element name="ApparentPower" type="ApparentPower" />
   <xs:element name="ReactivePower" type="ReactivePower" />
+  <xs:element name="ReactiveSusceptance" type="ReactiveSusceptance" />
   <xs:element name="PowerFactor" type="PowerFactor" />
+  <xs:element name="PowerFactorWithExcitation" type="PowerFactorWithExcitation" />
   <xs:element name="FixedVar" type="FixedVar" />
   <xs:element name="WattHour" type="WattHour" />
   <xs:element name="VoltageRMS" type="VoltageRMS" />
@@ -6680,6 +6887,7 @@ Bit 6 - projected (forecast): data that has been calculated as a projection or f
   <xs:element name="DeviceCategoryType" type="DeviceCategoryType" />
   <xs:element name="DstRuleType" type="DstRuleType" />
   <xs:element name="FlowDirectionType" type="FlowDirectionType" />
+  <xs:element name="GPSLocationType" type="GPSLocationType" />
   <xs:element name="KindType" type="KindType" />
   <xs:element name="LocaleType" type="LocaleType" />
   <xs:element name="mRIDType" type="mRIDType" />

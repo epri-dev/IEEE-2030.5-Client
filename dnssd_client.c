@@ -27,7 +27,7 @@ char *dnssd_query (char *packet);
 char *dnssd_question (char *dest, char *name, int type, int unicast);
 
 /** @brief Receive DNS-SD packets from a UdpPort.
-    
+
     Receive and process packets from a UdpPort and return the discovered
     services.
     @param port is a pointer to a UdpPort
@@ -35,7 +35,7 @@ char *dnssd_question (char *dest, char *name, int type, int unicast);
  */
 Service *dnssd_receive (UdpPort *port);
 
-/** @brief Return the next Service given a pointer to a discovered Service. 
+/** @brief Return the next Service given a pointer to a discovered Service.
     @param s is a pointer to a Service
     @returns the next discovered Service
 */
@@ -55,6 +55,8 @@ void print_dns_name (char *name);
 #include <stdio.h>
 #include <string.h>
 
+
+/*主机名字和地址信息*/
 typedef struct _Host {
   struct _Host *next;
   char *name;
@@ -69,7 +71,8 @@ typedef struct _Service {
   unsigned srv_found : 1;
   unsigned complete : 1;
   unsigned seen : 1;
-  Host *host; char *txt;
+  Host *host;
+  char *txt;
 } Service;
 
 typedef struct _Question {
@@ -98,37 +101,43 @@ Question *dns_question = NULL;
 
 // parse and validate DNS resource record
 // return pointer to rr fields, name, and length of rdata
-char *parse_rr (char *name, int *length, char *data) { char *next;
-  if ((data = dns_name (name, data)) && !truncated (data+10)) {
+char *parse_rr (char *name, int *length, char *data) {
+  char *next;
+  if ((data = dns_name (name, data)) && !truncated (data + 10)) {
     *length = rr_rdlength (data);
     next = rr_next (data, *length);
-    return truncated (next)? NULL : data;
-  } return NULL;
+    return truncated (next) ? NULL : data;
+  }
+  return NULL;
 }
 
 // skip DNS section
 char *skip_section (char *data, int count) {
-  char name[256]; int length;
+  char name[256];
+  int length;
   while (count--) {
     ok (data = parse_rr (name, &length, data));
     data = rr_next (data, length);
-  } return data;
+  }
+  return data;
 }
 
 char *skip_questions (char *data, int count) {
   char name[256];
   while (count--) {
     ok ((data = dns_name (name, data))
-	&& !truncated (data+4));
+        && !truncated (data + 4));
     data += 4;
-  } return data;
+  }
+  return data;
 }
 
 char *ar_section;
 
 // returns pointer to record if found, NULL otherwise
 char *dns_find (char *name, int *length, int type) {
-  char rr_name[256]; char *data = ar_section;
+  char rr_name[256];
+  char *data = ar_section;
   while (1) {
     ok (data = parse_rr (rr_name, length, data));
     if (streq (name, rr_name) && type == rr_type (data))
@@ -140,46 +149,65 @@ char *dns_find (char *name, int *length, int type) {
 // validate DNS-SD TXT record
 int txt_valid (char *data, int length) {
   if (length < 2) return 0; // empty TXT record
-  while (length > 0) { int n = *data;
-    if (n) { n++; length -= n; data += n; } else return 0;
-  } return length == 0;
+  while (length > 0) {
+    int n = *data;
+    if (n) {
+      n++;
+      length -= n;
+      data += n;
+    } else return 0;
+  }
+  return length == 0;
 }
 
 // extract key=value pair from TXT record
 char *txt_pair (char *key, char **value, char *data) {
-  int n = *data++, m; char *next = data+n; *value = "";
-  if (n) { char *eq = strchr (data, '=');
+  int n = *data++, m;
+  char *next = data + n;
+  *value = "";
+  if (n) {
+    char *eq = strchr (data, '=');
     if (eq && (m = eq - data) < n) {
-      n -= m+1; *value = key+m+1;
-      memcpy (*value, eq+1, n);
-      (*value)[n] = '\0'; n = m;
-    } memcpy (key, data, n); key[n] = '\0';
+      n -= m + 1;
+      *value = key + m + 1;
+      memcpy (*value, eq + 1, n);
+      (*value)[n] = '\0';
+      n = m;
+    }
+    memcpy (key, data, n);
+    key[n] = '\0';
     return next;
-  } return NULL;
+  }
+  return NULL;
 }
 
 // return value associated with a TXT key=value pair
 char *txt_value (char *buffer, char *data, char *key) {
-  if (data) { char *value;
+  if (data) {
+    char *value;
     while (data = txt_pair (buffer, &value, data))
       if (streq (buffer, key)) return value;
-  } return NULL;
+  }
+  return NULL;
 }
 
 // process TXT resource record
 char *dns_txt (Service *s, char *data, int length) {
   data += 10;
   if (txt_valid (data, length)) {
-    s->txt = malloc (length+1);
+    s->txt = malloc (length + 1);
     memcpy (s->txt, data, length);
-    s->txt[length] = '\0'; 
-    s->txt_found = 1; return data;
-  } return NULL;
+    s->txt[length] = '\0';
+    s->txt_found = 1;
+    return data;
+  }
+  return NULL;
 }
 
 // print key=value pairs contained in a TXT record
 void print_txt (char *data) {
-  char key[128], *value; int prev = 0;
+  char key[128], *value;
+  int prev = 0;
   while (data = txt_pair (key, &value, data)) {
     if (prev) printf (", ");
     if (value) printf ("%s=%s", key, value);
@@ -195,63 +223,78 @@ void print_dns_name (char *name) {
   while (*name != '\0') {
     int n = *name;
     *name = '.';
-    name += n+1;
+    name += n + 1;
   }
-  printf ("%s", buffer+1);
+  printf ("%s", buffer + 1);
 }
 
 void print_host (Address *host) {
-  char buffer[32+10];
-  write_address (buffer, host); printf ("%s", buffer);
+  char buffer[32 + 10];
+  write_address (buffer, host);
+  printf ("%s", buffer);
 }
 
+/*打印获取到的服务*/
 void print_service (Service *s) {
   Host *h = s->host;
   printf ("service found:\n");
-  printf ("  name: "); print_dns_name (s->name);
-  printf ("\n  target: "); print_dns_name (h->name);
-  printf ("\n  host: "); print_host (&h->addr);
+  printf ("  name: ");
+  print_dns_name (s->name);
+  printf ("\n  target: ");
+  print_dns_name (h->name);
+  printf ("\n  host: ");
+  print_host (&h->addr);
   printf ("\n  port: %d\n", s->port);
   printf ("  time to live: %d\n", s->ttl);
   if (s->txt) {
-    printf ("  txt: "); print_txt (s->txt); printf ("\n"); 
+    printf ("  txt: ");
+    print_txt (s->txt);
+    printf ("\n");
   }
 }
 
 // process A resource record (IPv4)
 void *host_a (Host *h, char *data, int length) {
-  ok (length == 4); data += 10;
+  ok (length == 4);
+  data += 10;
   ipv4_address (&h->addr, UNPACK32 (data), 0);
   return data;
 }
 
 // process AAAA resource record (IPv6)
 void *host_aaaa (Host *h, char *data, int length) {
-  ok (length == 16); data += 10;
+  ok (length == 16);
+  data += 10;
   ipv6_address (&h->addr, data, 0);
   return data;
 }
 
 // process SRV resource record (RFC 2782)
 void *dns_srv (Service *s, char *data) {
-  char target[256]; int length;
+  char target[256];
+  int length;
   s->ttl = rr_ttl (data);
-  s->port = UNPACK16 (data+10+4);
-  ok (dns_name (target, data+10+6));
+  s->port = UNPACK16 (data + 10 + 4);
+  ok (dns_name (target, data + 10 + 6));
   if (!s->host) s->host = get_host (target);
   if (data = dns_find (target, &length, AAAA_RECORD))
     host_aaaa (s->host, data, length);
   else if (data = dns_find (target, &length, A_RECORD))
     host_a (s->host, data, length);
-  s->srv_found = 1; return data;
+  s->srv_found = 1;
+  return data;
 }
 
 // process PTR resource record
 void dns_ptr (char *name, char *data) {
-  Question *q; Service *s; char instance[256]; int length;
+  Question *q;
+  Service *s;
+  char instance[256];
+  int length;
   if ((q = find_question (name))
-      && (data = dns_name (instance, data+10))) {
-    s = get_service (instance); s->query = q->name;
+      && (data = dns_name (instance, data + 10))) {
+    s = get_service (instance);
+    s->query = q->name;
     if (data = dns_find (instance, &length, SRV_RECORD))
       dns_srv (s, data);
     if (data = dns_find (instance, &length, TXT_RECORD))
@@ -261,90 +304,123 @@ void dns_ptr (char *name, char *data) {
 
 // process answer section
 void process_answers (char *data, int count) {
-  Service *s; Host *h; int length; char name[256];
+  Service *s;
+  Host *h;
+  int length;
+  char name[256];
   while (count--) {
     if (data = parse_rr (name, &length, data)) {
       switch (rr_type (data)) {
-      case PTR_RECORD: dns_ptr (name, data); break;
-      case SRV_RECORD: s = find_service (name);
-	if (s) dns_srv (s, data); break;
-      case TXT_RECORD: s = find_service (name);
-	if (s) dns_txt (s, data, length); break;
-      case A_RECORD: h = find_host (name);
-	if (h) host_a (h, data, length); break;
-      case AAAA_RECORD: h = find_host (name);
-	if (h) host_aaaa (h, data, length); break;
+      case PTR_RECORD:
+        dns_ptr (name, data);
+        break;
+      case SRV_RECORD:
+        s = find_service (name);
+        if (s) dns_srv (s, data);
+        break;
+      case TXT_RECORD:
+        s = find_service (name);
+        if (s) dns_txt (s, data, length);
+        break;
+      case A_RECORD:
+        h = find_host (name);
+        if (h) host_a (h, data, length);
+        break;
+      case AAAA_RECORD:
+        h = find_host (name);
+        if (h) host_aaaa (h, data, length);
+        break;
       }
       data = rr_next (data, length);
-    } return;
+    }
+    return;
   }
 }
 
 // process a DNS-SD packet
-void dnssd_packet (char *data, int length) { DnsHeader header;
-  dns_start = data; dns_end = data + length; // set the boundry
+void dnssd_packet (char *data, int length) {
+  DnsHeader header;
+  dns_start = data;
+  dns_end = data + length; // set the boundry
   // flags should indicate a standard response with no errors
   if ((data = dns_header (&header, data))
       && (header.flags & 0xf80f) == 0x8000
       && (data = skip_questions (data, header.qdcount))) {
-    ar_section = skip_section (data, header.ancount+header.nscount);
+    ar_section = skip_section (data, header.ancount + header.nscount);
     process_answers (data, header.ancount);
   }
 }
 
 // add a question to a DNS query packet
 char *dnssd_question (char *dest, char *name, int type, int unicast) {
-  static char *start, *names[14]; static int count;
-  if (name) { count++; get_question (name);
+  static char *start, *names[14];
+  static int count;
+  if (name) {
+    count++;
+    get_question (name);
     dest = encode_name (dest, name, start, names);
     PACK16 (dest, type);
-    PACK16 (dest+2, (unicast << 15) | INTERNET_CLASS);
-    PACK16 (start+4, count); // update number of questions
-    return dest+4;
+    PACK16 (dest + 2, (unicast << 15) | INTERNET_CLASS);
+    PACK16 (start + 4, count); // update number of questions
+    return dest + 4;
   }
   memset (names, 0, sizeof (char *) * 14);
-  start = dest; count = 0; return NULL;
+  start = dest;
+  count = 0;
+  return NULL;
 }
 
 // initialize a DNS query
 char *dnssd_query (char *packet) {
   memset (packet, 0, 12); // header section
   dnssd_question (packet, NULL, 0, 0);
-  return packet+12;
+  return packet + 12;
 }
 
 // followup query to request any missing records
 void dnssd_followup (UdpPort *p) {
-  char packet[1500]; int followup = 0;
+  char packet[1500];
+  int followup = 0;
   Service *s = dns_service;
   char *data = dnssd_query (packet);
-  while (s) { int complete = 1;
+  while (s) {
+    int complete = 1;
     if (!s->txt_found || !s->srv_found) {
-      data = dnssd_question (data, s->name, ANY_RECORD, 0); complete = 0;
+      data = dnssd_question (data, s->name, ANY_RECORD, 0);
+      complete = 0;
     }
     if (!s->host->addr.length) {
-      data = dnssd_question (data, s->host->name, ANY_RECORD, 0); complete = 0;
+      data = dnssd_question (data, s->host->name, ANY_RECORD, 0);
+      complete = 0;
     }
-    followup |= !complete; s->complete = complete; s = s->next;
+    followup |= !complete;
+    s->complete = complete;
+    s = s->next;
   }
-  if (followup) net_send (p, packet, data - packet, &multicast); 
+  if (followup) net_send (p, packet, data - packet, &multicast);
 }
 
 // receive and process DNS-SD packets, return list of services
 Service *dnssd_receive (UdpPort *port) {
-  char *data; int length;
+  char *data;
+  int length;
   while (data = net_receive (port, &length))
     dnssd_packet (data, length);
-  dnssd_followup (port); return dns_service;
+  dnssd_followup (port);
+  return dns_service;
 }
 
 // return next completed service not yet seen
+//DNSSD中的下一个服务
 Service *service_next (Service *s) {
   while (s) { // process discovered services
-    if (s->complete && !s->seen) {
-      s->seen = 1; return s;
-    } s = s->next;
-  } return NULL;
+    if (s->complete && !s->seen) {  //如果一个服务已经完成，但是还有没有被seen的服务，则返回。
+      s->seen = 1;
+      return s;
+    }
+    s = s->next;
+  }
+  return NULL;
 }
 
 #endif

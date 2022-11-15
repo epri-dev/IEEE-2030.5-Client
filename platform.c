@@ -20,24 +20,25 @@ void platform_init ();
     time zone handling implementation defined.
 */
 void set_timezone (int tz_offset, int dst_offset,
-		   time_t dst_start, time_t dst_end);
+                   time_t dst_start, time_t dst_end);
 
 /** @defgroup event Event
     @{
  */
-
+/*本应用中的 事件类型 */
 enum EventType {
   EVENT_NONE, ///< Indicates no event.
-  SYSTEM_EVENT, //< A place holder for system events
-  UDP_PORT=16, ///< A UdpPort with data to be read.
-  TCP_PORT, ///< A TcpPort with data to be read.
-  TCP_CONNECT, ///< A newly connected TcpPort
-  TCP_ACCEPT, ///< A newly accepted TcpPort
+  SYSTEM_EVENT, //< A place holder for system events  
+  UDP_PORT = 16, ///< A UdpPort with data to be read. 一个可以有数据读取的UDP端口
+  TCP_PORT, ///< A TcpPort with data to be read. 
+  //在这个端口上有数据可以读取 receiving data from a TCP connection (TCP_PORT)
+  TCP_CONNECT, ///< A newly connected TcpPort 一个新的连接建立（针对客户端）
+  TCP_ACCEPT, ///< A newly accepted TcpPort 一个新的被ACCEPT的TCP端口（这个好像针对服务器来说的）
   TCP_CLOSED, ///< A TcpPort that was closed.
-  TCP_TIMEOUT, ///< A TcpPort that timed out
-  TIMER_EVENT, ///< A timer that expired.
-  POLL_TIMEOUT, ///< The event_poll function timed out waiting for an event.
-  EVENT_NEW=32 ///< A place holder for higher level events.
+  TCP_TIMEOUT, ///< A TcpPort that timed out  
+  TIMER_EVENT, ///< A timer that expired. 一个定时溢出
+  POLL_TIMEOUT, ///< The event_poll function timed out waiting for an event.  
+  EVENT_NEW = 32 ///< A place holder for higher level events.  别的Event类型都在这个基础上叠加
 };
 
 /** @brief Poll an event from the Platform layer.
@@ -60,12 +61,12 @@ int event_poll (void **any, int timeout);
 enum FileType {FILE_NONE, FILE_REGULAR, FILE_DIR};
 
 /** @brief Read the entire contents of a file.
-    
+
     The buffer returned needs to be freed with @ref free.
     @param name is the name of the file to read
     @param length is a pointer to the returned length, can be NULL
     @returns a buffer with the contents of the file, also the length of the
-    file if the length parameter is not NULL 
+    file if the length parameter is not NULL
 */
 char *file_read (const char *name, int *length);
 
@@ -75,7 +76,7 @@ char *file_read (const char *name, int *length);
 */
 int file_type (const char *name);
 
-/** @brief Process a file line by line.    
+/** @brief Process a file line by line.
     @param name is the name of the file.
     @param func is a function that takes a line number and a buffer parameter
     that represents the contents of the line.
@@ -89,11 +90,11 @@ void process_file (const char *name, void (*func) (int n, char *));
     one of the files within a directory and an context.
 */
 void process_dir (const char *name, void *ctx,
-		  void (*func) (const char *, void *ctx));
+                  void (*func) (const char *, void *ctx));
 
 /** @} */
 
-/** @defgroup timer Timer 
+/** @defgroup timer Timer
     @{
 */
 
@@ -120,11 +121,12 @@ void set_timer_ct (Timer *timer, ClockTime *ct);
 Timer *add_timer (int type);
 
 /** @break Create a new timer, and set the timeout.
-    
+
     This is the equivalent of calling set_timer (add_timer (type), timeout).
     @param type is the event type to be returned by event_poll
     @param timeout is the timeout in seconds
     @returns the new armed timer
+    创建一个定时器。这个函数仅仅作为一个库函数提供。在这个工程中没有用到。
 */
 Timer *new_timer (int type, int timeout);
 
@@ -179,9 +181,9 @@ void print_interfaces (int ipv4);
 
 /** @brief The status of a TcpPort */
 enum TcpStatus {Closed, /**< TcpPort is closed */
-		InProgress, /**< Connection initiated with @ref tcp_connect */
-		Connected /**< TcpPort is connected */
-};
+                InProgress, /**< Connection initiated with @ref tcp_connect */
+                Connected /**< TcpPort is connected */
+               };
 
 /** @brief A TcpPort represents a TCP communication channel. */
 typedef struct _TcpPort TcpPort;
@@ -270,17 +272,17 @@ typedef struct _UdpPort UdpPort;
     @param p is a pointer to a UDP port.
     @param length is updated to indicate the length of the datagram.
     @returns a pointer to a buffer containing the datagram and the length of the
-    datagram or NULL if no datagram is available 
+    datagram or NULL if no datagram is available
 */
 char *net_receive (UdpPort *p, int *length);
 
-/** @brief Send a UDP datagram to a host Address from a UdpPort. 
+/** @brief Send a UDP datagram to a host Address from a UdpPort.
     @param p is a pointer to a UdpPort
     @param data is a pointer to a buffer containing the datagram
     @param length is the length of the datagram
     @param address is a pointer to the Address of the host to receive the
     datagram
-    @returns the length of the datagram sent or -1 if 
+    @returns the length of the datagram sent or -1 if
 */
 int net_send (UdpPort *p, char *data, int length, Address *address);
 
@@ -292,7 +294,7 @@ UdpPort *new_udp_port (int size);
 
 /** @brief Open a UdpPort.
     @param p is a pointer to a UdpPort
-    @param address is a pointer to an Address at which to receive datagrams 
+    @param address is a pointer to an Address at which to receive datagrams
 */
 void net_open (UdpPort *p, Address *address);
 

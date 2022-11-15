@@ -4,20 +4,29 @@
 /** @defgroup list List
 
     Provides a linked List structure with associated functions.
+
+    相比于本代码例子中的Queue组件，List的特征是提供了更加灵活的操作，比如插入、删除指定的任意节点等功能。
+    
     @{
 */
 
 /** @brief Linked List structure */
 typedef struct _List {
-  struct _List *next; ///< is a pointer to the next List item
+  struct _List *next; ///< is a pointer to the next List item 首个元素就是指向下一个元素的地址值。所以访问某一个元素的值的时候，就是得到下一个元素的地址。
   void *data;         ///< is a pointer to a data element
 } List;
 
 #define list_next(l) (((List *)l)->next)
+/*这个宏定义的巧妙之处在于，在本套代码的很多的结构体是这种类似的List结构，即首个元素是一个指针，指向后一个元素。
+所以这里可以用(List*)作强制转换，l可以是别的类型的元素*/
+
 #define list_data(l) (((List *)l)->data)
 
+//在头部插入一个list单元。head是一个指向l元素的首地址的指针。新插入的元素l的next总是指向head。
 #define link_insert(head, l) \
   ((list_next (l) = (void *)head), (head = (void *)l))
+
+//通过变量l对从head开始的每一个单元做遍历。
 #define foreach(l, head) \
   for (l = (void *)head; l != NULL; l = (void *)list_next (l))
 
@@ -96,7 +105,7 @@ void *list_remove (void *list, void *link);
     @returns a sorted list with the item inserted.
 */
 void *insert_sorted (void *list, void *item,
-		     int (*compare) (void *a, void *b));
+                     int (*compare) (void *a, void *b));
 
 /** @} */
 
@@ -105,84 +114,115 @@ void *insert_sorted (void *list, void *item,
 #include <stdlib.h>
 #include <string.h>
 
-void free_list (void *list) { List *l = list, *t;
+/*删除这个list，但是不会删除list成员中指向的那个数据体，即data成员。*/
+void free_list (void *list) {
+  List *l = list, *t;
   while (l) t = l, l = l->next, free (t);
 }
 
+//新建一个新的list成员，并且插入到成员l的前面。这个新插入的对象成为了这个list的header。
 List *list_insert (List *l, void *data) {
   List *n = malloc (sizeof (List));
-  n->next = l; n->data = data;
+  n->next = l;
+  n->data = data;
   return n;
 }
 
+//通过直接数数的方法来获取到这个队列的长度（因为没有一个专门的头来表达这个数据）
 int list_length (void *l) {
-  List *list = l; int length = 0;
+  List *list = l;
+  int length = 0;
   while (list) length++, list = list->next;
   return length;
 }
 
+//通过比较list单元中包含的data的地址值来判定是否找到了这份数据。
 void *_find_by_data (List **prev, List *l, void *data) {
-  for (*prev = NULL; l; *prev = l, l = l->next) 
-    if (l->data == data) return l;
+  for (*prev = NULL; l; *prev = l, l = l->next)
+    if (l->data == data) return l;  //同时也得到了在l元素之前的那个指针变量指向的地址。
   return NULL;
 }
 
-void *find_by_data (List *list, void *data) { List *prev;
-  return _find_by_data (&prev, list, data);
+void *find_by_data (List *list, void *data) {
+  List *prev;
+  return _find_by_data (&prev, list, data); //事实上这个prev这里仅仅是一个摆设，没有发挥作用。
 }
 
-List *insert_unique (List *l, void *data) { List *prev;
+//前面的insert可能有重复插入的情况，而这个是保证了唯一性。
+List *insert_unique (List *l, void *data) {
+  List *prev;
   if (_find_by_data (&prev, l, data)) return l;
   return list_insert (l, data);
 }
 
-List *list_delete (List *l, void *data) { List *d, *prev;
+//从链表中删除并释放该节点的内存（但是节点中的数据没有在这里释放，应该是在调用这个函数之前线释放掉）
+List *list_delete (List *l, void *data) {
+  List *d, *prev;
   if (d = _find_by_data (&prev, l, data)) {
     if (prev) prev->next = d->next;
-    else l = d->next; free (d);
-  } return l;
+    else l = d->next;
+    free (d);
+  }
+  return l; //移除特定节点之后，返回修改之后的 List 对象
 }
 
-List *list_subtract (List *la, List *lb) { List *b;
+//减去重复的节点。从la中减去在lb中出现的重复的数据对象，最后返回la。
+List *list_subtract (List *la, List *lb) {
+  List *b;
   foreach (b, lb) la = list_delete (la, b->data);
   return la;
 }
 
+//删除la中跟lb不同的部分
 List *list_intersect (List *la, List *lb) {
   List *a = la, *prev = (List *)&la, *next;
-  while (a) { next = a->next;
-    if (!find_by_data (lb, a->data)) {
-      prev->next = next; free (a);
-    } a = next;
-  } return la;
-}
-
-List *list_union (List *la, List *lb) { List *b;
-  foreach (b, lb)
-    la = insert_unique (la, b->data);
+  while (a) { //遍历全部的la节点
+    next = a->next;
+    if (!find_by_data (lb, a->data)) {  //如果在lb中没有找到当前a节点
+      prev->next = next;
+      free (a);  //就在la中删除a节点
+    }
+    a = next;
+  }
   return la;
 }
 
-void *list_remove (void *list, void *link) { 
+//将la和lb中全部的不同的节点合并起来（只合并不同的节点）
+List *list_union (List *la, List *lb) {
+  List *b;
+  foreach (b, lb)
+  la = insert_unique (la, b->data);
+  return la;
+}
+
+//将list中首个跟link相同的节点全部去除（断开链接但是不执行内存删除）
+void *list_remove (void *list, void *link) {
   List *l, *prev = (List *)&list;
   foreach (l, list) {
     if (l == link) {
-      prev->next = l->next; break;
-    } prev = l;
-  } return list;
+      prev->next = l->next;
+      break;
+    }
+    prev = l;
+  }
+  return list;//返回首个元素。代表了这个list。
 }
 
+//排序插入
 void *_insert_sorted (void *list, void *item, List **prev,
-		      int (*compare) (void *a, void *b)) {
+                      int (*compare) (void *a, void *b)) {
   List *l = list, *n = item;
-  while (l && (compare (n, l) > 0))
-    *prev = l, l = l->next;
-  if (*prev) (*prev)->next = n; else list = n;
-  n->next = l; return list;
+  while (l && (compare (n, l) > 0)) //如果n大于l则继续往后走，意思就是找到一个比n更大的，即不满足n>l的条件后才停止
+    *prev = l, l = l->next; //最终结果是大的放在后面，即升序排列。
+  if (*prev) (*prev)->next = n;
+  else list = n;
+  n->next = l;
+  return list;//插入新的节点
 }
 
+//
 void *insert_sorted (void *list, void *item,
-		    int (*compare) (void *a, void *b)) {
+                     int (*compare) (void *a, void *b)) {
   List *prev = NULL;
   return _insert_sorted (list, item, &prev, compare);
 }

@@ -1,10 +1,10 @@
 // Copyright (c) 2018 Electric Power Research Institute, Inc.
 // author: Mark Slicker <mark.slicker@gmail.com>
 
-/** @defgroup se_discover IEEE 2030.5 Service Discovery
+/** @defgroup se_discover IEEE 2030.5 Service Discovery         IEEE 2030.5 服务发现
     @ingroup dnssd_client
 
-    Provides an implementation of IEEE 2030.5 Service Discovery.
+    Provides an implementation of IEEE 2030.5 Service Discovery. 提供了IEEE 2030.5
     @{
 */
 
@@ -27,17 +27,17 @@ enum SeServerFlag {
 
 /** @brief Return a server flag given its subquery name.
     @param name is a subquery name, one of "bill", "dr", "derp", "file",
-    "msg", "ppy", "rsps", "tp", "tm", "upt", "edev", "mup", "sdev", or 
+    "msg", "ppy", "rsps", "tp", "tm", "upt", "edev", "mup", "sdev", or
     "smartenergy"
     @returns one of the values of SeServerFlag corresponding with the subquery
-    name.
+    name. 返回SeServerFlag的其中一个，对应着subquery名字。
 */
 int se_subquery (char *name);
 
-/** @brief Send a DNS-SD query for the indicated servers.
+/** @brief Send a DNS-SD query for the indicated servers. 
     @param server is a an bitwise OR (|) list of SeServerFlag values.
     @param qu is the value of the QU bit, 1 requests that the server send a
-    unicast response, 0 requests that a server send a multicast response 
+    unicast response, 0 requests that a server send a multicast response
 */
 void se_discover (int server, int qu);
 
@@ -74,41 +74,55 @@ void discover_init (char *name);
 
 #include <inttypes.h>
 
-const char * const service_name[] = {
+const char *const service_name[] = {
   "bill", "dr", "derp", "file", "msg", "ppy", "rsps", "tp", "tm", "upt",
   "edev", "mup", "sdev", "smartenergy"
 };
 
 const int service_types[] = {
-  SE_CustomerAccountList, SE_DemandResponseProgramList, SE_DERProgramList,
-  SE_FileList, SE_MessagingProgramList, SE_PrepaymentList, SE_ResponseSetList,
-  SE_TariffProfileList, SE_Time, SE_UsagePointList, SE_EndDeviceList,
-  SE_MirrorUsagePointList, SE_SelfDevice, SE_DeviceCapability
+  SE_CustomerAccountList, //0
+  SE_DemandResponseProgramList, //2 
+  SE_DERProgramList,  //4
+  SE_FileList,  //8
+  SE_MessagingProgramList,  //16 
+  SE_PrepaymentList,  //32
+  SE_ResponseSetList, //64
+  SE_TariffProfileList, //128
+  SE_Time,  //256
+  SE_UsagePointList,  //512 
+  SE_EndDeviceList, //1024
+  SE_MirrorUsagePointList,  //2048 
+  SE_SelfDevice, //4096
+  SE_DeviceCapability //8192
 };
 
 int se_subquery (char *name) {
   int index = string_index (name, service_name, 14);
-  return index < 14? 1 << index : 0;
+  return index < 14 ? 1 << index : 0;
 }
 
 UdpPort *mdns_port = NULL, *mdns_source = NULL, *dns_port = NULL;
 
-void se_discover (int server, int qu) { int i = 0;
+//这部分是通过dnssd来发现服务的
+void se_discover (int server, int qu) {
+  int i = 0;
   char query[1024], name[64], *packet;
   packet = dnssd_query (query);
   server &= ~(-1 << 14);
   while (server) {
-    if (server & 1) { char *n = name;
+    if (server & 1) {
+      char *n = name;
       if (i < 13) // sub type request
-	n += sprintf (name, ".%s._sub", service_name[i]);
+        n += sprintf (name, ".%s._sub", service_name[i]);
       strcpy (n, "._smartenergy._tcp.site");
       write_counted (name);
       packet = dnssd_question (packet, name, PTR_RECORD, qu);
     }
-    server >>= 1; i++;
+    server >>= 1;
+    i++;
   }
   printf ("se_discover %d\n",
-	  net_send (mdns_source, query, packet - query, &multicast));
+          net_send (mdns_source, query, packet - query, &multicast));
 }
 
 void discover_device () {
@@ -119,7 +133,7 @@ void discover_device () {
   write_counted (name);
   packet = dnssd_question (packet, name, PTR_RECORD, 1);
   printf ("discover_device %d\n",
-	  net_send (mdns_source, query, packet - query, &multicast));
+          net_send (mdns_source, query, packet - query, &multicast));
 }
 
 Address dns_server;
@@ -128,12 +142,13 @@ void se_discover_unicast (char *domain) {
   char query[512], *packet;
   packet = dnssd_query (query);
   strcpy (packet, "._smartenergy._tcp.");
-  strcpy (packet+19, domain);
-  write_counted (packet); get_question (packet); 
+  strcpy (packet + 19, domain);
+  write_counted (packet);
+  get_question (packet);
   packet += strlen (packet) + 1;
   PACK16 (packet, DOMAIN_NAME_PTR);
-  PACK16 (packet+2, INTERNET_CLASS);
-  net_send (dns_port, query, packet+4 - query, &dns_server);
+  PACK16 (packet + 2, INTERNET_CLASS);
+  net_send (dns_port, query, packet + 4 - query, &dns_server);
 }
 
 char *service_path (Service *s) {
@@ -150,20 +165,27 @@ int service_type (Service *s) {
   int n = s->query[0];
   if (strstr (s->query, "_sub")) {
     if (n < 5) {
-      char name[5]; strncpy (name, s->query+1, n); name[n] = '\0';
+      char name[5];
+      strncpy (name, s->query + 1, n);
+      name[n] = '\0';
       return service_types[string_index (name, service_name, 13)];
-    } return SE_EndDevice;
-  } return SE_DeviceCapability;
+    }
+    return SE_EndDevice;
+  }
+  return SE_DeviceCapability;
 }
 
 void *service_connect (Service *service, int secure) {
-  Address *addr; char buffer[32]; char *https = NULL;
+  Address *addr;
+  char buffer[32];
+  char *https = NULL;
   if (secure) https = txt_value (buffer, service->txt, "https");
-  int port = https? (*https == '\0'? 443 : atol (https)) : service->port,
-    n_port = htons (port);
+  int port = https ? (*https == '\0' ? 443 : atol (https)) : service->port,
+        n_port = htons (port);
   printf ("service_connect: connect on port %d, https = %s, port = %d\n",
-	  port, https, service->port); 
-  addr = &service->host->addr; addr->port = n_port;
+          port, https, service->port);
+  addr = &service->host->addr;
+  addr->port = n_port;
   return se_connect (addr, https != NULL);
 }
 

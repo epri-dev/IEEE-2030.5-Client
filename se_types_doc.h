@@ -1,4 +1,4 @@
-/** @defgroup se_types 2030.5 Types */
+/** @defgroup se_types IEEE 2030.5 Types */
 
 /** @defgroup se_typedefs Typedefs 
     @ingroup se_types */
@@ -617,38 +617,38 @@
     Type of data conveyed by a specific Reading. See IEC 61968 Part 9 Annex C for full definitions of these values.
 
     @var SE_ReadingType_t::_flags
-#define SE_uom_exists (1 << 5)
+#define SE_uom_exists (1 << 6)
 
-#define SE_tieredConsumptionBlocks_true (1 << 6)
-#define SE_tieredConsumptionBlocks_exists (1 << 7)
+#define SE_tieredConsumptionBlocks_true (1 << 7)
+#define SE_tieredConsumptionBlocks_exists (1 << 8)
 
-#define SE_supplyLimit_exists (1 << 8)
+#define SE_supplyLimit_exists (1 << 9)
 
-#define SE_subIntervalLength_exists (1 << 9)
+#define SE_subIntervalLength_exists (1 << 10)
 
-#define SE_powerOfTenMultiplier_exists (1 << 10)
+#define SE_powerOfTenMultiplier_exists (1 << 11)
 
-#define SE_phase_exists (1 << 11)
+#define SE_phase_exists (1 << 12)
 
-#define SE_numberOfTouTiers_exists (1 << 12)
+#define SE_numberOfTouTiers_exists (1 << 13)
 
-#define SE_numberOfConsumptionBlocks_exists (1 << 13)
+#define SE_numberOfConsumptionBlocks_exists (1 << 14)
 
-#define SE_maxNumberOfIntervals_exists (1 << 14)
+#define SE_maxNumberOfIntervals_exists (1 << 15)
 
-#define SE_intervalLength_exists (1 << 15)
+#define SE_intervalLength_exists (1 << 16)
 
-#define SE_flowDirection_exists (1 << 16)
+#define SE_flowDirection_exists (1 << 17)
 
-#define SE_dataQualifier_exists (1 << 17)
+#define SE_dataQualifier_exists (1 << 18)
 
-#define SE_conversionFactor_exists (1 << 18)
+#define SE_conversionFactor_exists (1 << 19)
 
-#define SE_commodity_exists (1 << 19)
+#define SE_commodity_exists (1 << 20)
 
-#define SE_calorificValue_exists (1 << 20)
+#define SE_calorificValue_exists (1 << 21)
 
-#define SE_accumulationBehaviour_exists (1 << 21)
+#define SE_accumulationBehaviour_exists (1 << 22)
 
     @var SE_ReadingType_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -995,15 +995,15 @@
     Specific value measured by a meter or other asset. ReadingBase is abstract, used to define the elements common to Reading and IntervalReading.
 
     @var SE_ReadingBase_t::_flags
-#define SE_value_exists (1 << 5)
+#define SE_value_exists (1 << 6)
 
-#define SE_touTier_exists (1 << 6)
+#define SE_touTier_exists (1 << 7)
 
-#define SE_timePeriod_exists (1 << 7)
+#define SE_timePeriod_exists (1 << 8)
 
-#define SE_qualityFlags_exists (1 << 8)
+#define SE_qualityFlags_exists (1 << 9)
 
-#define SE_consumptionBlock_exists (1 << 9)
+#define SE_consumptionBlock_exists (1 << 10)
 
     @var SE_ReadingBase_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -1053,17 +1053,17 @@
     Specific value measured by a meter or other asset.
 
     @var SE_Reading_t::_flags
-#define SE_value_exists (1 << 5)
+#define SE_value_exists (1 << 6)
 
-#define SE_touTier_exists (1 << 6)
+#define SE_touTier_exists (1 << 7)
 
-#define SE_timePeriod_exists (1 << 7)
+#define SE_timePeriod_exists (1 << 8)
 
-#define SE_qualityFlags_exists (1 << 8)
+#define SE_qualityFlags_exists (1 << 9)
 
-#define SE_consumptionBlock_exists (1 << 9)
+#define SE_consumptionBlock_exists (1 << 10)
 
-#define SE_localID_exists (1 << 10)
+#define SE_localID_exists (1 << 11)
 
     @var SE_Reading_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -1321,13 +1321,13 @@
     Mimic of MeterReading used for managing mirrors.
 
     @var SE_MirrorMeterReading_t::_flags
-#define SE_ReadingType_exists (1 << 5)
+#define SE_ReadingType_exists (1 << 6)
 
-#define SE_Reading_exists (1 << 6)
+#define SE_Reading_exists (1 << 7)
 
-#define SE_nextUpdateTime_exists (1 << 7)
+#define SE_nextUpdateTime_exists (1 << 8)
 
-#define SE_lastUpdateTime_exists (1 << 8)
+#define SE_lastUpdateTime_exists (1 << 9)
 
     @var SE_MirrorMeterReading_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -1516,8 +1516,6 @@
     A parallel to UsagePoint to support mirroring
 
     @var SE_MirrorUsagePoint_t::_flags
-#define SE_postRate_exists (1 << 5)
-
     @var SE_MirrorUsagePoint_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
 
@@ -1557,13 +1555,13 @@
 /** @defgroup List List
     @ingroup Resource
 
-    Container to hold a collection of object instances or references. See [ZB 11-0167] Design Patterns section for additional details.
+    Container to hold a collection of object instances or references. See Design Pattern section for additional details.
 
     @{ */
 
 /** @struct SE_List_t se_types.h
 
-    Container to hold a collection of object instances or references. See [ZB 11-0167] Design Patterns section for additional details.
+    Container to hold a collection of object instances or references. See Design Pattern section for additional details.
 
     @var SE_List_t::_flags
     @var SE_List_t::href
@@ -1727,7 +1725,7 @@
     A Resource to which a Response can be requested.
 
     @var SE_RespondableResource_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
     @var SE_RespondableResource_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -1742,7 +1740,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -1768,7 +1766,7 @@
     An IdentifiedObject to which a Response can be requested.
 
     @var SE_RespondableIdentifiedObject_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
     @var SE_RespondableIdentifiedObject_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -1783,7 +1781,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -2365,6 +2363,21 @@
 
 /** @} */
 
+/** @defgroup HexBinary32 HexBinary32
+    @ingroup se_typedefs
+
+    A 32-bit field encoded as a hex string (8 hex characters max). Where applicable, bit 0, or the least significant bit, goes on the right. Note that hexBinary requires pairs of hex characters, so an odd number of characters requires a leading "0".
+
+    @{ */
+
+/** @typedef SE_HexBinary32_t
+
+    A 32-bit field encoded as a hex string (8 hex characters max). Where applicable, bit 0, or the least significant bit, goes on the right. Note that hexBinary requires pairs of hex characters, so an odd number of characters requires a leading "0".
+
+*/
+
+/** @} */
+
 /** @defgroup SubscribableResource SubscribableResource
     @ingroup Resource
 
@@ -2399,27 +2412,56 @@
     DER status information.
 
     @var SE_DERStatus_t::_flags
-#define SE_storConnectStatus_exists (1 << 5)
+#define SE_storConnectStatus_exists (1 << 6)
 
-#define SE_storageModeStatus_exists (1 << 6)
+#define SE_storageModeStatus_exists (1 << 7)
 
-#define SE_stateOfChargeStatus_exists (1 << 7)
+#define SE_stateOfChargeStatus_exists (1 << 8)
 
-#define SE_operationalModeStatus_exists (1 << 8)
+#define SE_operationalModeStatus_exists (1 << 9)
 
-#define SE_manufacturerStatus_exists (1 << 9)
+#define SE_manufacturerStatus_exists (1 << 10)
 
-#define SE_localControlModeStatus_exists (1 << 10)
+#define SE_localControlModeStatus_exists (1 << 11)
 
-#define SE_inverterStatus_exists (1 << 11)
+#define SE_inverterStatus_exists (1 << 12)
 
-#define SE_genConnectStatus_exists (1 << 12)
+#define SE_genConnectStatus_exists (1 << 13)
+
+#define SE_alarmStatus_exists (1 << 14)
 
     @var SE_DERStatus_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
 
     @var SE_DERStatus_t::subscribable
     Indicates whether or not subscriptions are supported for this resource, and whether or not conditional (thresholds) are supported. If not specified, is "not subscribable" (0).
+
+    @var SE_DERStatus_t::alarmStatus
+    Bitmap indicating the status of DER alarms (see DER LogEvents for more details).
+
+    0 - DER_FAULT_OVER_CURRENT
+
+    1 - DER_FAULT_OVER_VOLTAGE
+
+    2 - DER_FAULT_UNDER_VOLTAGE
+
+    3 - DER_FAULT_OVER_FREQUENCY
+
+    4 - DER_FAULT_UNDER_FREQUENCY
+
+    5 - DER_FAULT_VOLTAGE_IMBALANCE
+
+    6 - DER_FAULT_CURRENT_IMBALANCE
+
+    7 - DER_FAULT_EMERGENCY_LOCAL
+
+    8 - DER_FAULT_EMERGENCY_REMOTE
+
+    9 - DER_FAULT_LOW_POWER_INPUT
+
+    10 - DER_FAULT_PHASE_ROTATION
+
+    11-31 - Reserved
 
     @var SE_DERStatus_t::genConnectStatus
     Connect/status value for generator DER. 
@@ -2643,13 +2685,13 @@
     Distributed Energy Resource program.
 
     @var SE_DERProgram_t::_flags
-#define SE_DERCurveListLink_exists (1 << 5)
+#define SE_DERCurveListLink_exists (1 << 6)
 
-#define SE_DERControlListLink_exists (1 << 6)
+#define SE_DERControlListLink_exists (1 << 7)
 
-#define SE_DefaultDERControlLink_exists (1 << 7)
+#define SE_DefaultDERControlLink_exists (1 << 8)
 
-#define SE_ActiveDERControlListLink_exists (1 << 8)
+#define SE_ActiveDERControlListLink_exists (1 << 9)
 
     @var SE_DERProgram_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -2756,6 +2798,8 @@
 
     6 - %setMaxDischargeRateW
 
+    7 - %statWAvail
+
     All other values reserved.
 
     @{ */
@@ -2778,6 +2822,8 @@
 
     6 - %setMaxDischargeRateW
 
+    7 - %statWAvail
+
     All other values reserved.
 
 */
@@ -2787,27 +2833,35 @@
 /** @defgroup DERCurveType DERCurveType
     @ingroup UInt8
 
-    0 - opModVoltVar (Volt-Var Mode)
+    0 - opModFreqWatt (Frequency-Watt Curve Mode)
 
-    1 - opModFreqWatt (Frequency-Watt Curve Mode)
+    1 - opModHFRTMayTrip (High Frequency Ride Through, May Trip Mode)
 
-    2 - opModWattPF (Watt-PowerFactor Mode)
+    2 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
 
-    3 - opModVoltWatt (Volt-Watt Mode)
+    3 - opModHVRTMayTrip (High Voltage Ride Through, May Trip Mode)
 
-    4 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
+    4 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
 
-    5 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
+    5 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
 
-    6 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
+    6 - opModLFRTMayTrip (Low Frequency Ride Through, May Trip Mode)
 
-    7 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
+    7 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
 
-    8 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
+    8 - opModLVRTMayTrip (Low Voltage Ride Through, May Trip Mode)
 
-    9 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
+    9 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
 
-    10 - opModWattVar (Watt-Var Mode)
+    10 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
+
+    11 - opModVoltVar (Volt-Var Mode)
+
+    12 - opModVoltWatt (Volt-Watt Mode)
+
+    13 - opModWattPF (Watt-PowerFactor Mode)
+
+    14 - opModWattVar (Watt-Var Mode)
 
     All other values reserved.
 
@@ -2815,27 +2869,35 @@
 
 /** @typedef SE_DERCurveType_t
 
-    0 - opModVoltVar (Volt-Var Mode)
+    0 - opModFreqWatt (Frequency-Watt Curve Mode)
 
-    1 - opModFreqWatt (Frequency-Watt Curve Mode)
+    1 - opModHFRTMayTrip (High Frequency Ride Through, May Trip Mode)
 
-    2 - opModWattPF (Watt-PowerFactor Mode)
+    2 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
 
-    3 - opModVoltWatt (Volt-Watt Mode)
+    3 - opModHVRTMayTrip (High Voltage Ride Through, May Trip Mode)
 
-    4 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
+    4 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
 
-    5 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
+    5 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
 
-    6 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
+    6 - opModLFRTMayTrip (Low Frequency Ride Through, May Trip Mode)
 
-    7 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
+    7 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
 
-    8 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
+    8 - opModLVRTMayTrip (Low Voltage Ride Through, May Trip Mode)
 
-    9 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
+    9 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
 
-    10 - opModWattVar (Watt-Var Mode)
+    10 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
+
+    11 - opModVoltVar (Volt-Var Mode)
+
+    12 - opModVoltWatt (Volt-Watt Mode)
+
+    13 - opModWattPF (Watt-PowerFactor Mode)
+
+    14 - opModWattVar (Watt-Var Mode)
 
     All other values reserved.
 
@@ -2854,11 +2916,15 @@
 
     Data point values for defining a curve or schedule
 
+    @var SE_CurveData_t::_flags
+#define SE_excitation_true (1 << 0)
+#define SE_excitation_exists (1 << 1)
+
     @var SE_CurveData_t::xvalue
     The data value of the X-axis (independent) variable, depending on the curve type. See definitions in DERControlBase for further information.
 
     @var SE_CurveData_t::yvalue
-    The data value of the Y-axis (dependent) variable, depending on the curve type. See definitions in DERControlBase for further information.
+    The data value of the Y-axis (dependent) variable, depending on the curve type. See definitions in DERControlBase for further information. If yvalue is Power Factor, the excitation field SHALL be present and yvalue SHALL be a positive value. If yvalue is not Power Factor, the excitation field SHALL NOT be present.
 
 */
 
@@ -2876,16 +2942,23 @@
     DER related curves such as Volt-Var mode curves. Relationship between an independent variable (X-axis) and a dependent variable (Y-axis).
 
     @var SE_DERCurve_t::_flags
-#define SE_rampPT1Tms_exists (1 << 5)
+#define SE_vRef_exists (1 << 6)
 
-#define SE_rampIncTms_exists (1 << 6)
+#define SE_rampPT1Tms_exists (1 << 7)
 
-#define SE_rampDecTms_exists (1 << 7)
+#define SE_rampIncTms_exists (1 << 8)
 
-#define SE_openLoopTms_exists (1 << 8)
+#define SE_rampDecTms_exists (1 << 9)
 
-#define SE_CurveData_count(x) (((se_flags (x) >> 9) & 0xf) + 1)
-#define SE_set_CurveData_count(x, n) (se_flags(x) |= (((n) - 1) & 0xf) << 9)
+#define SE_openLoopTms_exists (1 << 10)
+
+#define SE_CurveData_count(x) (((se_flags (x) >> 11) & 0xf) + 1)
+#define SE_set_CurveData_count(x, n) (se_flags(x) |= (((n) - 1) & 0xf) << 11)
+
+#define SE_autonomousVRefTimeConstant_exists (1 << 15)
+
+#define SE_autonomousVRefEnable_true (1 << 16)
+#define SE_autonomousVRefEnable_exists (1 << 17)
 
     @var SE_DERCurve_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -2899,6 +2972,9 @@
     @var SE_DERCurve_t::version
     Contains the version number of the object. See the type definition for details.
 
+    @var SE_DERCurve_t::autonomousVRefTimeConstant
+    If the curveType is opModVoltVar, then this field MAY be present. If the curveType is not opModVoltVar, then this field SHALL NOT be present. Adjustment range for vRef time constant, in hundredths of a second.
+
     @var SE_DERCurve_t::creationTime
     The time at which the object was created.
 
@@ -2907,7 +2983,7 @@
     Specifies the associated curve-based control mode.
 
     @var SE_DERCurve_t::openLoopTms
-    Open loop response time, the time to ramp up to 90% of the new reactive power target in response to the change in voltage, in hundredths of a second. Resolution is 1/100 sec. A value of 0 is used to mean no limit. When not present, the device SHOULD follow its default behavior.
+    Open loop response time, the time to ramp up to 90% of the new target in response to the change in voltage, in hundredths of a second. Resolution is 1/100 sec. A value of 0 is used to mean no limit. When not present, the device SHOULD follow its default behavior.
 
     @var SE_DERCurve_t::rampDecTms
     Decreasing ramp rate, interpreted as a percentage change in output capability limit per second (e.g. %setMaxW / sec).  Resolution is in hundredths of a percent/second. A value of 0 means there is no limit. If absent, ramp rate defaults to setGradW.
@@ -2917,6 +2993,9 @@
 
     @var SE_DERCurve_t::rampPT1Tms
     The configuration parameter for a low-pass filter, PT1 is a time, in hundredths of a second, in which the filter will settle to 95% of a step change in the input value. Resolution is 1/100 sec.
+
+    @var SE_DERCurve_t::vRef
+    If the curveType is opModVoltVar, then this field MAY be present. If the curveType is not opModVoltVar, then this field SHALL NOT be present. The nominal AC voltage (RMS) adjustment to the voltage curve points for Volt-Var curves.
 
     @var SE_DERCurve_t::xMultiplier
     Exponent for X-axis value.
@@ -2953,6 +3032,133 @@
     Indicates the number of items in this page of results.
 
     @var SE_DERCurveList_t::DERCurve
+*/
+
+/** @} */
+
+/** @defgroup DeviceCategoryType DeviceCategoryType
+    @ingroup HexBinary32
+
+    The Device category types defined.
+
+    Bit positions SHALL be defined as follows:
+
+    0 - Programmable Communicating Thermostat
+
+    1 - Strip Heaters
+
+    2 - Baseboard Heaters
+
+    3 - Water Heater
+
+    4 - Pool Pump
+
+    5 - Sauna
+
+    6 - Hot Tub
+
+    7 - Smart Appliance
+
+    8 - Irrigation Pump
+
+    9 - Managed Commercial and Industrial (C&amp;I) Loads
+
+    10 - Simple Misc. (Residential On/Off) Loads
+
+    11 - Exterior Lighting
+
+    12 - Interior Lighting
+
+    13 - Load Control Switch
+
+    14 - Energy Management System
+
+    15 - Smart Energy Module
+
+    16 - Electric Vehicle
+
+    17 - EVSE
+
+    18 - Virtual or Mixed DER
+
+    19 - Reciprocating Engine
+
+    20 - Fuel Cell
+
+    21 - Photovoltaic System
+
+    22 - Combined Heat and Power
+
+    23 - Combined PV and Storage
+
+    24 - Other Generation System
+
+    25 - Other Storage System
+
+    All other values reserved.
+
+    @{ */
+
+/** @typedef SE_DeviceCategoryType_t
+
+    The Device category types defined.
+
+    Bit positions SHALL be defined as follows:
+
+    0 - Programmable Communicating Thermostat
+
+    1 - Strip Heaters
+
+    2 - Baseboard Heaters
+
+    3 - Water Heater
+
+    4 - Pool Pump
+
+    5 - Sauna
+
+    6 - Hot Tub
+
+    7 - Smart Appliance
+
+    8 - Irrigation Pump
+
+    9 - Managed Commercial and Industrial (C&amp;I) Loads
+
+    10 - Simple Misc. (Residential On/Off) Loads
+
+    11 - Exterior Lighting
+
+    12 - Interior Lighting
+
+    13 - Load Control Switch
+
+    14 - Energy Management System
+
+    15 - Smart Energy Module
+
+    16 - Electric Vehicle
+
+    17 - EVSE
+
+    18 - Virtual or Mixed DER
+
+    19 - Reciprocating Engine
+
+    20 - Fuel Cell
+
+    21 - Photovoltaic System
+
+    22 - Combined Heat and Power
+
+    23 - Combined PV and Storage
+
+    24 - Other Generation System
+
+    25 - Other Storage System
+
+    All other values reserved.
+
 */
 
 /** @} */
@@ -3084,21 +3290,24 @@
 
 /** @} */
 
-/** @defgroup PowerFactor PowerFactor
+/** @defgroup PowerFactorWithExcitation PowerFactorWithExcitation
     @ingroup se_types
 
-    Specifies a setpoint for Displacement Power Factor, the ratio between apparent and active powers at the fundamental frequency (e.g. 60 Hz).
+    Specifies a setpoint for Displacement Power Factor, the ratio between apparent and active powers at the fundamental frequency (e.g. 60 Hz) and includes an excitation flag.
 
     @{ */
 
-/** @struct SE_PowerFactor_t se_types.h
+/** @struct SE_PowerFactorWithExcitation_t se_types.h
 
-    Specifies a setpoint for Displacement Power Factor, the ratio between apparent and active powers at the fundamental frequency (e.g. 60 Hz).
+    Specifies a setpoint for Displacement Power Factor, the ratio between apparent and active powers at the fundamental frequency (e.g. 60 Hz) and includes an excitation flag.
 
-    @var SE_PowerFactor_t::displacement
-    Significand of a signed value of cos(theta) between -0.9999 and 1.0. E.g. a value of -0.95 may be specified as a displacement of -950 and a multiplier of -3. Sign SHALL be interpreted according to the EEI convention.
+    @var SE_PowerFactorWithExcitation_t::_flags
+#define SE_excitation0_true (1 << 0)
 
-    @var SE_PowerFactor_t::multiplier
+    @var SE_PowerFactorWithExcitation_t::displacement
+    Significand of an unsigned value of cos(theta) between 0 and 1.0. E.g. a value of 0.95 may be specified as a displacement of 950 and a multiplier of -3.
+
+    @var SE_PowerFactorWithExcitation_t::multiplier
     Specifies exponent of 'displacement'.
 
 */
@@ -3137,35 +3346,48 @@
 
 #define SE_opModLVRTMomentaryCessation_exists (1 << 9)
 
-#define SE_opModLFRTMustTrip_exists (1 << 10)
+#define SE_opModLVRTMayTrip_exists (1 << 10)
 
-#define SE_opModHVRTMustTrip_exists (1 << 11)
+#define SE_opModLFRTMustTrip_exists (1 << 11)
 
-#define SE_opModHVRTMomentaryCessation_exists (1 << 12)
+#define SE_opModLFRTMayTrip_exists (1 << 12)
 
-#define SE_opModHFRTMustTrip_exists (1 << 13)
+#define SE_opModHVRTMustTrip_exists (1 << 13)
 
-#define SE_opModFreqWatt_exists (1 << 14)
+#define SE_opModHVRTMomentaryCessation_exists (1 << 14)
 
-#define SE_opModFreqDroop_exists (1 << 15)
+#define SE_opModHVRTMayTrip_exists (1 << 15)
 
-#define SE_opModFixedW_exists (1 << 16)
+#define SE_opModHFRTMustTrip_exists (1 << 16)
 
-#define SE_opModFixedVar_exists (1 << 17)
+#define SE_opModHFRTMayTrip_exists (1 << 17)
 
-#define SE_opModFixedPF_exists (1 << 18)
+#define SE_opModFreqWatt_exists (1 << 18)
 
-#define SE_opModEnergize_true (1 << 19)
-#define SE_opModEnergize_exists (1 << 20)
+#define SE_opModFreqDroop_exists (1 << 19)
 
-#define SE_opModConnect_true (1 << 21)
-#define SE_opModConnect_exists (1 << 22)
+#define SE_opModFixedW_exists (1 << 20)
 
-    @var SE_DERControlBase_t::opModFixedPF
-    The opModFixedPF function specifies a requested fixed Power Factor (PF) setting, consisting of a signed displacement value. The PF sign (which SHALL be interpreted according to the EEI convention, where unity PF is considered unsigned) indicates the direction of reactive power flow. The actual displacement SHALL be within the limits established by setMinPF and setMinPFNeg. If issued simultaneously with other reactive power controls (e.g. opModFixedVar) the control resulting in least var magnitude SHOULD take precedence.
+#define SE_opModFixedVar_exists (1 << 21)
+
+#define SE_opModFixedPFInjectW_exists (1 << 22)
+
+#define SE_opModFixedPFAbsorbW_exists (1 << 23)
+
+#define SE_opModEnergize_true (1 << 24)
+#define SE_opModEnergize_exists (1 << 25)
+
+#define SE_opModConnect_true (1 << 26)
+#define SE_opModConnect_exists (1 << 27)
+
+    @var SE_DERControlBase_t::opModFixedPFAbsorbW
+    The opModFixedPFAbsorbW function specifies a requested fixed Power Factor (PF) setting for when active power is being absorbed. The actual displacement SHALL be within the limits established by setMinPFOverExcited and setMinPFUnderExcited. If issued simultaneously with other reactive power controls (e.g. opModFixedVar) the control resulting in least var magnitude SHOULD take precedence.
+
+    @var SE_DERControlBase_t::opModFixedPFInjectW
+    The opModFixedPFInjectW function specifies a requested fixed Power Factor (PF) setting for when active power is being injected. The actual displacement SHALL be within the limits established by setMinPFOverExcited and setMinPFUnderExcited. If issued simultaneously with other reactive power controls (e.g. opModFixedVar) the control resulting in least var magnitude SHOULD take precedence.
 
     @var SE_DERControlBase_t::opModFixedVar
-    The opModFixedVar function specifies the delivered or received reactive power setpoint.  The context for the setpoint value is determined by refType and SHALL be one of %setMaxW, %setMaxVar, or %statVarAvail.  If issued simultaneously with other reactive power controls (e.g. opModFixedPF) the control resulting in least var magnitude SHOULD take precedence.
+    The opModFixedVar function specifies the delivered or received reactive power setpoint.  The context for the setpoint value is determined by refType and SHALL be one of %setMaxW, %setMaxVar, or %statVarAvail.  If issued simultaneously with other reactive power controls (e.g. opModFixedPFInjectW) the control resulting in least var magnitude SHOULD take precedence.
 
     @var SE_DERControlBase_t::opModFixedW
     The opModFixedW function specifies a requested charge or discharge mode setpoint, in %setMaxChargeRateW if negative value or %setMaxW or %setMaxDischargeRateW if positive value (in hundredths).
@@ -3174,25 +3396,37 @@
     Specifies a frequency-watt operation. This operation limits active power generation or consumption when the line frequency deviates from nominal by a specified amount.
 
     @var SE_DERControlBase_t::opModFreqWatt
-    Specify DERCurveLink for curve type == 1.  The Frequency-Watt function limits active power generation or consumption when the line frequency deviates from nominal by a specified amount. The Frequency-Watt curve is specified as an array of Frequency-Watt pairs that are interpolated into a piecewise linear function with hysteresis.  The x value of each pair specifies a frequency in Hz. The y value specifies a corresponding active power output in %setMaxW.
+    Specify DERCurveLink for curveType == 0.  The Frequency-Watt function limits active power generation or consumption when the line frequency deviates from nominal by a specified amount. The Frequency-Watt curve is specified as an array of Frequency-Watt pairs that are interpolated into a piecewise linear function with hysteresis.  The x value of each pair specifies a frequency in Hz. The y value specifies a corresponding active power output in %setMaxW.
+
+    @var SE_DERControlBase_t::opModHFRTMayTrip
+    Specify DERCurveLink for curveType == 1. The High Frequency Ride-Through (HFRT) function is specified by one or two duration-frequency curves that define the operating region under high frequency conditions. Each HFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region. The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "may trip" region.
 
     @var SE_DERControlBase_t::opModHFRTMustTrip
-    Specify curve type == 9.  The High Frequency Ride-Through (HFRT) function is specified by a duration-frequency curve that defines the operating region under high frequency conditions.  Each HFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "must trip" region.
+    Specify DERCurveLink for curveType == 2.  The High Frequency Ride-Through (HFRT) function is specified by a duration-frequency curve that defines the operating region under high frequency conditions.  Each HFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "must trip" region.
+
+    @var SE_DERControlBase_t::opModHVRTMayTrip
+    Specify DERCurveLink for curveType == 3. The High Voltage Ride-Through (HVRT) function is specified by one, two, or three duration-volt curves that define the operating region under high voltage conditions. Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region. The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percentage voltage, defined as ((locally measured voltage - setVRefOfs / setVRef). This control specifies the "may trip" region.
 
     @var SE_DERControlBase_t::opModHVRTMomentaryCessation
-    Specify curve type == 6.  The High Voltage Ride-Through (HVRT) function is specified by duration-volt curves that define the operating region under high voltage conditions.  Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "momentary cessation" region.
+    Specify DERCurveLink for curveType == 4.  The High Voltage Ride-Through (HVRT) function is specified by duration-volt curves that define the operating region under high voltage conditions.  Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "momentary cessation" region.
 
     @var SE_DERControlBase_t::opModHVRTMustTrip
-    Specify curve type == 7.  The High Voltage Ride-Through (HVRT) function is specified by duration-volt curves that define the operating region under high voltage conditions.  Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "must trip" region.
+    Specify DERCurveLink for curveType == 5.  The High Voltage Ride-Through (HVRT) function is specified by duration-volt curves that define the operating region under high voltage conditions.  Each HVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "must trip" region.
+
+    @var SE_DERControlBase_t::opModLFRTMayTrip
+    Specify DERCurveLink for curveType == 6. The Low Frequency Ride-Through (LFRT) function is specified by one or two duration-frequency curves that define the operating region under low frequency conditions. Each LFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region. The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "may trip" region.
 
     @var SE_DERControlBase_t::opModLFRTMustTrip
-    Specify curve type == 8.  The Low Frequency Ride-Through (LFRT) function is specified by a duration-frequency curve that defines the operating region under low frequency conditions.  Each LFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "must trip" region.
+    Specify DERCurveLink for curveType == 7.  The Low Frequency Ride-Through (LFRT) function is specified by a duration-frequency curve that defines the operating region under low frequency conditions.  Each LFRT curve is specified by an array of duration-frequency pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given frequency in seconds). The y value of each pair specifies a frequency, in Hz. This control specifies the "must trip" region.
+
+    @var SE_DERControlBase_t::opModLVRTMayTrip
+    Specify DERCurveLink for curveType == 8. The Low Voltage Ride-Through (LVRT) function is specified by one, two, or three duration-volt curves that define the operating region under low voltage conditions. Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region. The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "may trip" region.
 
     @var SE_DERControlBase_t::opModLVRTMomentaryCessation
-    Specify curve type == 4.  The Low Voltage Ride-Through (LVRT) function is specified by duration-volt curves that define the operating region under low voltage conditions.  Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "momentary cessation" region.
+    Specify DERCurveLink for curveType == 9.  The Low Voltage Ride-Through (LVRT) function is specified by duration-volt curves that define the operating region under low voltage conditions.  Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "momentary cessation" region.
 
     @var SE_DERControlBase_t::opModLVRTMustTrip
-    Specify curve type == 5.  The Low Voltage Ride-Through (LVRT) function is specified by duration-volt curves that define the operating region under low voltage conditions.  Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "must trip" region.
+    Specify DERCurveLink for curveType == 10.  The Low Voltage Ride-Through (LVRT) function is specified by duration-volt curves that define the operating region under low voltage conditions.  Each LVRT curve is specified by an array of duration-volt pairs that will be interpolated into a piecewise linear function that defines an operating region.  The x value of each pair specifies a duration (time at a given voltage in seconds). The y value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef). This control specifies the "must trip" region.
 
     @var SE_DERControlBase_t::opModMaxLimW
     The opModMaxLimW function sets the maximum active power generation level at the electrical coupling point as a percentage of set capacity (%setMaxW, in hundredths). This limitation may be met e.g. by reducing PV output or by using excess PV output to charge associated storage.
@@ -3204,16 +3438,16 @@
     Target output power, in Watts. This control is likely to be more useful for aggregators, as individual DERs may not be able to maintain a target setting.
 
     @var SE_DERControlBase_t::opModVoltVar
-    Specify DERCurveLink for curve type == 0.  The static volt-var function provides over- or under-excited var compensation as a function of measured voltage. The volt-var curve is specified as an array of volt-var pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef) and SHOULD support a domain of at least 0 - 135.  The y value specifies a target var output interpreted as a signed percentage (-100 to 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW, %setMaxVar, or %statVarAvail.
+    Specify DERCurveLink for curveType == 11.  The static volt-var function provides over- or under-excited var compensation as a function of measured voltage. The volt-var curve is specified as an array of volt-var pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef) and SHOULD support a domain of at least 0 - 135. If VRef is present in DERCurve, then the x value of each pair is additionally multiplied by (VRef / 10000). The y value specifies a target var output interpreted as a signed percentage (-100 to 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW, %setMaxVar, or %statVarAvail.
 
     @var SE_DERControlBase_t::opModVoltWatt
-    Specify DERCurveLink for curve type == 3.  The Volt-Watt reduces active power output as a function of measured voltage. The Volt-Watt curve is specified as an array of Volt-Watt pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef) and SHOULD support a domain of at least 0 - 135. The y value specifies an active power output in %setMaxW, (0 - 100).
+    Specify DERCurveLink for curveType == 12.  The Volt-Watt reduces active power output as a function of measured voltage. The Volt-Watt curve is specified as an array of Volt-Watt pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies an effective percent voltage, defined as ((locally measured voltage - setVRefOfs) / setVRef) and SHOULD support a domain of at least 0 - 135. The y value specifies an active power output interpreted as a percentage (0 - 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW or %statWAvail.
 
     @var SE_DERControlBase_t::opModWattPF
-    Specify DERCurveLink for curve type == 2.  The Watt-PF function varies Power Factor (PF) as a function of delivered active power. The Watt-PF curve is specified as an array of Watt-PF coordinates that are interpolated into a piecewise linear function with hysteresis.  The x value of each pair specifies a watt setting in %setMaxW, (0 - 100). The PF output setting is a signed displacement in y value (PF sign SHALL be interpreted according to the EEI convention, where unity PF is considered unsigned). These settings are not expected to be updated very often during the life of the installation, therefore only a single curve is required.  If issued simultaneously with other reactive power controls (e.g. opModFixedPF) the control resulting in least var magnitude SHOULD take precedence.
+    Specify DERCurveLink for curveType == 13.  The Watt-PF function varies Power Factor (PF) as a function of delivered active power. The Watt-PF curve is specified as an array of Watt-PF coordinates that are interpolated into a piecewise linear function with hysteresis.  The x value of each pair specifies a watt setting in %setMaxW, (0 - 100). The PF output setting is a signed displacement in y value (PF sign SHALL be interpreted according to the EEI convention, where unity PF is considered unsigned). These settings are not expected to be updated very often during the life of the installation, therefore only a single curve is required.  If issued simultaneously with other reactive power controls (e.g. opModFixedPFInjectW) the control resulting in least var magnitude SHOULD take precedence.
 
     @var SE_DERControlBase_t::opModWattVar
-    Specify DERCurveLink for curve type == 10. The Watt-Var function varies vars as a function of delivered active power. The Watt-Var curve is specified as an array of Watt-Var pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies a watt setting in %setMaxW, (0-100). The y value specifies a target var output interpreted as a signed percentage (-100 to 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW, %setMaxVar, or %statVarAvail.
+    Specify DERCurveLink for curveType == 14. The Watt-Var function varies vars as a function of delivered active power. The Watt-Var curve is specified as an array of Watt-Var pairs that are interpolated into a piecewise linear function with hysteresis. The x value of each pair specifies a watt setting in %setMaxW, (0-100). The y value specifies a target var output interpreted as a signed percentage (-100 to 100). The meaning of the y value is determined by yRefType and must be one of %setMaxW, %setMaxVar, or %statVarAvail.
 
     @var SE_DERControlBase_t::rampTms
     Requested ramp time, in hundredths of a second, for the device to transition from the current DERControl  mode setting(s) to the new mode setting(s). If absent, use default ramp rate (setGradW).  Resolution is 1/100 sec.
@@ -3291,7 +3525,7 @@
 
     4 = Superseded
 
-    Events marked as Superseded by servers are events that may have been replaced by new events from the same program that target the exact same set of deviceCategory's (if applicable) and overlap for a given period of time. Servers SHALL mark an event as Superseded at the earliest Effective Start Time of the overlapping event. Servers are responsible for maintaining the Superseded event in their collection for the duration of the Effective Scheduled Period. 
+    Events marked as Superseded by servers are events that may have been replaced by new events from the same program that target the exact same set of deviceCategory's (if applicable) AND DERControl controls (e.g., opModTargetW) (if applicable) and overlap for a given period of time. Servers SHALL mark an event as Superseded at the earliest Effective Start Time of the overlapping event. Servers are responsible for maintaining the Superseded event in their collection for the duration of the Effective Scheduled Period. 
 
     Client devices encountering a Superseded event SHALL terminate execution of the event immediately and commence execution of the new event immediately, unless the current time is within the start randomization window of the superseded event, in which case the client SHALL obey the start randomization of the new event. This Status.type SHALL NOT be used with TextMessage, since multiple text messages can be active. 
 
@@ -3322,7 +3556,7 @@
     An IdentifiedObject to which a Response can be requested.
 
     @var SE_RespondableSubscribableIdentifiedObject_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
     @var SE_RespondableSubscribableIdentifiedObject_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -3337,7 +3571,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -3375,7 +3609,7 @@
     An Event indicates information that applies to a particular period of time. Events SHALL be executed relative to the time of the server, as described in the Time function set section 11.1.
 
     @var SE_Event_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
     @var SE_Event_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -3390,7 +3624,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -3435,11 +3669,11 @@
     An Event that can indicate time ranges over which the start time and duration SHALL be randomized.
 
     @var SE_RandomizableEvent_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
-#define SE_randomizeStart_exists (1 << 6)
+#define SE_randomizeStart_exists (1 << 7)
 
-#define SE_randomizeDuration_exists (1 << 7)
+#define SE_randomizeDuration_exists (1 << 8)
 
     @var SE_RandomizableEvent_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -3454,7 +3688,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -3505,11 +3739,11 @@
     Distributed Energy Resource (DER) time/event-based control.
 
     @var SE_DERControl_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
-#define SE_randomizeStart_exists (1 << 6)
+#define SE_randomizeStart_exists (1 << 7)
 
-#define SE_randomizeDuration_exists (1 << 7)
+#define SE_randomizeDuration_exists (1 << 8)
 
     @var SE_DERControl_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -3524,7 +3758,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -3560,6 +3794,9 @@
     Number of seconds boundary inside which a random value must be selected to be applied to the associated interval start time, to avoid sudden synchronized demand changes. If related to price level changes, sign may be ignored. Valid range is -3600 to 3600. If not specified, 0 is the default.
 
     @var SE_DERControl_t::DERControlBase
+    @var SE_DERControl_t::deviceCategory
+    Specifies the bitmap indicating  the categories of devices that SHOULD respond. Devices SHOULD ignore events that do not indicate their device category. If not present, all devices SHOULD respond.
+
 */
 
 /** @} */
@@ -3596,23 +3833,27 @@
 /** @defgroup DERType DERType
     @ingroup UInt8
 
-    0 - Not applicable / Unknown 
+    0 - Not applicable / Unknown
 
-    1 - Virtual or mixed DER 
+    1 - Virtual or mixed DER
 
-    2 - Reciprocating engine 
+    2 - Reciprocating engine
 
-    3 - Fuel cell 
+    3 - Fuel cell
 
-    4 - Photovoltaic system 
+    4 - Photovoltaic system
 
-    5 - Combined heat and power 
+    5 - Combined heat and power
 
-    80 - Storage (immobile)
+    6 - Other generation system
 
-    81 - Electric vehicle / EVSE
+    80 - Other storage system
 
-    82 - Combined PV and storage
+    81 - Electric vehicle
+
+    82 - EVSE
+
+    83 - Combined PV and storage
 
     All other values reserved.
 
@@ -3620,25 +3861,71 @@
 
 /** @typedef SE_DERType_t
 
-    0 - Not applicable / Unknown 
+    0 - Not applicable / Unknown
 
-    1 - Virtual or mixed DER 
+    1 - Virtual or mixed DER
 
-    2 - Reciprocating engine 
+    2 - Reciprocating engine
 
-    3 - Fuel cell 
+    3 - Fuel cell
 
-    4 - Photovoltaic system 
+    4 - Photovoltaic system
 
-    5 - Combined heat and power 
+    5 - Combined heat and power
 
-    80 - Storage (immobile)
+    6 - Other generation system
 
-    81 - Electric vehicle / EVSE
+    80 - Other storage system
 
-    82 - Combined PV and storage
+    81 - Electric vehicle
+
+    82 - EVSE
+
+    83 - Combined PV and storage
 
     All other values reserved.
+
+*/
+
+/** @} */
+
+/** @defgroup ReactiveSusceptance ReactiveSusceptance
+    @ingroup se_types
+
+    Reactive susceptance
+
+    @{ */
+
+/** @struct SE_ReactiveSusceptance_t se_types.h
+
+    Reactive susceptance
+
+    @var SE_ReactiveSusceptance_t::multiplier
+    Specifies exponent of uom.
+
+    @var SE_ReactiveSusceptance_t::value
+    Value in siemens (uom 53)
+
+*/
+
+/** @} */
+
+/** @defgroup PowerFactor PowerFactor
+    @ingroup se_types
+
+    Specifies a setpoint for Displacement Power Factor, the ratio between apparent and active powers at the fundamental frequency (e.g. 60 Hz).
+
+    @{ */
+
+/** @struct SE_PowerFactor_t se_types.h
+
+    Specifies a setpoint for Displacement Power Factor, the ratio between apparent and active powers at the fundamental frequency (e.g. 60 Hz).
+
+    @var SE_PowerFactor_t::displacement
+    Significand of an unsigned value of cos(theta) between 0 and 1.0. E.g. a value of 0.95 may be specified as a displacement of 950 and a multiplier of -3.
+
+    @var SE_PowerFactor_t::multiplier
+    Specifies exponent of 'displacement'.
 
 */
 
@@ -3660,6 +3947,27 @@
 
     @var SE_WattHour_t::value
     Value in watt-hours (uom 72)
+
+*/
+
+/** @} */
+
+/** @defgroup VoltageRMS VoltageRMS
+    @ingroup se_types
+
+    Average electric potential difference between two points.
+
+    @{ */
+
+/** @struct SE_VoltageRMS_t se_types.h
+
+    Average electric potential difference between two points.
+
+    @var SE_VoltageRMS_t::multiplier
+    Specifies exponent of uom.
+
+    @var SE_VoltageRMS_t::value
+    Value in volts RMS (uom 29)
 
 */
 
@@ -3728,69 +4036,64 @@
 
 /** @} */
 
-/** @defgroup HexBinary32 HexBinary32
-    @ingroup se_typedefs
-
-    A 32-bit field encoded as a hex string (8 hex characters max). Where applicable, bit 0, or the least significant bit, goes on the right. Note that hexBinary requires pairs of hex characters, so an odd number of characters requires a leading "0".
-
-    @{ */
-
-/** @typedef SE_HexBinary32_t
-
-    A 32-bit field encoded as a hex string (8 hex characters max). Where applicable, bit 0, or the least significant bit, goes on the right. Note that hexBinary requires pairs of hex characters, so an odd number of characters requires a leading "0".
-
-*/
-
-/** @} */
-
 /** @defgroup DERControlType DERControlType
     @ingroup HexBinary32
 
     Control modes supported by the DER.  Bit positions SHALL be defined as follows:
 
-    0 - opModVoltVar (Volt-Var Mode)
+    0 - Charge mode
 
-    1 - opModFreqWatt (Frequency-Watt Curve Mode)
+    1 - Discharge mode
 
-    2 - opModFreqDroop (Frequency-Watt Parameterized Mode)
+    2 - opModConnect (Connect / Disconnect - implies galvanic isolation)
 
-    3 - opModWattPF (Watt-PowerFactor Mode)
+    3 - opModEnergize (Energize / De-Energize)
 
-    4 - opModVoltWatt (Volt-Watt Mode)
+    4 - opModFixedPFAbsorbW (Fixed Power Factor Setpoint when absorbing active power)
 
-    5 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
+    5 - opModFixedPFInjectW (Fixed Power Factor Setpoint when injecting active power)
 
-    6 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
+    6 - opModFixedVar (Reactive Power Setpoint)
 
-    7 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
+    7 - opModFixedW (Charge / Discharge Setpoint)
 
-    8 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
+    8 - opModFreqDroop (Frequency-Watt Parameterized Mode)
 
-    9 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
+    9 - opModFreqWatt (Frequency-Watt Curve Mode)
 
-    10 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
+    10 - opModHFRTMayTrip (High Frequency Ride Through, May Trip Mode)
 
-    11 - opModConnect (Connect / Disconnect - implies galvanic isolation)
+    11 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
 
-    12 - opModEnergize (Energize / De-Energize)
+    12 - opModHVRTMayTrip (High Voltage Ride Through, May Trip Mode)
 
-    13 - opModMaxLimW (Maximum Active Power)
+    13 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
 
-    14 - opModFixedVar (Reactive Power Setpoint)
+    14 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
 
-    15 - opModFixedPF (Fixed Power Factor Setpoint)
+    15 - opModLFRTMayTrip (Low Frequency Ride Through, May Trip Mode)
 
-    16 - opModFixedW (Charge / Discharge Setpoint)
+    16 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
 
-    17 - opModTargetW (Target Active Power)
+    17 - opModLVRTMayTrip (Low Voltage Ride Through, May Trip Mode)
 
-    18 - opModTargetVar (Target Reactive Power)
+    18 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
 
-    19 - Charge mode
+    19 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
 
-    20 - Discharge mode
+    20 - opModMaxLimW (Maximum Active Power)
 
-    21 - opModWattVar (Watt-Var Mode)
+    21 - opModTargetVar (Target Reactive Power)
+
+    22 - opModTargetW (Target Active Power)
+
+    23 - opModVoltVar (Volt-Var Mode)
+
+    24 - opModVoltWatt (Volt-Watt Mode)
+
+    25 - opModWattPF (Watt-PowerFactor Mode)
+
+    26 - opModWattVar (Watt-Var Mode)
 
     All other values reserved.
 
@@ -3800,49 +4103,59 @@
 
     Control modes supported by the DER.  Bit positions SHALL be defined as follows:
 
-    0 - opModVoltVar (Volt-Var Mode)
+    0 - Charge mode
 
-    1 - opModFreqWatt (Frequency-Watt Curve Mode)
+    1 - Discharge mode
 
-    2 - opModFreqDroop (Frequency-Watt Parameterized Mode)
+    2 - opModConnect (Connect / Disconnect - implies galvanic isolation)
 
-    3 - opModWattPF (Watt-PowerFactor Mode)
+    3 - opModEnergize (Energize / De-Energize)
 
-    4 - opModVoltWatt (Volt-Watt Mode)
+    4 - opModFixedPFAbsorbW (Fixed Power Factor Setpoint when absorbing active power)
 
-    5 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
+    5 - opModFixedPFInjectW (Fixed Power Factor Setpoint when injecting active power)
 
-    6 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
+    6 - opModFixedVar (Reactive Power Setpoint)
 
-    7 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
+    7 - opModFixedW (Charge / Discharge Setpoint)
 
-    8 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
+    8 - opModFreqDroop (Frequency-Watt Parameterized Mode)
 
-    9 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
+    9 - opModFreqWatt (Frequency-Watt Curve Mode)
 
-    10 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
+    10 - opModHFRTMayTrip (High Frequency Ride Through, May Trip Mode)
 
-    11 - opModConnect (Connect / Disconnect - implies galvanic isolation)
+    11 - opModHFRTMustTrip (High Frequency Ride Through, Must Trip Mode)
 
-    12 - opModEnergize (Energize / De-Energize)
+    12 - opModHVRTMayTrip (High Voltage Ride Through, May Trip Mode)
 
-    13 - opModMaxLimW (Maximum Active Power)
+    13 - opModHVRTMomentaryCessation (High Voltage Ride Through, Momentary Cessation Mode)
 
-    14 - opModFixedVar (Reactive Power Setpoint)
+    14 - opModHVRTMustTrip (High Voltage Ride Through, Must Trip Mode)
 
-    15 - opModFixedPF (Fixed Power Factor Setpoint)
+    15 - opModLFRTMayTrip (Low Frequency Ride Through, May Trip Mode)
 
-    16 - opModFixedW (Charge / Discharge Setpoint)
+    16 - opModLFRTMustTrip (Low Frequency Ride Through, Must Trip Mode)
 
-    17 - opModTargetW (Target Active Power)
+    17 - opModLVRTMayTrip (Low Voltage Ride Through, May Trip Mode)
 
-    18 - opModTargetVar (Target Reactive Power)
+    18 - opModLVRTMomentaryCessation (Low Voltage Ride Through, Momentary Cessation Mode)
 
-    19 - Charge mode
+    19 - opModLVRTMustTrip (Low Voltage Ride Through, Must Trip Mode)
 
-    20 - Discharge mode
+    20 - opModMaxLimW (Maximum Active Power)
 
-    21 - opModWattVar (Watt-Var Mode)
+    21 - opModTargetVar (Target Reactive Power)
+
+    22 - opModTargetW (Target Active Power)
+
+    23 - opModVoltVar (Volt-Var Mode)
+
+    24 - opModVoltWatt (Volt-Watt Mode)
+
+    25 - opModWattPF (Watt-PowerFactor Mode)
+
+    26 - opModWattVar (Watt-Var Mode)
 
     All other values reserved.
 
@@ -3862,39 +4175,49 @@
     Distributed energy resource type and nameplate ratings.
 
     @var SE_DERCapability_t::_flags
-#define SE_rtgWh_exists (1 << 5)
+#define SE_rtgVNom_exists (1 << 6)
 
-#define SE_rtgVarNeg_exists (1 << 6)
+#define SE_rtgUnderExcitedW_exists (1 << 7)
 
-#define SE_rtgVar_exists (1 << 7)
+#define SE_rtgUnderExcitedPF_exists (1 << 8)
 
-#define SE_rtgVA_exists (1 << 8)
+#define SE_rtgReactiveSusceptance_exists (1 << 9)
 
-#define SE_rtgUnderExcitedW_exists (1 << 9)
+#define SE_rtgOverExcitedW_exists (1 << 10)
 
-#define SE_rtgUnderExcitedPF_exists (1 << 10)
+#define SE_rtgOverExcitedPF_exists (1 << 11)
 
-#define SE_rtgOverExcitedW_exists (1 << 11)
+#define SE_rtgNormalCategory_exists (1 << 12)
 
-#define SE_rtgOverExcitedPF_exists (1 << 12)
+#define SE_rtgMinV_exists (1 << 13)
 
-#define SE_rtgNormalCategory_exists (1 << 13)
+#define SE_rtgMinPFUnderExcited_exists (1 << 14)
 
-#define SE_rtgMinPFNeg_exists (1 << 14)
+#define SE_rtgMinPFOverExcited_exists (1 << 15)
 
-#define SE_rtgMinPF_exists (1 << 15)
+#define SE_rtgMaxWh_exists (1 << 16)
 
-#define SE_rtgMaxDischargeRateW_exists (1 << 16)
+#define SE_rtgMaxVarNeg_exists (1 << 17)
 
-#define SE_rtgMaxDischargeRateVA_exists (1 << 17)
+#define SE_rtgMaxVar_exists (1 << 18)
 
-#define SE_rtgMaxChargeRateW_exists (1 << 18)
+#define SE_rtgMaxVA_exists (1 << 19)
 
-#define SE_rtgMaxChargeRateVA_exists (1 << 19)
+#define SE_rtgMaxV_exists (1 << 20)
 
-#define SE_rtgAh_exists (1 << 20)
+#define SE_rtgMaxDischargeRateW_exists (1 << 21)
 
-#define SE_rtgAbnormalCategory_exists (1 << 21)
+#define SE_rtgMaxDischargeRateVA_exists (1 << 22)
+
+#define SE_rtgMaxChargeRateW_exists (1 << 23)
+
+#define SE_rtgMaxChargeRateVA_exists (1 << 24)
+
+#define SE_rtgMaxAh_exists (1 << 25)
+
+#define SE_rtgMaxA_exists (1 << 26)
+
+#define SE_rtgAbnormalCategory_exists (1 << 27)
 
     @var SE_DERCapability_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -3902,11 +4225,8 @@
     @var SE_DERCapability_t::modesSupported
     Bitmap indicating the DER Controls implemented by the device. See DERControlType for values.
 
-    @var SE_DERCapability_t::rtgA
-    Maximum continuous AC current capability of the DER, in Amperes (RMS).
-
     @var SE_DERCapability_t::rtgAbnormalCategory
-    Abnormal operating performance category as defined by IEEE 1547-2017. One of:
+    Abnormal operating performance category as defined by IEEE 1547-2018. One of:
 
     0 - not specified
 
@@ -3918,7 +4238,10 @@
 
     All other values reserved.
 
-    @var SE_DERCapability_t::rtgAh
+    @var SE_DERCapability_t::rtgMaxA
+    Maximum continuous AC current capability of the DER, in Amperes (RMS).
+
+    @var SE_DERCapability_t::rtgMaxAh
     Usable energy storage capacity of the DER, in AmpHours.
 
     @var SE_DERCapability_t::rtgMaxChargeRateVA
@@ -3931,16 +4254,37 @@
     Maximum apparent power discharge rating in Volt-Amperes. May differ from the maximum apparent power rating.
 
     @var SE_DERCapability_t::rtgMaxDischargeRateW
-    Maximum rate of energy transfer delivered by the storage DER, in Watts. Required for combined generation/storage DERs (e.g. DERType == 82).
+    Maximum rate of energy transfer delivered by the storage DER, in Watts. Required for combined generation/storage DERs (e.g. DERType == 83).
 
-    @var SE_DERCapability_t::rtgMinPF
-    Minimum Power Factor displacement capability of the DER; SHALL be a positive value between 0.0 (typically &gt; 0.7) and 1.0. If absent, defaults to unity. (Unity power factor is considered unsigned.)
+    @var SE_DERCapability_t::rtgMaxV
+    AC voltage maximum rating.
 
-    @var SE_DERCapability_t::rtgMinPFNeg
-    Minimum Power Factor displacement capability of the DER; SHALL be a negative value between 0.0 (typically &lt; -0.7) and -0.9999.  If absent, defaults to negative rtgMinPF. (Unity power factor is considered unsigned.)
+    @var SE_DERCapability_t::rtgMaxVA
+    Maximum continuous apparent power output capability of the DER, in VA.
+
+    @var SE_DERCapability_t::rtgMaxVar
+    Maximum continuous reactive power delivered by the DER, in var.
+
+    @var SE_DERCapability_t::rtgMaxVarNeg
+    Maximum continuous reactive power received by the DER, in var.  If absent, defaults to negative rtgMaxVar.
+
+    @var SE_DERCapability_t::rtgMaxW
+    Maximum continuous active power output capability of the DER, in watts. Represents combined generation plus storage output if DERType == 83.
+
+    @var SE_DERCapability_t::rtgMaxWh
+    Maximum energy storage capacity of the DER, in WattHours.
+
+    @var SE_DERCapability_t::rtgMinPFOverExcited
+    Minimum Power Factor displacement capability of the DER when injecting reactive power (over-excited); SHALL be a positive value between 0.0 (typically &gt; 0.7) and 1.0. If absent, defaults to unity.
+
+    @var SE_DERCapability_t::rtgMinPFUnderExcited
+    Minimum Power Factor displacement capability of the DER when absorbing reactive power (under-excited); SHALL be a positive value between 0.0 (typically &gt; 0.7) and 0.9999.  If absent, defaults to rtgMinPFOverExcited.
+
+    @var SE_DERCapability_t::rtgMinV
+    AC voltage minimum rating.
 
     @var SE_DERCapability_t::rtgNormalCategory
-    Normal operating performance category as defined by IEEE 1547-2017. One of:
+    Normal operating performance category as defined by IEEE 1547-2018. One of:
 
     0 - not specified
 
@@ -3956,26 +4300,17 @@
     @var SE_DERCapability_t::rtgOverExcitedW
     Active power rating in Watts at specified over-excited power factor (rtgOverExcitedPF). If present, rtgOverExcitedPF SHALL be present.
 
+    @var SE_DERCapability_t::rtgReactiveSusceptance
+    Reactive susceptance that remains connected to the Area EPS in the cease to energize and trip state.
+
     @var SE_DERCapability_t::rtgUnderExcitedPF
     Specified under-excited power factor.
 
     @var SE_DERCapability_t::rtgUnderExcitedW
     Active power rating in Watts at specified under-excited power factor (rtgUnderExcitedPF). If present, rtgUnderExcitedPF SHALL be present.
 
-    @var SE_DERCapability_t::rtgVA
-    Maximum continuous apparent power output capability of the DER, in VA.
-
-    @var SE_DERCapability_t::rtgVar
-    Maximum continuous reactive power delivered by the DER, in var.
-
-    @var SE_DERCapability_t::rtgVarNeg
-    Maximum continuous reactive power received by the DER, in var.  If absent, defaults to negative rtgVar.
-
-    @var SE_DERCapability_t::rtgW
-    Maximum continuous active power output capability of the DER, in watts. Represents combined generation plus storage output if DERType == 82.
-
-    @var SE_DERCapability_t::rtgWh
-    Maximum energy storage capacity of the DER, in WattHours.
+    @var SE_DERCapability_t::rtgVNom
+    AC voltage nominal rating.
 
     @var SE_DERCapability_t::type
     Type of DER; see DERType object
@@ -3996,15 +4331,15 @@
     Indicates current reserve generation status
 
     @var SE_DERAvailability_t::_flags
-#define SE_statWAvail_exists (1 << 5)
+#define SE_statWAvail_exists (1 << 6)
 
-#define SE_statVarAvail_exists (1 << 6)
+#define SE_statVarAvail_exists (1 << 7)
 
-#define SE_reservePercent_exists (1 << 7)
+#define SE_reservePercent_exists (1 << 8)
 
-#define SE_reserveChargePercent_exists (1 << 8)
+#define SE_reserveChargePercent_exists (1 << 9)
 
-#define SE_maxChargeDuration_exists (1 << 9)
+#define SE_maxChargeDuration_exists (1 << 10)
 
     @var SE_DERAvailability_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -4037,27 +4372,6 @@
 
 /** @} */
 
-/** @defgroup VoltageRMS VoltageRMS
-    @ingroup se_types
-
-    Average electric potential difference between two points.
-
-    @{ */
-
-/** @struct SE_VoltageRMS_t se_types.h
-
-    Average electric potential difference between two points.
-
-    @var SE_VoltageRMS_t::multiplier
-    Specifies exponent of uom.
-
-    @var SE_VoltageRMS_t::value
-    Value in volts RMS (uom 29)
-
-*/
-
-/** @} */
-
 /** @defgroup DERSettings DERSettings
     @ingroup SubscribableResource
 
@@ -4070,35 +4384,41 @@
     Distributed energy resource settings
 
     @var SE_DERSettings_t::_flags
-#define SE_setVRefOfs_exists (1 << 5)
+#define SE_setVRefOfs_exists (1 << 6)
 
-#define SE_setVRef_exists (1 << 6)
+#define SE_setVRef_exists (1 << 7)
 
-#define SE_setMinPFNeg_exists (1 << 7)
+#define SE_setVNom_exists (1 << 8)
 
-#define SE_setMinPF_exists (1 << 8)
+#define SE_setMinV_exists (1 << 9)
 
-#define SE_setMaxWh_exists (1 << 9)
+#define SE_setMinPFUnderExcited_exists (1 << 10)
 
-#define SE_setMaxVarNeg_exists (1 << 10)
+#define SE_setMinPFOverExcited_exists (1 << 11)
 
-#define SE_setMaxVar_exists (1 << 11)
+#define SE_setMaxWh_exists (1 << 12)
 
-#define SE_setMaxVA_exists (1 << 12)
+#define SE_setMaxVarNeg_exists (1 << 13)
 
-#define SE_setMaxDischargeRateW_exists (1 << 13)
+#define SE_setMaxVar_exists (1 << 14)
 
-#define SE_setMaxDischargeRateVA_exists (1 << 14)
+#define SE_setMaxVA_exists (1 << 15)
 
-#define SE_setMaxChargeRateW_exists (1 << 15)
+#define SE_setMaxV_exists (1 << 16)
 
-#define SE_setMaxChargeRateVA_exists (1 << 16)
+#define SE_setMaxDischargeRateW_exists (1 << 17)
 
-#define SE_setMaxAh_exists (1 << 17)
+#define SE_setMaxDischargeRateVA_exists (1 << 18)
 
-#define SE_setMaxA_exists (1 << 18)
+#define SE_setMaxChargeRateW_exists (1 << 19)
 
-#define SE_modesEnabled_exists (1 << 19)
+#define SE_setMaxChargeRateVA_exists (1 << 20)
+
+#define SE_setMaxAh_exists (1 << 21)
+
+#define SE_setMaxA_exists (1 << 22)
+
+#define SE_modesEnabled_exists (1 << 23)
 
     @var SE_DERSettings_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -4124,6 +4444,9 @@
     @var SE_DERSettings_t::setESLowVolt
     Enter service voltage low. Specified as an effective percent voltage, defined as (100% * (locally measured voltage - setVRefOfs) / setVRef), in hundredths of a percent.
 
+    @var SE_DERSettings_t::setESRampTms
+    Enter service ramp time, in hundredths of a second.
+
     @var SE_DERSettings_t::setESRandomDelay
     Enter service randomized delay, in hundredths of a second.
 
@@ -4148,29 +4471,38 @@
     @var SE_DERSettings_t::setMaxDischargeRateW
     Maximum rate of energy transfer delivered by the storage device, in Watts. Defaults to rtgMaxDischargeRateW.
 
+    @var SE_DERSettings_t::setMaxV
+    AC voltage maximum setting.
+
     @var SE_DERSettings_t::setMaxVA
-    Set limit for maximum apparent power capability of the DER (in VA). Defaults to rtgVA.
+    Set limit for maximum apparent power capability of the DER (in VA). Defaults to rtgMaxVA.
 
     @var SE_DERSettings_t::setMaxVar
-    Set limit for maximum reactive power delivered by the DER (in var). SHALL be a positive value &lt;= rtgVar (default).
+    Set limit for maximum reactive power delivered by the DER (in var). SHALL be a positive value &lt;= rtgMaxVar (default).
 
     @var SE_DERSettings_t::setMaxVarNeg
-    Set limit for maximum reactive power received by the DER (in var). If present, SHALL be a negative value &gt;= rtgVarNeg (default). If absent, defaults to negative setMaxVar.
+    Set limit for maximum reactive power received by the DER (in var). If present, SHALL be a negative value &gt;= rtgMaxVarNeg (default). If absent, defaults to negative setMaxVar.
 
     @var SE_DERSettings_t::setMaxW
-    Set limit for maximum active power capability of the DER (in W). Defaults to rtgW.
+    Set limit for maximum active power capability of the DER (in W). Defaults to rtgMaxW.
 
     @var SE_DERSettings_t::setMaxWh
     Maximum energy storage capacity of the DER, in WattHours. Note: this may be different from physical capability.
 
-    @var SE_DERSettings_t::setMinPF
-    Set minimum Power Factor displacement limit of the DER; positive value between 0.0 (typically &gt; 0.7) and 1.0.  SHALL be &gt;= rtgMinPF (default).
+    @var SE_DERSettings_t::setMinPFOverExcited
+    Set minimum Power Factor displacement limit of the DER when injecting reactive power (over-excited); SHALL be a positive value between 0.0 (typically &gt; 0.7) and 1.0.  SHALL be &gt;= rtgMinPFOverExcited (default).
 
-    @var SE_DERSettings_t::setMinPFNeg
-    Set minimum Power Factor displacement limit of the DER; negative value between 0.0 (typically &lt; -0.7) and -0.9999.  If present, SHALL be &lt;= rtgMinPFNeg (default).  If absent, defaults to negative setMinPF.
+    @var SE_DERSettings_t::setMinPFUnderExcited
+    Set minimum Power Factor displacement limit of the DER when absorbing reactive power (under-excited); SHALL be a positive value between 0.0 (typically &gt; 0.7) and 0.9999.  If present, SHALL be &gt;= rtgMinPFUnderExcited (default).  If absent, defaults to setMinPFOverExcited.
+
+    @var SE_DERSettings_t::setMinV
+    AC voltage minimum setting.
 
     @var SE_DERSettings_t::setSoftGradW
     Set soft-start rate of change (soft-start ramp rate) of active power output due to command or internal action, defined in %setWMax / second.  Resolution is in hundredths of a percent/second. A value of 0 means there is no limit. Interpreted as a percentage change in output capability limit per second when used as a ramp rate.
+
+    @var SE_DERSettings_t::setVNom
+    AC voltage nominal setting.
 
     @var SE_DERSettings_t::setVRef
     The nominal AC voltage (RMS) at the utility's point of common coupling.
@@ -4335,19 +4667,19 @@
     Contains links to DER resources.
 
     @var SE_DER_t::_flags
-#define SE_DERStatusLink_exists (1 << 5)
+#define SE_DERStatusLink_exists (1 << 6)
 
-#define SE_DERSettingsLink_exists (1 << 6)
+#define SE_DERSettingsLink_exists (1 << 7)
 
-#define SE_DERCapabilityLink_exists (1 << 7)
+#define SE_DERCapabilityLink_exists (1 << 8)
 
-#define SE_DERAvailabilityLink_exists (1 << 8)
+#define SE_DERAvailabilityLink_exists (1 << 9)
 
-#define SE_CurrentDERProgramLink_exists (1 << 9)
+#define SE_CurrentDERProgramLink_exists (1 << 10)
 
-#define SE_AssociatedUsagePointLink_exists (1 << 10)
+#define SE_AssociatedUsagePointLink_exists (1 << 11)
 
-#define SE_AssociatedDERProgramListLink_exists (1 << 11)
+#define SE_AssociatedDERProgramListLink_exists (1 << 12)
 
     @var SE_DER_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -4407,7 +4739,7 @@
     Contains control mode information to be used if no active DERControl is found.
 
     @var SE_DefaultDERControl_t::_flags
-#define SE_setGradW_exists (1 << 5)
+#define SE_setGradW_exists (1 << 6)
 
     @var SE_DefaultDERControl_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -4439,6 +4771,9 @@
 
     @var SE_DefaultDERControl_t::setESLowVolt
     Enter service voltage low. Specified as an effective percent voltage, defined as (100% * (locally measured voltage - setVRefOfs) / setVRef), in hundredths of a percent. When present, this value SHALL update the value of the corresponding setting (DERSettings::setESLowVolt).
+
+    @var SE_DefaultDERControl_t::setESRampTms
+    Enter service ramp time, in hundredths of a second. When present, this value SHALL update the value of the corresponding setting (DERSettings::setESRampTms).
 
     @var SE_DefaultDERControl_t::setESRandomDelay
     Enter service randomized delay, in hundredths of a second. When present, this value SHALL update the value of the corresponding setting (DERSettings::setESRandomDelay).
@@ -4486,7 +4821,7 @@
     The server may modify the charging or discharging parameters and interval to provide a lower aggregated demand at the premises, or within a larger part of the distribution system.
 
     @var SE_FlowReservationResponse_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
     @var SE_FlowReservationResponse_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -4501,7 +4836,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -4614,7 +4949,7 @@
     Used to request flow transactions. Client EndDevices submit a request for charging or discharging from the server. The server creates an associated FlowReservationResponse containing the charging parameters and interval to provide a lower aggregated demand at the premises, or within a larger part of the distribution system.
 
     @var SE_FlowReservationRequest_t::_flags
-#define SE_durationRequested_exists (1 << 5)
+#define SE_durationRequested_exists (1 << 6)
 
     @var SE_FlowReservationRequest_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -4852,11 +5187,11 @@
     PrepayOperationStatus describes the status of the service or commodity being conditionally controlled by the Prepayment function set.
 
     @var SE_PrepayOperationStatus_t::_flags
-#define SE_serviceChange_exists (1 << 5)
+#define SE_serviceChange_exists (1 << 6)
 
-#define SE_creditTypeInUse_exists (1 << 6)
+#define SE_creditTypeInUse_exists (1 << 7)
 
-#define SE_creditTypeChange_exists (1 << 7)
+#define SE_creditTypeChange_exists (1 << 8)
 
     @var SE_PrepayOperationStatus_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -4932,9 +5267,9 @@
     Logical point on a network at which consumption or production is either physically measured (e.g. metered) or estimated (e.g. unmetered street lights).
 
     @var SE_UsagePoint_t::_flags
-#define SE_MeterReadingListLink_exists (1 << 5)
+#define SE_MeterReadingListLink_exists (1 << 6)
 
-#define SE_deviceLFDI_exists (1 << 6)
+#define SE_deviceLFDI_exists (1 << 7)
 
     @var SE_UsagePoint_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -5236,15 +5571,15 @@
     Prepayment (inherited from CIM SDPAccountingFunction)
 
     @var SE_Prepayment_t::_flags
-#define SE_lowEmergencyCreditWarningLevel_exists (1 << 5)
+#define SE_lowEmergencyCreditWarningLevel_exists (1 << 6)
 
-#define SE_lowCreditWarningLevel_exists (1 << 6)
+#define SE_lowCreditWarningLevel_exists (1 << 7)
 
-#define SE_creditExpiryLevel_exists (1 << 7)
+#define SE_creditExpiryLevel_exists (1 << 8)
 
-#define SE_ActiveSupplyInterruptionOverrideListLink_exists (1 << 8)
+#define SE_ActiveSupplyInterruptionOverrideListLink_exists (1 << 9)
 
-#define SE_ActiveCreditRegisterListLink_exists (1 << 9)
+#define SE_ActiveCreditRegisterListLink_exists (1 << 10)
 
     @var SE_Prepayment_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -5326,7 +5661,7 @@
     CreditRegister instances define a credit-modifying transaction. Typically this would be a credit-adding transaction, but may be a subtracting transaction (perhaps in response to an out-of-band debt signal).
 
     @var SE_CreditRegister_t::_flags
-#define SE_creditType_exists (1 << 5)
+#define SE_creditType_exists (1 << 6)
 
     @var SE_CreditRegister_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -5425,11 +5760,11 @@
     AccountBalance contains the regular credit and emergency credit balance for this given service or commodity prepay instance. It may also contain status information concerning the balance data.
 
     @var SE_AccountBalance_t::_flags
-#define SE_emergencyCreditStatus_exists (1 << 5)
+#define SE_emergencyCreditStatus_exists (1 << 6)
 
-#define SE_emergencyCredit_exists (1 << 6)
+#define SE_emergencyCredit_exists (1 << 7)
 
-#define SE_creditStatus_exists (1 << 7)
+#define SE_creditStatus_exists (1 << 8)
 
     @var SE_AccountBalance_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -5492,13 +5827,13 @@
     Organisation that provides services to Customers.
 
     @var SE_ServiceSupplier_t::_flags
-#define SE_web_exists (1 << 5)
+#define SE_web_exists (1 << 6)
 
-#define SE_providerID_exists (1 << 6)
+#define SE_providerID_exists (1 << 7)
 
-#define SE_phone_exists (1 << 7)
+#define SE_phone_exists (1 << 8)
 
-#define SE_email_exists (1 << 8)
+#define SE_email_exists (1 << 9)
 
     @var SE_ServiceSupplier_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -5609,9 +5944,9 @@
     Contains historical, target, and projection readings of various types, possibly associated with charges.
 
     @var SE_BillingMeterReadingBase_t::_flags
-#define SE_ReadingTypeLink_exists (1 << 5)
+#define SE_ReadingTypeLink_exists (1 << 6)
 
-#define SE_BillingReadingSetListLink_exists (1 << 6)
+#define SE_BillingReadingSetListLink_exists (1 << 7)
 
     @var SE_BillingMeterReadingBase_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -5643,9 +5978,9 @@
     Contains readings that specify a target or goal, such as a consumption target, to which billing incentives or other contractual ramifications may be associated.
 
     @var SE_TargetReading_t::_flags
-#define SE_ReadingTypeLink_exists (1 << 5)
+#define SE_ReadingTypeLink_exists (1 << 6)
 
-#define SE_BillingReadingSetListLink_exists (1 << 6)
+#define SE_BillingReadingSetListLink_exists (1 << 7)
 
     @var SE_TargetReading_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -5703,9 +6038,9 @@
     Contains values that forecast a future reading for the time or interval specified.
 
     @var SE_ProjectionReading_t::_flags
-#define SE_ReadingTypeLink_exists (1 << 5)
+#define SE_ReadingTypeLink_exists (1 << 6)
 
-#define SE_BillingReadingSetListLink_exists (1 << 6)
+#define SE_BillingReadingSetListLink_exists (1 << 7)
 
     @var SE_ProjectionReading_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -5763,9 +6098,9 @@
     To be used to present readings that have been processed and possibly corrected (as allowed, due to missing or incorrect data) by backend systems. This includes quality codes valid, verified, estimated, and derived / corrected.
 
     @var SE_HistoricalReading_t::_flags
-#define SE_ReadingTypeLink_exists (1 << 5)
+#define SE_ReadingTypeLink_exists (1 << 6)
 
-#define SE_BillingReadingSetListLink_exists (1 << 6)
+#define SE_BillingReadingSetListLink_exists (1 << 7)
 
     @var SE_HistoricalReading_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6029,27 +6364,27 @@
     Agreement between the customer and the service supplier to pay for service at a specific service location. It records certain billing information about the type of service provided at the service location and is used during charge creation to determine the type of service.
 
     @var SE_CustomerAgreement_t::_flags
-#define SE_TariffProfileLink_exists (1 << 5)
+#define SE_TariffProfileLink_exists (1 << 6)
 
-#define SE_TargetReadingListLink_exists (1 << 6)
+#define SE_TargetReadingListLink_exists (1 << 7)
 
-#define SE_serviceLocation_exists (1 << 7)
+#define SE_serviceLocation_exists (1 << 8)
 
-#define SE_serviceAccount_exists (1 << 8)
+#define SE_serviceAccount_exists (1 << 9)
 
-#define SE_ProjectionReadingListLink_exists (1 << 9)
+#define SE_ProjectionReadingListLink_exists (1 << 10)
 
-#define SE_PrepaymentLink_exists (1 << 10)
+#define SE_PrepaymentLink_exists (1 << 11)
 
-#define SE_HistoricalReadingListLink_exists (1 << 11)
+#define SE_HistoricalReadingListLink_exists (1 << 12)
 
-#define SE_BillingPeriodListLink_exists (1 << 12)
+#define SE_BillingPeriodListLink_exists (1 << 13)
 
-#define SE_ActiveTargetReadingListLink_exists (1 << 13)
+#define SE_ActiveTargetReadingListLink_exists (1 << 14)
 
-#define SE_ActiveProjectionReadingListLink_exists (1 << 14)
+#define SE_ActiveProjectionReadingListLink_exists (1 << 15)
 
-#define SE_ActiveBillingPeriodListLink_exists (1 << 15)
+#define SE_ActiveBillingPeriodListLink_exists (1 << 16)
 
     @var SE_CustomerAgreement_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6167,13 +6502,13 @@
     Assignment of a group of products and services purchased by the Customer through a CustomerAgreement, used as a mechanism for customer billing and payment. It contains common information from the various types of CustomerAgreements to create billings (invoices) for a Customer and receive payment.
 
     @var SE_CustomerAccount_t::_flags
-#define SE_ServiceSupplierLink_exists (1 << 5)
+#define SE_ServiceSupplierLink_exists (1 << 6)
 
-#define SE_customerName_exists (1 << 6)
+#define SE_customerName_exists (1 << 7)
 
-#define SE_CustomerAgreementListLink_exists (1 << 7)
+#define SE_CustomerAgreementListLink_exists (1 << 8)
 
-#define SE_customerAccount_exists (1 << 8)
+#define SE_customerAccount_exists (1 << 9)
 
     @var SE_CustomerAccount_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6273,7 +6608,7 @@
     Time sequence of readings of the same reading type.
 
     @var SE_BillingReadingSet_t::_flags
-#define SE_BillingReadingListLink_exists (1 << 5)
+#define SE_BillingReadingListLink_exists (1 << 6)
 
     @var SE_BillingReadingSet_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6400,15 +6735,15 @@
     Data captured at regular intervals of time. Interval data could be captured as incremental data, absolute data, or relative data. The source for the data is usually a tariff quantity or an engineering quantity. Data is typically captured in time-tagged, uniform, fixed-length intervals of 5 min, 10 min, 15 min, 30 min, or 60 min. However, consumption aggregations can also be represented with this class.
 
     @var SE_BillingReading_t::_flags
-#define SE_value_exists (1 << 5)
+#define SE_value_exists (1 << 6)
 
-#define SE_touTier_exists (1 << 6)
+#define SE_touTier_exists (1 << 7)
 
-#define SE_timePeriod_exists (1 << 7)
+#define SE_timePeriod_exists (1 << 8)
 
-#define SE_qualityFlags_exists (1 << 8)
+#define SE_qualityFlags_exists (1 << 9)
 
-#define SE_consumptionBlock_exists (1 << 9)
+#define SE_consumptionBlock_exists (1 << 10)
 
     @var SE_BillingReading_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6485,11 +6820,11 @@
     A Billing Period relates to the period of time on which a customer is billed.  As an example the billing period interval for a particular customer might be 31 days starting on July 1, 2011. The start date and interval can change on each billing period. There may also be multiple billing periods related to a customer agreement to support different tariff structures.
 
     @var SE_BillingPeriod_t::_flags
-#define SE_statusTimeStamp_exists (1 << 5)
+#define SE_statusTimeStamp_exists (1 << 6)
 
-#define SE_billToDate_exists (1 << 6)
+#define SE_billToDate_exists (1 << 7)
 
-#define SE_billLastPeriod_exists (1 << 7)
+#define SE_billLastPeriod_exists (1 << 8)
 
     @var SE_BillingPeriod_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6586,9 +6921,9 @@
     Text message such as a notification.
 
     @var SE_TextMessage_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
-#define SE_originator_exists (1 << 6)
+#define SE_originator_exists (1 << 7)
 
     @var SE_TextMessage_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6603,7 +6938,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -6749,9 +7084,9 @@
     Provides a container for collections of text messages.
 
     @var SE_MessagingProgram_t::_flags
-#define SE_TextMessageListLink_exists (1 << 5)
+#define SE_TextMessageListLink_exists (1 << 6)
 
-#define SE_ActiveTextMessageListLink_exists (1 << 6)
+#define SE_ActiveTextMessageListLink_exists (1 << 7)
 
     @var SE_MessagingProgram_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6848,13 +7183,13 @@
     Describes the time-differentiated portion of the RateComponent, if applicable, and provides the ability to specify multiple time intervals, each with its own consumption-based components and other attributes.
 
     @var SE_TimeTariffInterval_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
-#define SE_randomizeStart_exists (1 << 6)
+#define SE_randomizeStart_exists (1 << 7)
 
-#define SE_randomizeDuration_exists (1 << 7)
+#define SE_randomizeDuration_exists (1 << 8)
 
-#define SE_ConsumptionTariffIntervalListLink_exists (1 << 8)
+#define SE_ConsumptionTariffIntervalListLink_exists (1 << 9)
 
     @var SE_TimeTariffInterval_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -6869,7 +7204,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -6977,11 +7312,11 @@
     A schedule of charges; structure that allows the definition of tariff structures such as step (block) and time of use (tier) when used in conjunction with TimeTariffInterval and ConsumptionTariffInterval.
 
     @var SE_TariffProfile_t::_flags
-#define SE_rateCode_exists (1 << 5)
+#define SE_rateCode_exists (1 << 6)
 
-#define SE_pricePowerOfTenMultiplier_exists (1 << 6)
+#define SE_pricePowerOfTenMultiplier_exists (1 << 7)
 
-#define SE_currency_exists (1 << 7)
+#define SE_currency_exists (1 << 8)
 
     @var SE_TariffProfile_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -7107,11 +7442,11 @@
     Specifies the applicable charges for a single component of the rate, which could be generation price or consumption price, for example.
 
     @var SE_RateComponent_t::_flags
-#define SE_flowRateStartLimit_exists (1 << 5)
+#define SE_flowRateStartLimit_exists (1 << 6)
 
-#define SE_flowRateEndLimit_exists (1 << 6)
+#define SE_flowRateEndLimit_exists (1 << 7)
 
-#define SE_ActiveTimeTariffIntervalListLink_exists (1 << 7)
+#define SE_ActiveTimeTariffIntervalListLink_exists (1 << 8)
 
     @var SE_RateComponent_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -7257,7 +7592,7 @@
     One of a sequence of thresholds defined in terms of consumption quantity of a service such as electricity, water, gas, etc. It defines the steps or blocks in a step tariff structure, where startValue simultaneously defines the entry value of this step and the closing value of the previous step. Where consumption is greater than startValue, it falls within this block and where consumption is less than or equal to startValue, it falls within one of the previous blocks.
 
     @var SE_ConsumptionTariffInterval_t::_flags
-#define SE_price_exists (1 << 5)
+#define SE_price_exists (1 << 6)
 
     @var SE_ConsumptionTariffInterval_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -7376,7 +7711,7 @@
     A set of Readings of the ReadingType indicated by the parent MeterReading.
 
     @var SE_ReadingSet_t::_flags
-#define SE_ReadingListLink_exists (1 << 5)
+#define SE_ReadingListLink_exists (1 << 6)
 
     @var SE_ReadingSet_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -7511,9 +7846,9 @@
     Set of values obtained from the meter.
 
     @var SE_MeterReading_t::_flags
-#define SE_ReadingSetListLink_exists (1 << 5)
+#define SE_ReadingSetListLink_exists (1 << 6)
 
-#define SE_ReadingLink_exists (1 << 6)
+#define SE_ReadingLink_exists (1 << 7)
 
     @var SE_MeterReading_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -7751,113 +8086,6 @@
 
 /** @} */
 
-/** @defgroup DeviceCategoryType DeviceCategoryType
-    @ingroup HexBinary32
-
-    The Device category types defined.
-
-    Bit positions SHALL be defined as follows:
-
-    0 - Programmable Communicating Thermostat 
-
-    1 - Strip Heaters 
-
-    2 - Baseboard Heaters 
-
-    3 - Water Heater 
-
-    4 - Pool Pump 
-
-    5 - Sauna 
-
-    6 - Hot tub
-
-    7 - Smart Appliance 
-
-    8 - Irrigation Pump 
-
-    9 - Managed Commercial and Industrial (C&amp;I) Loads 
-
-    10 - Simple misc. (Residential On/Off) loads 
-
-    11 - Exterior Lighting 
-
-    12 - Interior Lighting 
-
-    13 - Electric Vehicle 
-
-    14 - Generation Systems 
-
-    15 - Load Control Switch 
-
-    16 - Smart Inverter 
-
-    17 - EVSE 
-
-    18 - RESU (Residential Energy Storage Unit)
-
-    19 - Energy Management System 
-
-    20 - Smart Energy Module
-
-    All other values reserved.
-
-    @{ */
-
-/** @typedef SE_DeviceCategoryType_t
-
-    The Device category types defined.
-
-    Bit positions SHALL be defined as follows:
-
-    0 - Programmable Communicating Thermostat 
-
-    1 - Strip Heaters 
-
-    2 - Baseboard Heaters 
-
-    3 - Water Heater 
-
-    4 - Pool Pump 
-
-    5 - Sauna 
-
-    6 - Hot tub
-
-    7 - Smart Appliance 
-
-    8 - Irrigation Pump 
-
-    9 - Managed Commercial and Industrial (C&amp;I) Loads 
-
-    10 - Simple misc. (Residential On/Off) loads 
-
-    11 - Exterior Lighting 
-
-    12 - Interior Lighting 
-
-    13 - Electric Vehicle 
-
-    14 - Generation Systems 
-
-    15 - Load Control Switch 
-
-    16 - Smart Inverter 
-
-    17 - EVSE 
-
-    18 - RESU (Residential Energy Storage Unit)
-
-    19 - Energy Management System 
-
-    20 - Smart Energy Module
-
-    All other values reserved.
-
-*/
-
-/** @} */
-
 /** @defgroup ApplianceLoadReductionType ApplianceLoadReductionType
     @ingroup UInt8
 
@@ -7923,17 +8151,17 @@
     Instructs an EndDevice to perform a specified action.
 
     @var SE_EndDeviceControl_t::_flags
-#define SE_responseRequired_exists (1 << 5)
+#define SE_responseRequired_exists (1 << 6)
 
-#define SE_randomizeStart_exists (1 << 6)
+#define SE_randomizeStart_exists (1 << 7)
 
-#define SE_randomizeDuration_exists (1 << 7)
+#define SE_randomizeDuration_exists (1 << 8)
 
-#define SE_TargetReduction_exists (1 << 8)
+#define SE_TargetReduction_exists (1 << 9)
 
-#define SE_loadShiftForward_true (1 << 9)
+#define SE_loadShiftForward_true (1 << 10)
 
-#define SE_drProgramMandatory_true (1 << 10)
+#define SE_drProgramMandatory_true (1 << 11)
 
     @var SE_EndDeviceControl_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -7948,7 +8176,7 @@
 
     Value encoded as hex according to the following bit assignments, any combination is possible. 
 
-    See Table 10-10 for the list of appropriate Response status codes to be sent for these purposes.
+    See Table 27 for the list of appropriate Response status codes to be sent for these purposes.
 
     0 - End device shall indicate that message was received 
 
@@ -8087,13 +8315,13 @@
     Demand response program.
 
     @var SE_DemandResponseProgram_t::_flags
-#define SE_EndDeviceControlListLink_exists (1 << 5)
+#define SE_EndDeviceControlListLink_exists (1 << 6)
 
-#define SE_availabilityUpdatePowerChangeThreshold_exists (1 << 6)
+#define SE_availabilityUpdatePowerChangeThreshold_exists (1 << 7)
 
-#define SE_availabilityUpdatePercentChangeThreshold_exists (1 << 7)
+#define SE_availabilityUpdatePercentChangeThreshold_exists (1 << 8)
 
-#define SE_ActiveEndDeviceControlListLink_exists (1 << 8)
+#define SE_ActiveEndDeviceControlListLink_exists (1 << 9)
 
     @var SE_DemandResponseProgram_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -8185,11 +8413,11 @@
     Indicates current consumption status and ability to shed load.
 
     @var SE_LoadShedAvailability_t::_flags
-#define SE_sheddablePower_exists (1 << 5)
+#define SE_sheddablePower_exists (1 << 6)
 
-#define SE_sheddablePercent_exists (1 << 6)
+#define SE_sheddablePercent_exists (1 << 7)
 
-#define SE_DemandResponseProgramLink_exists (1 << 7)
+#define SE_DemandResponseProgramLink_exists (1 << 8)
 
     @var SE_LoadShedAvailability_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -8268,7 +8496,7 @@
     This object provides status of device file load and activation operations.
 
     @var SE_FileStatus_t::_flags
-#define SE_FileLink_exists (1 << 5)
+#define SE_FileLink_exists (1 << 6)
 
     @var SE_FileStatus_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -8366,9 +8594,9 @@
     This resource contains various meta-data describing a file's characteristics.  The meta-data provides general file information and also is used to support filtered queries of file lists
 
     @var SE_File_t::_flags
-#define SE_mfSerNum_exists (1 << 5)
+#define SE_mfSerNum_exists (1 << 6)
 
-#define SE_mfHwVer_exists (1 << 6)
+#define SE_mfHwVer_exists (1 << 7)
 
     @var SE_File_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -8716,7 +8944,7 @@
     Time/Date at which battery was installed,
 
     @var SE_PowerConfiguration_t::lowChargeThreshold
-    In context of the PowerStatus resource, this is the value of EstimatedTimeRemaining below which BatteryStatus "low" is indicated and the LE_LOW_BATTERY is raised.
+    In context of the PowerStatus resource, this is the value of EstimatedTimeRemaining below which BatteryStatus "low" is indicated and the PS_LOW_BATTERY is raised.
 
 */
 
@@ -8734,11 +8962,11 @@
     This resource contains various settings to control the operation of the device
 
     @var SE_Configuration_t::_flags
-#define SE_TimeConfiguration_exists (1 << 5)
+#define SE_TimeConfiguration_exists (1 << 6)
 
-#define SE_PriceResponseCfgListLink_exists (1 << 6)
+#define SE_PriceResponseCfgListLink_exists (1 << 7)
 
-#define SE_PowerConfiguration_exists (1 << 7)
+#define SE_PowerConfiguration_exists (1 << 8)
 
     @var SE_Configuration_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -8774,9 +9002,9 @@
     A time stamped instance of a significant event detected by the device.
 
     @var SE_LogEvent_t::_flags
-#define SE_extendedData_exists (1 << 5)
+#define SE_extendedData_exists (1 << 6)
 
-#define SE_details_exists (1 << 6)
+#define SE_details_exists (1 << 7)
 
     @var SE_LogEvent_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -8842,7 +9070,7 @@
     This 16-bit value, combined with createdDateTime, profileID, and logEventPEN, should provide a reasonable level of uniqueness.
 
     @var SE_LogEvent_t::logEventPEN
-    The Private Enterprise Number(PEN) of the entity that defined the profileID, functionSet, and logEventCode of the logEvent. ZigBee-assigned logEventCodes SHALL use the ZigBee Alliance PEN.  Combinations of profileID, functionSet, and logEventCode SHALL have unique meaning within a logEventPEN and are defined by the owner of the PEN.
+    The Private Enterprise Number(PEN) of the entity that defined the profileID, functionSet, and logEventCode of the logEvent. IEEE 2030.5-assigned logEventCodes SHALL use the IEEE 2030.5 PEN.  Combinations of profileID, functionSet, and logEventCode SHALL have unique meaning within a logEventPEN and are defined by the owner of the PEN.
 
     @var SE_LogEvent_t::profileID
     The profileID identifies which profile (HA, BA, SE, etc) defines the following event information.
@@ -8982,11 +9210,11 @@
     Specific RPLInstance resource.  This resource may be thought of as network status information for a specific RPL instance associated with IPInterface.
 
     @var SE_RPLInstance_t::_flags
-#define SE_RPLSourceRoutesListLink_exists (1 << 5)
+#define SE_RPLSourceRoutesListLink_exists (1 << 6)
 
-#define SE_groundedFlag_true (1 << 6)
+#define SE_groundedFlag_true (1 << 7)
 
-#define SE_DODAGroot_true (1 << 7)
+#define SE_DODAGroot_true (1 << 8)
 
     @var SE_RPLInstance_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -9055,7 +9283,7 @@
     Contains 802.15.4 link layer specific attributes.
 
     @var SE_Neighbor_t::_flags
-#define SE_isChild_true (1 << 5)
+#define SE_isChild_true (1 << 6)
 
     @var SE_Neighbor_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -9207,31 +9435,31 @@
     A link-layer interface object.
 
     @var SE_LLInterface_t::_flags
-#define SE_loWPAN_exists (1 << 5)
+#define SE_loWPAN_exists (1 << 6)
 
-#define SE_LLSecurityErrorRx_exists (1 << 6)
+#define SE_LLSecurityErrorRx_exists (1 << 7)
 
-#define SE_LLRetryCount_exists (1 << 7)
+#define SE_LLRetryCount_exists (1 << 8)
 
-#define SE_LLOctetsTx_exists (1 << 8)
+#define SE_LLOctetsTx_exists (1 << 9)
 
-#define SE_LLOctetsRx_exists (1 << 9)
+#define SE_LLOctetsRx_exists (1 << 10)
 
-#define SE_LLMediaAccessFail_exists (1 << 10)
+#define SE_LLMediaAccessFail_exists (1 << 11)
 
-#define SE_LLFramesTx_exists (1 << 11)
+#define SE_LLFramesTx_exists (1 << 12)
 
-#define SE_LLFramesRx_exists (1 << 12)
+#define SE_LLFramesRx_exists (1 << 13)
 
-#define SE_LLFramesDropTx_exists (1 << 13)
+#define SE_LLFramesDropTx_exists (1 << 14)
 
-#define SE_LLFramesDropRx_exists (1 << 14)
+#define SE_LLFramesDropRx_exists (1 << 15)
 
-#define SE_LLCSMAFail_exists (1 << 15)
+#define SE_LLCSMAFail_exists (1 << 16)
 
-#define SE_LLAckNotRx_exists (1 << 16)
+#define SE_LLAckNotRx_exists (1 << 17)
 
-#define SE_IEEE_802_15_4_exists (1 << 17)
+#define SE_IEEE_802_15_4_exists (1 << 18)
 
     @var SE_LLInterface_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -9382,58 +9610,58 @@
     Specific IPInterface resource.  This resource may be thought of as network status information for a specific network (IP) layer interface.
 
     @var SE_IPInterface_t::_flags
-#define SE_LLInterfaceListLink_exists (1 << 5)
+#define SE_LLInterfaceListLink_exists (1 << 6)
 
-#define SE_lastUpdatedTime_exists (1 << 6)
+#define SE_lastUpdatedTime_exists (1 << 7)
 
-#define SE_lastResetTime_exists (1 << 7)
+#define SE_lastResetTime_exists (1 << 8)
 
-#define SE_IPAddrListLink_exists (1 << 8)
+#define SE_IPAddrListLink_exists (1 << 9)
 
-#define SE_ifType_exists (1 << 9)
+#define SE_ifType_exists (1 << 10)
 
-#define SE_ifSpeed_exists (1 << 10)
+#define SE_ifSpeed_exists (1 << 11)
 
-#define SE_ifPromiscuousMode_true (1 << 11)
-#define SE_ifPromiscuousMode_exists (1 << 12)
+#define SE_ifPromiscuousMode_true (1 << 12)
+#define SE_ifPromiscuousMode_exists (1 << 13)
 
-#define SE_ifOutUcastPkts_exists (1 << 13)
+#define SE_ifOutUcastPkts_exists (1 << 14)
 
-#define SE_ifOutOctets_exists (1 << 14)
+#define SE_ifOutOctets_exists (1 << 15)
 
-#define SE_ifOutMulticastPkts_exists (1 << 15)
+#define SE_ifOutMulticastPkts_exists (1 << 16)
 
-#define SE_ifOutErrors_exists (1 << 16)
+#define SE_ifOutErrors_exists (1 << 17)
 
-#define SE_ifOutDiscards_exists (1 << 17)
+#define SE_ifOutDiscards_exists (1 << 18)
 
-#define SE_ifOutBroadcastPkts_exists (1 << 18)
+#define SE_ifOutBroadcastPkts_exists (1 << 19)
 
-#define SE_ifOperStatus_exists (1 << 19)
+#define SE_ifOperStatus_exists (1 << 20)
 
-#define SE_ifName_exists (1 << 20)
+#define SE_ifName_exists (1 << 21)
 
-#define SE_ifMtu_exists (1 << 21)
+#define SE_ifMtu_exists (1 << 22)
 
-#define SE_ifInUnknownProtos_exists (1 << 22)
+#define SE_ifInUnknownProtos_exists (1 << 23)
 
-#define SE_ifInUcastPkts_exists (1 << 23)
+#define SE_ifInUcastPkts_exists (1 << 24)
 
-#define SE_ifInOctets_exists (1 << 24)
+#define SE_ifInOctets_exists (1 << 25)
 
-#define SE_ifInMulticastPkts_exists (1 << 25)
+#define SE_ifInMulticastPkts_exists (1 << 26)
 
-#define SE_ifInErrors_exists (1 << 26)
+#define SE_ifInErrors_exists (1 << 27)
 
-#define SE_ifInDiscards_exists (1 << 27)
+#define SE_ifInDiscards_exists (1 << 28)
 
-#define SE_ifIndex_exists (1 << 28)
+#define SE_ifIndex_exists (1 << 29)
 
-#define SE_ifInBroadcastPkts_exists (1 << 29)
+#define SE_ifInBroadcastPkts_exists (1 << 30)
 
-#define SE_ifHighSpeed_exists (1 << 30)
+#define SE_ifHighSpeed_exists (1 << 31)
 
-#define SE_ifDescr_exists (1 << 31)
+#define SE_ifDescr_exists (1 << 32)
 
     @var SE_IPInterface_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -9578,7 +9806,7 @@
     An Internet Protocol address object.
 
     @var SE_IPAddr_t::_flags
-#define SE_RPLInstanceListLink_exists (1 << 5)
+#define SE_RPLInstanceListLink_exists (1 << 6)
 
     @var SE_IPAddr_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -9704,15 +9932,15 @@
     Contains the status of the device's power sources
 
     @var SE_PowerStatus_t::_flags
-#define SE_totalTimeOnBattery_exists (1 << 5)
+#define SE_totalTimeOnBattery_exists (1 << 6)
 
-#define SE_sessionTimeOnBattery_exists (1 << 6)
+#define SE_sessionTimeOnBattery_exists (1 << 7)
 
-#define SE_PEVInfo_exists (1 << 7)
+#define SE_PEVInfo_exists (1 << 8)
 
-#define SE_estimatedTimeRemaining_exists (1 << 8)
+#define SE_estimatedTimeRemaining_exists (1 << 9)
 
-#define SE_estimatedChargeRemaining_exists (1 << 9)
+#define SE_estimatedChargeRemaining_exists (1 << 10)
 
     @var SE_PowerStatus_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -9828,6 +10056,27 @@
 
 /** @} */
 
+/** @defgroup GPSLocationType GPSLocationType
+    @ingroup se_types
+
+    Specifies a GPS location, expressed in WGS 84 coordinates.
+
+    @{ */
+
+/** @struct SE_GPSLocationType_t se_types.h
+
+    Specifies a GPS location, expressed in WGS 84 coordinates.
+
+    @var SE_GPSLocationType_t::lat
+    Specifies the latitude from equator. -90 (south) to +90 (north) in decimal degrees.
+
+    @var SE_GPSLocationType_t::lon
+    Specifies the longitude from Greenwich Meridian. -180 (west) to +180 (east) in decimal degrees.
+
+*/
+
+/** @} */
+
 /** @defgroup DRLCCapabilities DRLCCapabilities
     @ingroup se_types
 
@@ -9886,7 +10135,7 @@
 
     20 - Appliance load reduction
 
-    21-32 - Reserved
+    21-31 - Reserved
 
 */
 
@@ -9904,13 +10153,15 @@
     Contains identification and other information about the device that changes very infrequently, typically only when updates are applied, if ever.
 
     @var SE_DeviceInformation_t::_flags
-#define SE_SupportedLocaleListLink_exists (1 << 5)
+#define SE_SupportedLocaleListLink_exists (1 << 6)
 
-#define SE_mfInfo_exists (1 << 6)
+#define SE_mfInfo_exists (1 << 7)
 
-#define SE_functionsImplemented_exists (1 << 7)
+#define SE_gpsLocation_exists (1 << 8)
 
-#define SE_DRLCCapabilities_exists (1 << 8)
+#define SE_functionsImplemented_exists (1 << 9)
+
+#define SE_DRLCCapabilities_exists (1 << 10)
 
     @var SE_DeviceInformation_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -9964,6 +10215,9 @@
 
     20 - DER Control
 
+    @var SE_DeviceInformation_t::gpsLocation
+    GPS location of this device.
+
     @var SE_DeviceInformation_t::lFDI
     Long form device identifier. See the Security section for full details.
 
@@ -10014,7 +10268,7 @@
     Contains the representation of time, constantly updated.
 
     @var SE_Time_t::_flags
-#define SE_localTime_exists (1 << 5)
+#define SE_localTime_exists (1 << 6)
 
     @var SE_Time_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10071,9 +10325,9 @@
     The Response object is the generic response data repository which is extended for specific function sets.
 
     @var SE_Response_t::_flags
-#define SE_status_exists (1 << 5)
+#define SE_status_exists (1 << 6)
 
-#define SE_createdDateTime_exists (1 << 6)
+#define SE_createdDateTime_exists (1 << 7)
 
     @var SE_Response_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10106,9 +10360,9 @@
     A response to a text message
 
     @var SE_TextResponse_t::_flags
-#define SE_status_exists (1 << 5)
+#define SE_status_exists (1 << 6)
 
-#define SE_createdDateTime_exists (1 << 6)
+#define SE_createdDateTime_exists (1 << 7)
 
     @var SE_TextResponse_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10165,7 +10419,7 @@
     A container for a ResponseList.
 
     @var SE_ResponseSet_t::_flags
-#define SE_ResponseListLink_exists (1 << 5)
+#define SE_ResponseListLink_exists (1 << 6)
 
     @var SE_ResponseSet_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10251,9 +10505,9 @@
     A response related to a price message.
 
     @var SE_PriceResponse_t::_flags
-#define SE_status_exists (1 << 5)
+#define SE_status_exists (1 << 6)
 
-#define SE_createdDateTime_exists (1 << 6)
+#define SE_createdDateTime_exists (1 << 7)
 
     @var SE_PriceResponse_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10307,11 +10561,11 @@
     A response to a Demand Response Load Control (EndDeviceControl) message.
 
     @var SE_DrResponse_t::_flags
-#define SE_status_exists (1 << 5)
+#define SE_status_exists (1 << 6)
 
-#define SE_createdDateTime_exists (1 << 6)
+#define SE_createdDateTime_exists (1 << 7)
 
-#define SE_AppliedTargetReduction_exists (1 << 7)
+#define SE_AppliedTargetReduction_exists (1 << 8)
 
     @var SE_DrResponse_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10352,9 +10606,9 @@
     A response to a FlowReservationResponse
 
     @var SE_FlowReservationResponseResponse_t::_flags
-#define SE_status_exists (1 << 5)
+#define SE_status_exists (1 << 6)
 
-#define SE_createdDateTime_exists (1 << 6)
+#define SE_createdDateTime_exists (1 << 7)
 
     @var SE_FlowReservationResponseResponse_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10387,9 +10641,9 @@
     A response to a DERControl
 
     @var SE_DERControlResponse_t::_flags
-#define SE_status_exists (1 << 5)
+#define SE_status_exists (1 << 6)
 
-#define SE_createdDateTime_exists (1 << 6)
+#define SE_createdDateTime_exists (1 << 7)
 
     @var SE_DERControlResponse_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10444,7 +10698,7 @@
     Holds the information related to a client subscription to receive updates to a resource automatically. The actual resources may be passed in the Notification by specifying a specific xsi:type for the Resource and passing the full representation.
 
     @var SE_Notification_t::_flags
-#define SE_Resource_exists (1 << 5)
+#define SE_Resource_exists (1 << 6)
 
     @var SE_Notification_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10540,7 +10794,7 @@
     Holds the information related to a client subscription to receive updates to a resource automatically.
 
     @var SE_Subscription_t::_flags
-#define SE_Condition_exists (1 << 5)
+#define SE_Condition_exists (1 << 6)
 
     @var SE_Subscription_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10845,23 +11099,23 @@
     Defines a collection of function set instances that are to be used by one or more devices as indicated by the EndDevice object(s) of the server.
 
     @var SE_FunctionSetAssignmentsBase_t::_flags
-#define SE_UsagePointListLink_exists (1 << 5)
+#define SE_UsagePointListLink_exists (1 << 6)
 
-#define SE_TariffProfileListLink_exists (1 << 6)
+#define SE_TariffProfileListLink_exists (1 << 7)
 
-#define SE_ResponseSetListLink_exists (1 << 7)
+#define SE_ResponseSetListLink_exists (1 << 8)
 
-#define SE_PrepaymentListLink_exists (1 << 8)
+#define SE_PrepaymentListLink_exists (1 << 9)
 
-#define SE_MessagingProgramListLink_exists (1 << 9)
+#define SE_MessagingProgramListLink_exists (1 << 10)
 
-#define SE_FileListLink_exists (1 << 10)
+#define SE_FileListLink_exists (1 << 11)
 
-#define SE_DERProgramListLink_exists (1 << 11)
+#define SE_DERProgramListLink_exists (1 << 12)
 
-#define SE_DemandResponseProgramListLink_exists (1 << 12)
+#define SE_DemandResponseProgramListLink_exists (1 << 13)
 
-#define SE_CustomerAccountListLink_exists (1 << 13)
+#define SE_CustomerAccountListLink_exists (1 << 14)
 
     @var SE_FunctionSetAssignmentsBase_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -10892,23 +11146,23 @@
     Provides an identifiable, subscribable collection of resources for a particular device to consume.
 
     @var SE_FunctionSetAssignments_t::_flags
-#define SE_UsagePointListLink_exists (1 << 5)
+#define SE_UsagePointListLink_exists (1 << 6)
 
-#define SE_TariffProfileListLink_exists (1 << 6)
+#define SE_TariffProfileListLink_exists (1 << 7)
 
-#define SE_ResponseSetListLink_exists (1 << 7)
+#define SE_ResponseSetListLink_exists (1 << 8)
 
-#define SE_PrepaymentListLink_exists (1 << 8)
+#define SE_PrepaymentListLink_exists (1 << 9)
 
-#define SE_MessagingProgramListLink_exists (1 << 9)
+#define SE_MessagingProgramListLink_exists (1 << 10)
 
-#define SE_FileListLink_exists (1 << 10)
+#define SE_FileListLink_exists (1 << 11)
 
-#define SE_DERProgramListLink_exists (1 << 11)
+#define SE_DERProgramListLink_exists (1 << 12)
 
-#define SE_DemandResponseProgramListLink_exists (1 << 12)
+#define SE_DemandResponseProgramListLink_exists (1 << 13)
 
-#define SE_CustomerAccountListLink_exists (1 << 13)
+#define SE_CustomerAccountListLink_exists (1 << 14)
 
     @var SE_FunctionSetAssignments_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -11204,11 +11458,9 @@
     The EndDevice providing the resources available within the DeviceCapabilities.
 
     @var SE_AbstractDevice_t::_flags
-#define SE_PowerStatusLink_exists (1 << 5)
+#define SE_PowerStatusLink_exists (1 << 6)
 
-#define SE_LogEventListLink_exists (1 << 6)
-
-#define SE_loadShedDeviceCategory_exists (1 << 7)
+#define SE_LogEventListLink_exists (1 << 7)
 
 #define SE_LoadShedAvailabilityListLink_exists (1 << 8)
 
@@ -11232,6 +11484,9 @@
 
     @var SE_AbstractDevice_t::ConfigurationLink
     @var SE_AbstractDevice_t::DERListLink
+    @var SE_AbstractDevice_t::deviceCategory
+    This field is for use in devices that can adjust energy usage (e.g., demand response, distributed energy resources).  For devices that do not respond to EndDeviceControls or DERControls (for instance, an ESI), this field should not have any bits set.
+
     @var SE_AbstractDevice_t::DeviceInformationLink
     @var SE_AbstractDevice_t::DeviceStatusLink
     @var SE_AbstractDevice_t::FileStatusLink
@@ -11240,9 +11495,6 @@
     Long form of device identifier. See the Security section for additional details.
 
     @var SE_AbstractDevice_t::LoadShedAvailabilityListLink
-    @var SE_AbstractDevice_t::loadShedDeviceCategory
-    This field is for use in devices that can shed load.  If you are a device that does not respond to EndDeviceControls (for instance, an ESI), this field should not have any bits set.
-
     @var SE_AbstractDevice_t::LogEventListLink
     @var SE_AbstractDevice_t::PowerStatusLink
     @var SE_AbstractDevice_t::sFDI
@@ -11264,11 +11516,9 @@
     The EndDevice providing the resources available within the DeviceCapabilities.
 
     @var SE_SelfDevice_t::_flags
-#define SE_PowerStatusLink_exists (1 << 5)
+#define SE_PowerStatusLink_exists (1 << 6)
 
-#define SE_LogEventListLink_exists (1 << 6)
-
-#define SE_loadShedDeviceCategory_exists (1 << 7)
+#define SE_LogEventListLink_exists (1 << 7)
 
 #define SE_LoadShedAvailabilityListLink_exists (1 << 8)
 
@@ -11292,6 +11542,9 @@
 
     @var SE_SelfDevice_t::ConfigurationLink
     @var SE_SelfDevice_t::DERListLink
+    @var SE_SelfDevice_t::deviceCategory
+    This field is for use in devices that can adjust energy usage (e.g., demand response, distributed energy resources).  For devices that do not respond to EndDeviceControls or DERControls (for instance, an ESI), this field should not have any bits set.
+
     @var SE_SelfDevice_t::DeviceInformationLink
     @var SE_SelfDevice_t::DeviceStatusLink
     @var SE_SelfDevice_t::FileStatusLink
@@ -11300,9 +11553,6 @@
     Long form of device identifier. See the Security section for additional details.
 
     @var SE_SelfDevice_t::LoadShedAvailabilityListLink
-    @var SE_SelfDevice_t::loadShedDeviceCategory
-    This field is for use in devices that can shed load.  If you are a device that does not respond to EndDeviceControls (for instance, an ESI), this field should not have any bits set.
-
     @var SE_SelfDevice_t::LogEventListLink
     @var SE_SelfDevice_t::PowerStatusLink
     @var SE_SelfDevice_t::sFDI
@@ -11489,11 +11739,9 @@
     Asset container that performs one or more end device functions. Contains information about individual devices in the network.
 
     @var SE_EndDevice_t::_flags
-#define SE_PowerStatusLink_exists (1 << 5)
+#define SE_PowerStatusLink_exists (1 << 6)
 
-#define SE_LogEventListLink_exists (1 << 6)
-
-#define SE_loadShedDeviceCategory_exists (1 << 7)
+#define SE_LogEventListLink_exists (1 << 7)
 
 #define SE_LoadShedAvailabilityListLink_exists (1 << 8)
 
@@ -11530,6 +11778,9 @@
 
     @var SE_EndDevice_t::ConfigurationLink
     @var SE_EndDevice_t::DERListLink
+    @var SE_EndDevice_t::deviceCategory
+    This field is for use in devices that can adjust energy usage (e.g., demand response, distributed energy resources).  For devices that do not respond to EndDeviceControls or DERControls (for instance, an ESI), this field should not have any bits set.
+
     @var SE_EndDevice_t::DeviceInformationLink
     @var SE_EndDevice_t::DeviceStatusLink
     @var SE_EndDevice_t::FileStatusLink
@@ -11538,9 +11789,6 @@
     Long form of device identifier. See the Security section for additional details.
 
     @var SE_EndDevice_t::LoadShedAvailabilityListLink
-    @var SE_EndDevice_t::loadShedDeviceCategory
-    This field is for use in devices that can shed load.  If you are a device that does not respond to EndDeviceControls (for instance, an ESI), this field should not have any bits set.
-
     @var SE_EndDevice_t::LogEventListLink
     @var SE_EndDevice_t::PowerStatusLink
     @var SE_EndDevice_t::sFDI
@@ -11552,6 +11800,9 @@
     @var SE_EndDevice_t::FlowReservationRequestListLink
     @var SE_EndDevice_t::FlowReservationResponseListLink
     @var SE_EndDevice_t::FunctionSetAssignmentsListLink
+    @var SE_EndDevice_t::postRate
+    POST rate, or how often EndDevice and subordinate resources should be POSTed, in seconds. A client MAY indicate a preferred postRate when POSTing EndDevice. A server MAY add or modify postRate to indicate its preferred posting rate.
+
     @var SE_EndDevice_t::RegistrationLink
     @var SE_EndDevice_t::SubscriptionListLink
 */
@@ -11632,11 +11883,11 @@
     Status of device
 
     @var SE_DeviceStatus_t::_flags
-#define SE_opTime_exists (1 << 5)
+#define SE_opTime_exists (1 << 6)
 
-#define SE_opState_exists (1 << 6)
+#define SE_opState_exists (1 << 7)
 
-#define SE_onCount_exists (1 << 7)
+#define SE_onCount_exists (1 << 8)
 
     @var SE_DeviceStatus_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.
@@ -11757,29 +12008,29 @@
     Returned by the URI provided by DNS-SD, to allow clients to find the URIs to the resources in which they are interested.
 
     @var SE_DeviceCapability_t::_flags
-#define SE_UsagePointListLink_exists (1 << 5)
+#define SE_UsagePointListLink_exists (1 << 6)
 
-#define SE_TariffProfileListLink_exists (1 << 6)
+#define SE_TariffProfileListLink_exists (1 << 7)
 
-#define SE_ResponseSetListLink_exists (1 << 7)
+#define SE_ResponseSetListLink_exists (1 << 8)
 
-#define SE_PrepaymentListLink_exists (1 << 8)
+#define SE_PrepaymentListLink_exists (1 << 9)
 
-#define SE_MessagingProgramListLink_exists (1 << 9)
+#define SE_MessagingProgramListLink_exists (1 << 10)
 
-#define SE_FileListLink_exists (1 << 10)
+#define SE_FileListLink_exists (1 << 11)
 
-#define SE_DERProgramListLink_exists (1 << 11)
+#define SE_DERProgramListLink_exists (1 << 12)
 
-#define SE_DemandResponseProgramListLink_exists (1 << 12)
+#define SE_DemandResponseProgramListLink_exists (1 << 13)
 
-#define SE_CustomerAccountListLink_exists (1 << 13)
+#define SE_CustomerAccountListLink_exists (1 << 14)
 
-#define SE_SelfDeviceLink_exists (1 << 14)
+#define SE_SelfDeviceLink_exists (1 << 15)
 
-#define SE_MirrorUsagePointListLink_exists (1 << 15)
+#define SE_MirrorUsagePointListLink_exists (1 << 16)
 
-#define SE_EndDeviceListLink_exists (1 << 16)
+#define SE_EndDeviceListLink_exists (1 << 17)
 
     @var SE_DeviceCapability_t::href
     A reference to the resource address (URI). Required in a response to a GET, ignored otherwise.

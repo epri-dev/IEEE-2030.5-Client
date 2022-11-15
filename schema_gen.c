@@ -12,6 +12,12 @@
 #include "schema.c"
 #include "list_util.c"
 
+
+
+/*
+说明：
+这里的代码将编译成一个工具。这个工具用来生成se_schema.c、se_types.h和se_types_doc.h这三个文件。这三个文件又是用来提供给主程序。
+*/
 typedef struct _Flag {
   struct _Flag *next;
   char *name;
@@ -23,15 +29,16 @@ struct _SchemaType;
 
 typedef struct {
   char *name, *type, *desc;
-  Flag *flag; int prim;  
+  Flag *flag;
+  int prim;
 } Field;
 
-enum ParticleType {PartElement, PartAll, PartChoice, PartSequence,
-		   PartGroup, PartAny};
+enum ParticleType {PartElement, PartAll, PartChoice, PartSequence, PartGroup, PartAny };
 
 typedef struct _Particle {
   struct _Particle *next;
-  int kind, min, max; char *ref;
+  int kind, min, max;
+  char *ref;
   union {
     struct {
       Field field;
@@ -59,7 +66,8 @@ enum TypeKind {AtomicType, ListType, UnionType, ComplexType};
 typedef struct _SchemaType {
   struct _SchemaType *next;
   char *name, *desc;
-  int kind; char *base;
+  int kind;
+  char *base;
   int length, minLength, maxLength;
   List *attr;
   Particle *part;
@@ -67,7 +75,8 @@ typedef struct _SchemaType {
   int index;
   unsigned restriction : 1;
   unsigned has_flags : 1;
-  List *flags, *pre; void *post;
+  List *flags, *pre;
+  void *post;
   int base_bits, bits;
   TableEntry *entries;
   List *deps;
@@ -89,20 +98,22 @@ typedef struct {
   unsigned elementFormDefault : 1;
 } SchemaDoc;
 
-const char * const xs_names[] =
-  {"xs:string", "xs:boolean", "xs:hexBinary", "xs:anyURI",
-   "xs:long", "xs:int", "xs:short", "xs:byte",
-   "xs:unsignedLong", "xs:unsignedInt", "xs:unsignedShort",
-   "xs:unsignedByte"};
+const char *const xs_names[] = {
+  "xs:string", "xs:boolean", "xs:hexBinary", "xs:anyURI",
+  "xs:long", "xs:int", "xs:short", "xs:byte",
+  "xs:unsignedLong", "xs:unsignedInt", "xs:unsignedShort",
+  "xs:unsignedByte"
+};
 
 FILE *file;
 
 int print (char *format, ...) {
-  va_list args; int n;
+  va_list args;
+  int n;
   va_start (args, format);
   n = vfprintf (file, format, args);
   va_end (args);
-  return n; 
+  return n;
 }
 
 #include "c_gen.c"
@@ -121,7 +132,9 @@ typedef struct _Graph {
 
 void add_edge (Graph *g, void *a, void *b) {
   Edge *e = malloc (sizeof (Edge));
-  e->next = g->edges; e->a = a; e->b = b;
+  e->next = g->edges;
+  e->a = a;
+  e->b = b;
   g->edges = e;
 }
 
@@ -131,8 +144,8 @@ void add_dep (Graph *g, SchemaType *t, char *name, SchemaType *head) {
 }
 
 void add_attribute_dep (Graph *graph, SchemaType *t,
-			List *list, SchemaType *head) {
-  List *l; 
+                        List *list, SchemaType *head) {
+  List *l;
   foreach (l, list) {
     AttrDecl *a = l->data;
     add_dep (graph, t, a->field.type, head);
@@ -146,19 +159,20 @@ List *add_unique (List *head, char *name) {
 }
 
 void add_particle_dep (Graph *graph, SchemaType *t,
-		       Particle *part, SchemaType *root) {
+                       Particle *part, SchemaType *root) {
   Particle *p;
   foreach (p, part) {
     if (p->kind == PartElement && p->field.type) {
       add_dep (graph, t, p->field.type, root);
-      t->deps = add_unique (t->deps, p->field.type); 
+      t->deps = add_unique (t->deps, p->field.type);
     } else add_particle_dep (graph, t, p->child, root);
-  }			   
+  }
 }
 
 // build type dependency graph
 void build_graph (Graph *graph, SchemaType *head) {
-  SchemaType *t; Edge *ed;
+  SchemaType *t;
+  Edge *ed;
   memset (graph, 0, sizeof (Graph));
   foreach (t, head) {
     // add type to the list of potential start nodes
@@ -169,7 +183,7 @@ void build_graph (Graph *graph, SchemaType *head) {
   }
   // remove base types
   foreach (ed, graph->edges)
-    graph->start = list_delete (graph->start, ed->b);
+  graph->start = list_delete (graph->start, ed->b);
 }
 
 List *top_sort (Graph *graph) {
@@ -177,19 +191,28 @@ List *top_sort (Graph *graph) {
   while (s) {
     Edge *e = graph->edges, *prev = NULL;
     void *n = s->data;
-    t = s; s = s->next;
+    t = s;
+    s = s->next;
     link_insert (l, t);
     while (e) {
       if (e->a == n) {
-	Edge *f = e; void *m = e->b;
-	int in_use = 0; e = e->next;
-	if (prev) prev->next = e;
-	else graph->edges = e;
-	free (f);
-	foreach (f, graph->edges)
-	  if (f->b == m) { in_use = 1; break; }
-	if (!in_use) s = list_insert (s, m); 
-      } else { prev = e; e = e->next; }
+        Edge *f = e;
+        void *m = e->b;
+        int in_use = 0;
+        e = e->next;
+        if (prev) prev->next = e;
+        else graph->edges = e;
+        free (f);
+        foreach (f, graph->edges)
+        if (f->b == m) {
+          in_use = 1;
+          break;
+        }
+        if (!in_use) s = list_insert (s, m);
+      } else {
+        prev = e;
+        e = e->next;
+      }
     }
   }
   return l;
@@ -205,16 +228,20 @@ void add_namespace (SchemaDoc *doc, char *ns, char *prefix) {
 
 int get_int_value (Element *e, char *name, int ret) {
   Element *f = find_element (e, name);
-  if (f) { char *value = xml_attr (f, "value");
+  if (f) {
+    char *value = xml_attr (f, "value");
     if (value) return atoi (value);
-  } return ret;
+  }
+  return ret;
 }
 
-char *get_documentation (Element *e) { Element *f;
+char *get_documentation (Element *e) {
+  Element *f;
   if (f = find_element (e, "documentation")) {
     Text *t = (Text *)f->first;
     return t->data;
-  } return NULL;
+  }
+  return NULL;
 }
 
 SchemaType *simple_type (SchemaDoc *doc, Element *e) {
@@ -240,18 +267,21 @@ SchemaType *simple_type (SchemaDoc *doc, Element *e) {
     t->base = xml_attr (f, "memberTypes");
     foreach (g, (Element *)e->first) {
       if (streq (g->name, "simpleType")) {
-	u = simple_type (doc, g);
-	u->next = t->child; t->child = u;
+        u = simple_type (doc, g);
+        u->next = t->child;
+        t->child = u;
       }
     }
   }
-  t->next = doc->types; doc->types = t;
+  t->next = doc->types;
+  doc->types = t;
   return t;
 }
 
 List *type_attr (SchemaType *t, Element *e) {
-  Element *f; List *head = NULL;
-  foreach (f, (Element *)e->first) {   
+  Element *f;
+  List *head = NULL;
+  foreach (f, (Element *)e->first) {
     if (streq (f->name, "attribute")) {
       AttrDecl *a = type_alloc (AttrDecl);
       char *value;
@@ -259,7 +289,7 @@ List *type_attr (SchemaType *t, Element *e) {
       a->field.type = xml_attr (f, "type");
       a->field.desc = get_documentation (f);
       value = xml_attr (f, "use");
-      a->optional = value? streq (value, "optional") : 1;
+      a->optional = value ? streq (value, "optional") : 1;
       head = list_insert (head, a);
     } else if (streq (f->name, "attributeGroup")) {
     }
@@ -268,13 +298,15 @@ List *type_attr (SchemaType *t, Element *e) {
 
 void part_attr (Particle *p, Element *e) {
   char *value = xml_attr (e, "minOccurs");
-  p->min = value? atoi (value) : 1;
+  p->min = value ? atoi (value) : 1;
   value = xml_attr (e, "maxOccurs");
-  p->max = value? (streq (value, "unbounded")? -1 : atoi (value)) : 1;
+  p->max = value ? (streq (value, "unbounded") ? -1 : atoi (value)) : 1;
 }
 
 SchemaType *complex_type (SchemaDoc *doc, Element *e) {
-  SchemaType *t; Element *f, *g; Particle *p, *last = NULL;
+  SchemaType *t;
+  Element *f, *g;
+  Particle *p, *last = NULL;
   if (f = find_element (e, "simpleContent")) {
     if (find_element (f, "restriction")) {
       t = simple_type (doc, f);
@@ -289,12 +321,12 @@ SchemaType *complex_type (SchemaDoc *doc, Element *e) {
   } else {
     t = type_alloc (SchemaType);
     t->desc = get_documentation (e);
-    t->name = xml_attr (e, "name");    
+    t->name = xml_attr (e, "name");
     t->kind = ComplexType;
     if ((f = find_element (e, "simpleContent"))
-	|| (f = find_element (e, "complexContent"))) {
+        || (f = find_element (e, "complexContent"))) {
       if (g = find_element (f, "restriction"))
-	t->restriction = 1;
+        t->restriction = 1;
       else if (g = find_element (f, "extension"));
       t->base = xml_attr (g, "base");
     } else g = e;
@@ -307,25 +339,27 @@ SchemaType *complex_type (SchemaDoc *doc, Element *e) {
       p->kind = PartSequence;
       part_attr (p, f);
       foreach (e, f->first) {
-	if (streq (e->name, "element")) {
-	  Particle *q = type_alloc (Particle);
-	  q->kind = PartElement;
-	  q->field.name = xml_attr (e, "name");
-	  q->field.type = xml_attr (e, "type");
-	  q->field.desc = get_documentation (e);
-	  part_attr (q, e);
-	  if (g = find_element (e, "simpleType")) {
-	    q->st = simple_type (doc, g);
-	  } else if (g = find_element (e, "complexType")) {
-	    q->st = complex_type (doc, g);
-	  }
-	  if (last) last->next = q;
-	  else p->child = q; last = q;
-	}
+        if (streq (e->name, "element")) {
+          Particle *q = type_alloc (Particle);
+          q->kind = PartElement;
+          q->field.name = xml_attr (e, "name");
+          q->field.type = xml_attr (e, "type");
+          q->field.desc = get_documentation (e);
+          part_attr (q, e);
+          if (g = find_element (e, "simpleType")) {
+            q->st = simple_type (doc, g);
+          } else if (g = find_element (e, "complexType")) {
+            q->st = complex_type (doc, g);
+          }
+          if (last) last->next = q;
+          else p->child = q;
+          last = q;
+        }
       }
     }
   }
-  t->next = doc->types; doc->types = t;
+  t->next = doc->types;
+  doc->types = t;
   return t;
 }
 
@@ -337,7 +371,9 @@ void element_decl (SchemaDoc *doc, Element *e) {
 }
 
 void process_schema (SchemaDoc *doc, Element *root) {
-  Element *e; char *prefix; Attribute *a;
+  Element *e;
+  char *prefix;
+  Attribute *a;
   foreach (a, root->attr) {
     if (streq (a->name, "attributeFormDefault"))
       doc->attributeFormDefault = streq (a->value, "qualified");
@@ -347,7 +383,10 @@ void process_schema (SchemaDoc *doc, Element *root) {
       doc->targetNamespace = a->value;
     else if (strncmp (a->name, "xmlns", 5) == 0) {
       char *prefix = strchr (a->name, ':');
-      if (prefix) { *prefix = '\0'; prefix++; }
+      if (prefix) {
+        *prefix = '\0';
+        prefix++;
+      }
       add_namespace (doc, a->value, prefix);
     }
   }
@@ -367,26 +406,42 @@ void process_schema (SchemaDoc *doc, Element *root) {
   }
 }
 
-int main () {
-  Graph graph; List *sorted;
+//用来生成几个“工具”文件的一个工具代码。
+//在执行这个功能的时候，如果出现 segmentation fault (core dumped) 错误。
+//如果使用debug方式单步执行各个动作，是可以正常执行的。下次如果直接运行失败的情况下，就试试这种方式。
+int main () { 
+  Graph graph;
+  List *sorted;
   SchemaDoc doc = {0};
-  Named *se_list = load_list ("se_list.txt"); 
+
+  printf("schema_gen start...\n");  //在没有加这条printf之前，执行该程序会报告错误：segmentation fault (core dumped) 错误。可能是编译的过程错误导致的。
+  
+  Named *se_list = load_list ("se_list.txt");
   Element *root = xml_read ("sep.xsd");
   process_schema (&doc, root);
   build_graph (&graph, doc.types);
   sorted = top_sort (&graph);
   compute_flags (sorted, doc.types);
+
   file = fopen ("se_types.h", "wb+");
   print_types (sorted, doc.types);
   print_symbols (doc.elements);
   fclose (file);
+
   file = fopen ("se_types_doc.h", "wb+");
   print_types_doc (sorted, doc.types);
   fclose (file);
+
   file = fopen ("se_schema.c", "wb+");
-  print_schema (sorted, &doc); fclose (file);
-  file = fopen ("se_list.c", "wb+");  
-  print_list_info (se_list, doc.types); fclose (file);
+  print_schema (sorted, &doc);
+  fclose (file);
+
+  file = fopen ("se_list.c", "wb+");
+  print_list_info (se_list, doc.types);
+  fclose (file);
+
+  printf("schema_gen finished\n");
+  
   // java_gen (&doc);
   return 0;
 }

@@ -1,11 +1,13 @@
 Client API
 ==========
 
+整个工程中的重要API.
+
 The IEEE 2030.5 client API provides a means for developers to integrate IEEE
 2030.5 functionality into their applications. At the base is a portable
 platform layer that includes support for files, TCP connections, UDP ports,
-timers, and events. The event polling mechanism provides a portable and unified
-way of processing operating system events that is both responsive
+timers, and events. The event polling mechanism provides a portable and unified（adj. 一致的，统一的；联合的，一体的）
+way of processing operating system events that is both responsive （响应式）
 (non-blocking) and balanced (includes round robin scheduling).
 
 After platform initialization and interface selection are performed, the client
@@ -65,11 +67,14 @@ order to distinguish timer events from other event types.
 
 ### Networking
 
+网络层提供了IEEE 2030.5功能的基础。Service discovery由交换UDP包来实现，用以构成IEEE 2030.5 的核心的协议的HTTP RESTful操作是在TCP连接的顶层上实现的。
 The network layer provides a base for the IEEE 2030.5 functionality. Service
 discovery is performed by exchanging UDP packets, the HTTP RESTful operations
 that form the core of the IEEE 2030.5 protocol are performed on top of a TCP
 connection. In addition to providing this base, the network layer gives the
-developer a means of performing network operations portably and efficiently.
+developer a means of performing network operations portably and efficiently. 
+
+可移植的以及高效的。
 
 Security/TLS Initialization
 ---------------------------
@@ -83,11 +88,13 @@ SFDI).
 Schema
 ------
 
-IEEE 2030.5 resources are defined by an XML schema (sep.xsd). This schema is
-processed to extract C type definitions (se_types.h) and a table (se_schema.c)
+由sep.xsd文件来构建出c文件。
+
+IEEE 2030.5 resources are defined by an XML schema (sep.xsd文件，在这个目录下). This schema is
+processed to extract（n. 选段，引文；提取物，汁） C type definitions (se_types.h) and a table (se_schema.c)
 which can be used to transform 2030.5 resources from their XML or EXI
-representation into a C object representation. The process can also be
-reversed, transforming a C object into an XML or EXI representation. The
+representation into a C object representation. 将2030.5的以XML或者EXI形式表示的资源数据转换成C对象表示。The process can also be
+reversed, transforming a C object into an XML or EXI representation 这个过程当然是可以互反的，即将C数据转换成XML或者EXI表示. The
 @ref schema module provides basic types for representing schemas in table form,
 and methods for querying the schema table and performing operations on schema
 based objects.
@@ -113,6 +120,9 @@ Connections
 The client API provides three types of connections that build upon each other
 to provide higher level functionality.
 
+
+三层网络连接关系
+
 The @ref connection module extends the platform `TcpPort` to provide either a
 TCP or a TCP+TLS connection with a server.  The @ref http_connection module
 extends the @ref connection module to provide support for HTTP client and
@@ -129,7 +139,7 @@ Service Discovery
 
 The @ref dnssd_client module provide functions for DNS service discovery
 (DNS-SD). The @ref se_discover module extends the @ref dnssd_client module to
-provide support for IEEE 2030.5 subtype queries and connecting with IEEE 2030.5
+provide support for IEEE 2030.5 subtype（子类型？？） queries and connecting with IEEE 2030.5
 service providers.
 
 -   @ref dnssd_client

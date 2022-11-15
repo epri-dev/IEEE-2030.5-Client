@@ -7,15 +7,25 @@
 
 #ifndef HEADER_ONLY
 
+
+//读取文件，将读取到的内容刚到一个buffer中然后返回buffer。
+
 char *file_read (const char *name, int *length) {
   FILE *f = fopen (name, "rb");
-  char *buffer; int end;
-  if (!f) { perror (name); exit (0); }
+  char *buffer;
+  int end;
+  if (!f) {
+    perror (name);
+    exit (0);
+  }
   fseek (f, 0, SEEK_END);
   end = ftell (f);
-  buffer = malloc (end+1);
+  buffer = malloc (end + 1);
   fseek (f, 0, SEEK_SET);
-  fread (buffer, end, 1, f);
+  int n = fread (buffer, end, 1, f);
+  if(n <= 0){
+    printf("failed to read from file\n");
+  }
   fclose (f);
   buffer[end] = '\0';
   if (length) *length = end;
@@ -23,29 +33,35 @@ char *file_read (const char *name, int *length) {
 }
 
 char *break_line (char *buffer) {
-  static char *line; char *start, *end;
+  static char *line;
+  char *start, *end;
   if (buffer) line = buffer;
   start = line;
   end = strchr (line, '\n');
   if (end) {
-    line = end+1;
-    if (*(end-1) == '\r') end--;
-    *end = '\0'; return start;
-  } line = start + strlen (start);
+    line = end + 1;
+    if (*(end - 1) == '\r') end--;
+    *end = '\0';
+    return start;
+  }
+  line = start + strlen (start);
   return line == start ? NULL : start;
 }
 
-int empty_line (char *s) { int c;
+int empty_line (char *s) {
+  int c;
   while ((c = *s++) != '\0')
     if (!(c == ' ' || c == '\t')) return 0;
   return 1;
 }
 
 void process_buffer (char *buffer, void (*func) (int n, char *)) {
-  char *line = break_line (buffer); int n = 0;
+  char *line = break_line (buffer);
+  int n = 0;
   while (line) {
     if (!empty_line (line)) func (n, line);
-    n++; line = break_line (NULL);
+    n++;
+    line = break_line (NULL);
   }
 }
 

@@ -2,6 +2,7 @@
 // author: Mark Slicker <mark.slicker@gmail.com>
 
 #define CIPHER_LIST "ECDHE-ECDSA-AES128-CCM8"
+#include "debug_log.h"
 
 /** @addtogroup security
     @{
@@ -16,6 +17,7 @@ typedef int (*VerifyFunc) (void *context, uint8_t *cert, int length);
     'path'.pem, where 'path' is the first function parameter.
     @param path is used to identify the device certificate and private key
     files, 'path'.x509 and 'path'.pem respectively.
+    
     @param verify is called as extra step to verify the client TLS certificate.
     Certificates are in any case are verified against their CA certificate
     chain, this extra step this can be used to impliment a filter by only
@@ -52,11 +54,13 @@ void load_cert_dir (const char *path);
 #include <openssl/x509v3.h>
 
 void print_ssl_error (char *func) {
-  char buffer[120]; int err;
+  char buffer[120];
+  int err;
   while (err = ERR_get_error()) {
     ERR_error_string (err, buffer);
-    printf ("%s: %d, %s\n", func, err, buffer); fflush (stdout);
-  } 
+    LOG_E ("%s: %d, %s\n", func, err, buffer);
+    fflush (stdout);
+  }
 }
 
 SSL_CTX *ssl_ctx = NULL;
@@ -67,7 +71,7 @@ int bio_read (BIO *bio, char *buffer, int size) {
   // printf ("ssl_read %d, %d\n", size, n); fflush (stdout);
   BIO_clear_retry_flags (bio);
   if (n == -1 && event_pending (p))
-      BIO_set_retry_read (bio);
+    BIO_set_retry_read (bio);
   return n;
 }
 
@@ -96,50 +100,184 @@ void init_bio () {
   BIO_meth_set_ctrl (ssl_bio, bio_ctrl);
 }
 
+
+//打印每一个证书的序列号，以辅助调试。
+void print_cert_serial_num(X509 *cert) {
+
+  ASN1_INTEGER *asn1_serial = NULL;
+  BIO               *outbio = NULL;
+
+  /* ---------------------------------------------------------- *
+   * These function calls initialize openssl for correct work.  *
+   * ---------------------------------------------------------- */
+  OpenSSL_add_all_algorithms();
+  ERR_load_BIO_strings();
+  ERR_load_crypto_strings();
+
+  /* ---------------------------------------------------------- *
+   * Create the Input/Output BIO's.                             *
+   * ---------------------------------------------------------- */
+  outbio  = BIO_new_fp(stdout, BIO_NOCLOSE);
+
+  /* ---------------------------------------------------------- *
+   * Extract the certificate's serial number.                   *
+   * ---------------------------------------------------------- */
+   asn1_serial = X509_get_serialNumber(cert);
+   if (asn1_serial == NULL)
+     printf("Error getting serial number from certificate");
+
+  /* ---------------------------------------------------------- *
+   * Print the serial number value, openssl x509 -serial style  *
+   * ---------------------------------------------------------- */
+  //BIO_puts(outbio,"serial (openssl x509 -serial style): ");
+  i2a_ASN1_INTEGER(outbio, asn1_serial);
+  BIO_puts(outbio,"\n");
+  
+  #if 0 //下面这部分仅仅是中间加入了冒号，所以不用打了
+  /* ---------------------------------------------------------- *
+   * Print the serial number value, openssl x509 -text style    *
+   * ---------------------------------------------------------- */
+  if (asn1_serial->length <= (int)sizeof(long)) {
+    l=ASN1_INTEGER_get(asn1_serial);
+    if (asn1_serial->type == V_ASN1_NEG_INTEGER) {
+      l= -l;
+      neg="-";
+    }
+    else neg="";
+
+    if (BIO_printf(outbio," %s%lu (%s0x%lx)\n",neg,l,neg,l) <= 0)
+      BIO_printf(outbio, "Error during printing the serial.\n");
+  } else {
+    neg=(asn1_serial->type == V_ASN1_NEG_INTEGER)?" (Negative)":"";
+    //if (BIO_printf(outbio,"\n%12s%s","",neg) <= 0)
+    if (BIO_printf(outbio,"serial (openssl x509 -text   style): %s",neg) <= 0)
+      BIO_printf(outbio, "Error during printing the serial.\n");
+
+    for (i=0; i<asn1_serial->length; i++) {
+     if (BIO_printf(outbio,"%02x%c",asn1_serial->data[i],((i+1 == asn1_serial->length)?'\n':':')) <= 0)
+      BIO_printf(outbio, "Error during printing the serial.\n");
+    }
+  }
+  #endif
+  
+  BIO_free_all(outbio);
+  
+}
+
+
+
 typedef int (*VerifyFunc) (void *ctx, uint8_t *cert, int length);
 
 VerifyFunc _verify_peer = NULL;
 
 /* verify the presence of critical and non-critical extensions required by
-   sections 8.11.6, 8.11.8, and 8.11.10 */
+   sections 8.11.6, 8.11.8, and 8.11.10 (这里章节目录指的是2013版本的IEEE)
+这个函数就是用来验证一个证书是否符合IEEE2030.5的规格要求
+*/
 int check_cert (int status, X509 *cert) {
+  //ASN1_INTEGER *ser_num = X509_get_serialNumber(cert);
+  print_cert_serial_num(cert);
   int count = X509_get_ext_count (cert), i;
+  LOG_I("check_cert,count:%d\n",count);
   for (i = 0; i < count; i++) {
     X509_EXTENSION *ext = X509_get_ext (cert, i);
     ASN1_OBJECT *obj = X509_EXTENSION_get_object (ext);
     int critical = X509_EXTENSION_get_critical (ext);
     unsigned nid = OBJ_obj2nid (obj);
+    LOG_I("  check_cert:critical:%d,nid:%d\n",critical,nid);
     switch (nid) {
-    case NID_policy_mappings:
-    case NID_name_constraints: return 0;
-    case NID_subject_alt_name:
-      if (X509_check_ca (cert)) return 0;
-    case NID_key_usage:
-    case NID_basic_constraints:
-    case NID_certificate_policies:
-      if (!critical) return 0; break;
-    case NID_authority_key_identifier:
-    case NID_subject_key_identifier:
-    default: if (critical) return 0;
+    case NID_policy_mappings: //747.Policy-mapping is not supported, and certificates containing policy mappings MUST be rejected.In IEEE 2030.5 2018 6.11.10.
+    case NID_name_constraints://666.Name-constraints are not supported and certificates containing name-constraints MUST be rejected.
+    {
+      LOG_W("  check_cert:NID_policy_mappings or NID_name_constraints,reject\n");
+      return 0;
     }
-  } return status;
+    case NID_subject_alt_name:  //85
+      LOG_I("  check_cert:NID_subject_alt_name case\n");
+      if (X509_check_ca (cert)) {
+        LOG_W("  check_cert:NID_subject_alt_name,reject\n");
+        return 0;
+      }
+    case NID_key_usage: //83
+    case NID_basic_constraints://87
+    case NID_certificate_policies:  //89
+      if (!critical){ 
+        LOG_W("  check_cert:NID_key_usage or NID_basic_constraints or NID_certificate_policies,reject\n");
+        return 0;
+      }
+      break;
+    case NID_authority_key_identifier:  //90
+    case NID_subject_key_identifier:  //82
+    default:
+      if (critical) {
+        LOG_W("  check_cert:NID_authority_key_identifier or NID_subject_key_identifier,reject\n");
+        return 0;
+      }
+    }
+  }
+  return status;
 }
 
+
+/*检查对方的证书链中的每一个证书是否符合客户端这边的要求（根据IEEE对证书的规格的规定）*/
+int verify_chain(int status,X509_STORE_CTX* ctx)
+{
+    int i = 0;
+    /*X509_STORE_CTX_get1_chain() returns a complete validate chain if a previous verification is successful. 
+      Otherwise the returned chain may be incomplete or invalid. */    
+    STACK_OF(X509) *certs = X509_STORE_CTX_get1_chain(ctx);
+    for (i = 0; i < sk_X509_num(certs); i++) {
+        X509* uCert = sk_X509_value(certs, i);
+        print_cert_serial_num(uCert);
+        if (check_cert(status,uCert) == 0){
+          LOG_W("verify_chain : failed,return 0\n");
+          status = 0;
+          break;
+        }
+    }
+    
+    sk_X509_pop_free(certs, X509_free);
+
+    return status;
+}
+
+
+/*原Demo代码是仅仅检查了证书链中的第一个证书，而实际测试条件是，要求检查证书链上的全部证书。
+这部分代码经过了陈立飞的修改，以通过测试case中的COMM004E/F两个case。*/
 int verify_peer (int status, X509_STORE_CTX *ctx) {
-  SSL *ssl = X509_STORE_CTX_get_ex_data
-    (ctx, SSL_get_ex_data_X509_STORE_CTX_idx ());
+  SSL *ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx ());
   void *user = SSL_get_app_data (ssl);
+  
+  /*
+  X509_STORE_CTX_get0_cert() retrieves an internal pointer to the certificate being verified by the ctx.
+  X509_STORE_CTX_get_current_cert() returns the certificate in ctx which caused the error or NULL if no certificate is relevant.
+  */
   X509 *x509 = X509_STORE_CTX_get0_cert (ctx), // peer cert
-    *curr = X509_STORE_CTX_get_current_cert (ctx);
-  status = check_cert (status, x509);
-  if (x509 != curr) return status; // only check the peer cert
+        *curr = X509_STORE_CTX_get_current_cert (ctx);
+  
+  //status = check_cert (status, x509); //删除原代码
+  
+  /*陈立飞加入的代码*/
+  status = verify_chain(status,ctx);
+  /*结束*/
+  if (x509 != curr) { //其实不知道这个什么意思，为什么要返回。
+    LOG_W("verify_peer : x509 != curr,return status %d\n",status);
+    return status; // only check the peer cert 意思就是仅仅检查对端的证书？
+  }
+  
+  /*那么下面是不是就是意味着对整个证书链执行检查？？*/
   if (x509 && _verify_peer) {
+    /*i2d_X509() encodes the structure pointed to by x into DER format. 
+      If out is not NULL is writes the DER encoded data to the buffer at *out, and increments it to point after the data just written. 
+      If the return value is negative an error occurred, otherwise it returns the length of the encoded data.*/
     int length = i2d_X509 (x509, NULL);
-    uint8_t *cert, *p = malloc (sha256_size (length)); cert = p;
+    uint8_t *cert, *p = malloc (sha256_size (length));
+    cert = p;
     i2d_X509 (x509, &p);
     if (!_verify_peer (user, cert, length)) status = 0;
     free (cert);
-  } return status;
+  }
+  return status;
 }
 
 const uint8_t *ssl_session_id (void *ssl) {
@@ -153,9 +291,10 @@ int ssl_load_cert (const char *path) {
 
 void load_cert (const char *path) {
   if (ssl_load_cert (path) != 1) {
-    printf ("load_cert: error opening certificate file: %s\n", path);
+    LOG_E ("load_cert: error opening certificate file: %s\n", path);
     exit (0);
-  } printf ("loaded certificate \"%s\"\n", path);
+  }
+  printf ("loaded certificate \"%s\"\n", path);
 }
 
 void _load_cert (const char *path, void *ctx) {
@@ -167,32 +306,76 @@ void load_cert_dir (const char *path) {
 }
 
 int _tls_initialized = 0;
+/*
+Initialize the TLS library.
+Initialize the TLS library calling the appropriate functions. 
+Load the device certificate 'path'.x509 and use the device private key 'path'.pem, where 'path' is the first function parameter.
 
+Parameters
+<path>: is used to identify the device certificate and private key files, 'path'.x509 and 'path'.pem respectively.
+<verify>: is called as extra step to verify the client TLS certificate. 
+Certificates are in any case are verified against their CA certificate chain, 
+this extra step this can be used to impliment a filter by only accepting clients with the right credentials (SFDI, LFDI), 
+this parameter can be NULL to indicate not to take this step.
+
+这个注释看起来有问题，跟代码不一样。可能是老的注释，代码修改了注释没有改。
+
+*/
 void tls_init (const char *path, VerifyFunc verify) {
-  int ret, type; char *private = strdup (path), *ext;
+  int ret, type;
+  char *private = strdup (path), *ext;
   if ((ssl_ctx = SSL_CTX_new (TLS_method ())) == NULL) {
-    print_ssl_error ("tls_init"); exit (0);
+    print_ssl_error ("tls_init");
+    exit (0);
   }
-  init_bio (); _verify_peer = verify;
-  SSL_CTX_set_verify (ssl_ctx, SSL_VERIFY_PEER |
-		      SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_peer);
+  init_bio ();
+  _verify_peer = verify;
+
+  /*陈立飞加入的代码*/
+  SSL_CTX_set_verify_depth(ssl_ctx,10); //实际上最大可能只有4层。如果不加入这一段，将导致COMM004不能通过。
+  /*陈立飞加入的代码结束*/
+  
+  /* SSL_CTX_set_verify() sets the verification flags for ctx to be mode and specifies the verify_callback function to be used.
+  The verify_callback function is used to control the behaviour when the SSL_VERIFY_PEER flag is set. */
+  SSL_CTX_set_verify (ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_peer);
   if (!SSL_CTX_set_cipher_list (ssl_ctx, CIPHER_LIST)) {
-    printf ("tls_init: error selecting %s cipher list\n", CIPHER_LIST);
+    LOG_E ("tls_init: error selecting %s cipher list\n", CIPHER_LIST);
     exit (0);
   }
   if (ext = strstr (private, ".x509")) {
-    strcpy (ext, ".pem"); type = SSL_FILETYPE_ASN1;
+    strcpy (ext, ".pem"); //如果传入的是一个 .x509 文件，那么就将后缀替换成 .pem 
+    type = SSL_FILETYPE_ASN1;
   } else type = SSL_FILETYPE_PEM;
-  if (SSL_CTX_use_certificate_file (ssl_ctx, path, type) != 1) {
-    printf ("tls_init: error opening certificate file: %s\n", path);
+  
+  //导入设备自己的证书文件
+  if ( SSL_CTX_use_certificate_file (ssl_ctx, path, type) != 1 ) {
+    LOG_E ("tls_init: error opening certificate file: %s\n", path);
+    print_ssl_error ("SSL_CTX_use_certificate_file");
     exit (0);
   }
+  LOG_I("  tls_init : loaded device certificate file,%s\n",path);
+  
+  //导入设备的私钥文件。要求将 private key 直接拷贝到前面的证书文件的后面。 这样这个函数也能够读取进来。
+  //这里我们强制使用.pem格式的文件。
+  //这段代码是陈立飞加入的。要求一个独立的私钥文件。文件名是前面的证书文件加入“_key”。其实也可以将私钥粘贴复制到前面的证书文件中，然后这里也用同一个文件。
+  char *key_path = malloc(strlen(private) + 4 + 2 );  //名字中加入_key后缀
+  strcpy(key_path,private);
+  if( ext = strstr(key_path,".pem")){
+    strcpy(ext,"_key.pem");
+  }
+  LOG_I("  tls_init : private key file path:%s\n",key_path);
+  //陈立飞加入的代码结束
+  
   if ((ret = SSL_CTX_use_PrivateKey_file
-       (ssl_ctx, private, SSL_FILETYPE_PEM)) != 1) {
-    printf ("tls_init: error (%d) opening private key file: %s\n",
-	    ret, private);
+             (ssl_ctx, key_path, SSL_FILETYPE_PEM)) != 1) {
+    LOG_E ("tls_init: error (%d) opening private key file: %s\n",ret, key_path);
     exit (0);
-  } free (private); _tls_initialized = 1;
+  }
+             
+  free(key_path);
+             
+  free (private);
+  _tls_initialized = 1;
 }
 
 void *ssl_new (void *conn) {
@@ -204,7 +387,9 @@ void *ssl_new (void *conn) {
     SSL_set_bio (ssl, bio, bio);
     SSL_set_app_data (ssl, conn);
     return ssl;
-  } printf ("ssl_new: error, TLS library not initialized\n"); exit (0);
+  }
+  printf ("ssl_new: error, TLS library not initialized\n");
+  exit (0);
 }
 
 #define ssl_free(ssl) SSL_free (ssl)
@@ -215,20 +400,25 @@ int ssl_ret, ssl_err;
 #define ssl_pending() \
   (ssl_err == SSL_ERROR_WANT_READ || ssl_err == SSL_ERROR_WANT_WRITE)
 
-int ssl_handshake (void *ssl) { ERR_clear_error ();
+int ssl_handshake (void *ssl) {
+  ERR_clear_error ();
   if ((ssl_ret = SSL_do_handshake (ssl)) == 1) return 1;
   ssl_err = SSL_get_error (ssl, ssl_ret);
   return 0;
 }
 
-int ssl_read (void *ssl, char *buffer, int size) { int ret;
-  ERR_clear_error (); ret = SSL_read (ssl, buffer, size);
-  if (ret <= 0) ssl_err = SSL_get_error (ssl, ret); 
+int ssl_read (void *ssl, char *buffer, int size) {
+  int ret;
+  ERR_clear_error ();
+  ret = SSL_read (ssl, buffer, size);
+  if (ret <= 0) ssl_err = SSL_get_error (ssl, ret);
   return ret;
 }
 
-int ssl_write (void *ssl, const char *data, int length) { int ret;
-  ERR_clear_error (); ret = SSL_write (ssl, data, length);
+int ssl_write (void *ssl, const char *data, int length) {
+  int ret;
+  ERR_clear_error ();
+  ret = SSL_write (ssl, data, length);
   if (ret <= 0) ssl_err = SSL_get_error (ssl, ret);
   return ret;
 }

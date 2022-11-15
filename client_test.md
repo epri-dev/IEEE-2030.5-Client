@@ -1,8 +1,9 @@
 Client Test Application
 =======================
-
+基于之前文档中的API(在client.md文档中有说明)构建的一个测试应用，用于展示于SunSpec 测试过程的顺应性问题。
 The purpose of the client_test application is demonstrate usage of the EPRI
 2030.5 client API and demonstrate compliance with the SunSpec test procedure.
+
 
 Usage
 -----
@@ -10,30 +11,36 @@ Usage
 The `client_test` application is a command line tool with the following
 arguments:
 
-    client_test interface [device_cert ca_certs..]
-                           <subtype[:1][/path] | URI> [commands]
+    client_test interface [device_cert ca_certs..] <subtype[:1][/path] | URI> [commands]
 
 The `interface` argument is the the name of the network interface,
 running the `client_test` application with no arguments will list the
 available network interfaces.
 
-The `device_cert` argument names the device certificate file. If the
-certificate ends in `.x509` then the `client_test` application looks for the
-corresponding private key in similarly named file with the `.pem` extension. If
-certificate end in `.pem`, then both the certificate and private key are loaded
-from the same file.
+有关证书
 
-The `ca_certs` argument is a list of CA certificates or certificate
-directories to be loaded. If a directory is specified, then all the
-certificates within the directory are loaded. If no certificates or
-directories then the certificates from `./certs` in the local directory
-are loaded.
+The `device_cert` argument names the device certificate file. 
+If the certificate ends in `.x509` then the `client_test` application looks for the corresponding private key in similarly named file with the `.pem` extension. 
 
-The `<subtype[:1][/path] | URI>` argument delimits the list of certificates and
-specifies either to perform xmDNS service discovery, or to retrieve the
-document at the specified URI.
+如果证书文件是以.x509结尾的，那么 client_test 程序将寻找（可能是在同目录下寻找）对应的私钥文件，该文件以.pem为扩展名。
 
-Subtype DNS-SD queries
+If certificate end in `.pem`, then both the certificate and private key are loaded from the same file.
+
+如果证书文件以.pem作为后缀，那么证书和私钥将从同一个文件内导入。
+
+
+The `ca_certs` argument is a list of CA certificates or certificate directories to be loaded. If a directory is specified, then all the
+certificates within the directory are loaded. If no certificates or directories then the certificates from `./certs` in the local directory are loaded.
+
+'ca_certs'是一个将要导入的CA证书列表或者证书文件夹。如果被指定的是文件夹，那么该文件夹下面的所有的证书文件将被导入。如果给出没有没有证书或者文件夹参数，
+那么使用测试目录下的 ‘./certs’ 目录。
+
+The `<subtype[:1][/path] | URI>` argument delimits(vt. 划界；定界限) the list of certificates and
+specifies either to perform xmDNS service discovery, OR to retrieve the document at the specified URI.
+
+要么使用xmDNS方式来发现服务Service，要么通过遍历的方式找到在URI指定下的文档
+
+Subtype DNS-SD queries 注意，下面的指令只是针对DNS-SD服务
 ----------------------
 
 The `subtype` can be one of:
@@ -53,11 +60,11 @@ The `subtype` can be one of:
 -   `sdev` - to discover Self Device servers
 -   `smartenergy` - to discover IEEE 2030.5 servers of any type
 
-When the number `1` is affixed to the `subtype`, the `client_test` sets
-the `QU` bit to `1` in the service discovery request indicating that a
+When the number `1` is affixed（v. 粘上，附上；（使）附于；可固定（affix 的过去式及过去分词）） to the `subtype`, 
+the `client_test` sets the `QU` bit to `1` in the service discovery request indicating that a
 unicast response is desired.
 
-Since the `subtype` argument can delimit the list of certificates it
+Since the `subtype` argument can delimit（vt. 划界；定界限） the list of certificates it
 follows that there can not be a certificate or certificate directory
 with the same name as the `subtype` argument.
 
@@ -68,26 +75,35 @@ specified on the command line. When specified, the client will retrieve the
 resource identified by the path from the server location returned by the DNS-SD
 response.
 
-URI retrieval
+URI retrieval 这个是另外一种方式，前面指令中的“|”符号表示的是“或”的意思。
 -------------
+
+如果前面的Subtype参数没有给出，则将使用这个URI路径的方式来
 
 If a `subtype` is not specified in the list of arguments, the
 `client_test` application attempts to parse a URI. The first argument
 that matches an absolute form URI (e.g <https:://>\[::1\]/dcap ) will
-delimit the list of certificates and attempt to retrieve the URI. The
+delimit（意思就是截断的意思，指如果出现了一个URI，则前面的certificates参数就算是截止了） 
+the list of certificates and attempt to retrieve the URI. The
 URI scheme specified determines the type of connection used to retrieve
 the resource either `http` for an unencrypted connection or `https` for
 a secure TLS connection. If no port is specified, the default ports for
 HTTP and HTTPS are used, 80 and 443 respectively.
 
+通过URI路径中是 “HTTPS” 还是 “HTTP” 来判断是加密的还是没有加密的
+
+
 Commands
+
 --------
 
 The last set of arguments are a list of commands to be interpreted.
 These can be any of the following:
 
--   `sfdi SFDI` - Use the specified sfdi in performing device registration.
-This command should be the first command in the list of commands.
+这个参数应当是第一个参数
+
+-   `sfdi SFDI` - Use the specified sfdi in performing device registration. This command should be the first command in the list of commands.
+
 
 -   `register` - Register the client EndDevice with the server. The
 `client_test` application will first check the available EndDevices in
@@ -104,7 +120,11 @@ device settings to the links provided in the DER instance.
     server the PIN of the client EndDevice.
 
 -   `delete SFDI` - Perform retrieval on the EndDeviceList and perform a DELETE
-    request on the EndDevice instance with a matching SFDI.
+    request on the EndDevice instance with a matching SFDI. 通过该指令来删除一个设备
+
+执行一个“注册”的任务，然后 retrieve 跟这个设备相关的FunctionSetAssignmentsList。
+决定最高优先级，执行与前面的FSA相关联的DERProgramList，然后获取到DERCurveList和DERControlList。
+最后执行各个events。
 
 -   `primary` - Perform all the functions of `register`, then retrieve the
 FunctionSetAssignmentsList associated with each EndDevice. Determine the
@@ -113,9 +133,11 @@ ordering and retrieve only the DERProgramList associated with that FSA,
 then retrieve the DERCurveList and DERControlList associated with the
 highest priority DERProgram in the DERProgramList. Finally schedule the
 events when retrieval is complete.
+在执行resigter之外，执行获取FSA，执行DERProgram的功能。
 
 -   `all` - Perform the same functions as `primary`, except all DERPrograms
 and the associated DERCurveLists and DERControlLists are retrieved.
+跟前面的primary类似，除了所有的DERPrograms和与之相关联的DERCurveLists和DERControlLists将被获取（从服务器）。
 
 -   `time` - Perform the time test.
 
@@ -131,7 +153,7 @@ and the associated DERCurveLists and DERControlLists are retrieved.
     perform the DER Identification Test.
 
 -   `poll interval` - Set the poll rate for active events in seconds, the
-    default is 300 seconds or 5 minutes.
+    default is 300 seconds or 5 minutes. 
 
 -   `load sfdi directory` - Load the device settings located in `directory`
     for the EndDevice with the `sfdi` specified.
@@ -142,4 +164,7 @@ and the associated DERCurveLists and DERControlLists are retrieved.
     client's computed SFDI. An aggregator client will retrieve the subordinate
     resources and perform scheduling for every EndDevice managed by the
     aggregator client.
+    
+    仅仅作为一个逆变器客户端（DER Client，但是意思不是只有“一台”逆变器）来测试，而不是一个“集中器”来测试。
+    如果是作为集中器来测试，那么将对这个集中器下面的每一个EndDevice执行调度操作。
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Electric Power Research Institute, Inc.
 // author: Mark Slicker <mark.slicker@gmail.com>
 
-/** @defgroup queue Queue
+/** @defgroup queue Queue 相比于本代码中的list组件，queue的特征是“先进先出”，没有“插入”操作。
     @{
 */
 
@@ -56,35 +56,42 @@ void queue_free (Queue *queue);
 #ifndef HEADER_ONLY
 
 void queue_add (Queue *q, void *item) {
-  if (q->last) q->last = q->last->next = item;
-  else q->first = q->last = item;
+  if (q->last) q->last = q->last->next = item;  //将item加入到最后位置
+  else q->first = q->last = item;   //针对这个queue中加入首个元素的情况
 }
 
 void _queue_insert (Queue *q, void *item, void *prev,
-		    int (*compare) (void *a, void *b)) {
+                    int (*compare) (void *a, void *b)) {
   q->first = _insert_sorted (q->first, item, prev, compare);
   if (q->last) {
     if (q->last->next) q->last = q->last->next;
   } else q->last = q->first;
 }
 
+
+/* 这个函数在本Demo代码中从来没有用过 */
 void queue_insert (Queue *q, void *item,
-		    int (*compare) (void *a, void *b)) {
+                   int (*compare) (void *a, void *b)) {
   List *prev = NULL;
   _queue_insert (q, item, &prev, compare);
 }
 
+
+/*将queue中的第一个元素移出，但是不删除该元素所占用的空间*/
 void *queue_remove (Queue *q) {
-  void *item = q->first; 
+  void *item = q->first;
   if (item) {
     if (q->first == q->last) queue_clear (q);
-    else q->first = q->first->next;
-  } return item;
+    else q->first = q->first->next; //将first往后移动一个位置
+  }
+  return item;//并且返回首个元素
 }
 
+//将Queue中的全部成员占用的空间清除
 void queue_free (Queue *q) {
-  free_list (q->first); queue_clear (q);
+  free_list (q->first);
+  queue_clear (q);
 }
 
 #endif
-    
+
